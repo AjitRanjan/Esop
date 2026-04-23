@@ -59,6 +59,7 @@ dependencies {
 //    implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
     implementation(libs.androidx.room3.common.jvm)
+    implementation(libs.androidx.compose.material3.window.size.class1)
 
 
 
