@@ -14,32 +14,28 @@ import androidx.compose.ui.tooling.preview.Preview
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.example.esop.login.LoginResponse
+import com.example.esop.network.AppPreferences
+import com.example.esop.network.AuthViewModel
+import com.example.esop.network.Resource
 import com.example.esop.ui.theme.dimens
+import com.example.esop.login.UserDataStore
 
 //// 🔥 Login Mode Enum
 
@@ -49,11 +45,11 @@ enum class LoginType {
     PASSWORD,
     MOBILEOTP
 }
-
-// 🔥 Login Mode Enum
-@SuppressLint("UnusedBoxWithConstraintsScope")
+//
+//// 🔥 Login Mode Enum
+@SuppressLint("UnusedBoxWithConstraintsScope", "MissingPermission")
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavHostController) {
 
     val dimens = MaterialTheme.dimens   // ✅ IMPORTANT
 
@@ -63,6 +59,100 @@ fun LoginScreen() {
     var password by rememberSaveable { mutableStateOf("") }
     var aadhaar by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf("") }
+    val viewModel: AuthViewModel = viewModel()
+    val loginState by viewModel.loginState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var isNavigated by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+
+
+    val context = LocalContext.current
+    val appPrefs = remember { AppPreferences(context) }
+
+    LaunchedEffect(loginState) {
+        when (loginState) {
+
+            is Resource.Success -> {
+
+                val response =
+                    (loginState as Resource.Success<LoginResponse>).data
+
+                dialogMessage = response.message ?: "Login Successful"
+                showDialog = true
+
+                if (response.message == "Login Successful") {
+
+                    val user = response.data
+
+                    // ✅ 👉 YAHAN CALL KARNA HAI
+                    user?.let {
+                        appPrefs.saveUser(
+                            UserDataStore(
+                                id = user?.id.toString(),
+                                name = it.fullName,
+                                email = user.email,
+                                mobile = user.mobile,
+                                designation = user.designation,
+                                organization = user.organization,
+                                isLoggedIn = true
+                            )
+                        )
+                    }
+//                    navController.navigate("welcome") {
+//                        popUpTo("login") { inclusive = true }
+//                        launchSingleTop = true
+                    // ✅ YAHAN USE KARNA HAI
+                    if (!isNavigated) {
+                        isNavigated = true
+                        navController.navigate("welcome") {
+                            popUpTo("login") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+
+                        // ✅ Navigate
+//                    navController.navigate("welcome") {
+//                        popUpTo("login") { inclusive = true }
+//                    }
+                }
+            }
+
+            is Resource.Error<*> -> {}
+            is Resource.Loading<*> -> {}
+            null -> {
+
+            }
+        }
+    }
+//    LaunchedEffect(loginState) {
+//        when (loginState) {
+//
+//            is Resource.Success -> {
+//                val response = (loginState as Resource.Success<LoginResponse>).data
+//
+//                // 👉 yaha API ka actual message lo
+//                dialogMessage = response.message ?: "Login Successful"
+//                showDialog = true
+//            }
+//
+//            is Resource.Error -> {
+//                dialogMessage =
+//                    (loginState as Resource.Error).message
+//                        ?: "Something went wrong"
+//                showDialog = true
+//            }
+//
+//            is Resource.Loading -> {
+//                // optional loader
+//            }
+//
+//            else -> {}
+//        }
+//    }
+
     Spacer(modifier = Modifier.height(dimens.spaceM))
     BoxWithConstraints(
         modifier = Modifier
@@ -161,10 +251,13 @@ fun LoginScreen() {
 //                                mobile = it
 //                            }
 
-                            if (it.length <= 10) {
+//                            if (it.length <= 10) {
+//                                loginId = it
+//                            }
+
+                            if (it.isNotBlank()) {
                                 loginId = it
                             }
-
                         },
                         label = { Text(stringResource(R.string.login_id)) },
                         modifier = Modifier.fillMaxWidth(),
@@ -227,13 +320,13 @@ fun LoginScreen() {
                             context.getString(R.string.login_success_aadhaar)
                     } else {
                         error = when {
-//                            loginId.length != 10 ->
                             loginId.isEmpty() ->
                                 context.getString(R.string.must_be_login)
+
                             password.isEmpty() ->
                                 context.getString(R.string.enter_password)
-                            else -> "Login Success (Password)"
-                        }
+                                else -> viewModel.login(loginId, password)
+                        }.toString()
                     }
                 },
                 modifier = Modifier
@@ -247,7 +340,6 @@ fun LoginScreen() {
 
 
             {
-//                Text(stringResource(R.string.login))
                 Text(buttonText)   // ✅ changed here
             }
 
@@ -379,109 +471,285 @@ fun LoginScreen() {
             }
         }
     }
+
+
+//    LaunchedEffect(loginState) {
+//        when (loginState) {
+//
+//            is Resource.Success -> {
+//                snackbarHostState.showSnackbar(
+//                    "Login Successful"
+//                )
+//            }
+//
+//            is Resource.Error -> {
+//                snackbarHostState.showSnackbar(
+//                    (loginState as Resource.Error).message
+//                        ?: "Something went wrong"
+//                )
+//            }
+//
+//            is Resource.Loading -> {
+//                // optional loader
+//            }
+//
+//            else -> {}
+//        }
+//    }
 }
 
 
 
-
+//@SuppressLint("UnusedBoxWithConstraintsScope", "MissingPermission")
 //@Composable
 //fun LoginScreen() {
 //
-////    val dimens = LocalDimens.current   // ✅ USE THIS
 //    val dimens = MaterialTheme.dimens
+//
 //    var loginType by rememberSaveable { mutableStateOf(LoginType.PASSWORD) }
 //    var mobile by rememberSaveable { mutableStateOf("") }
+//    var loginId by rememberSaveable { mutableStateOf("") }
 //    var password by rememberSaveable { mutableStateOf("") }
 //    var aadhaar by rememberSaveable { mutableStateOf("") }
-//
 //    var error by rememberSaveable { mutableStateOf("") }
 //
+//    val viewModel: AuthViewModel = viewModel()
+//
+//    // ✅ Snackbar
+//    val snackbarHostState = remember { SnackbarHostState() }
+//
+//    // ✅ Observe state
+//    val loginState by viewModel.loginState.collectAsState()
+//
+//    val context = LocalContext.current
+//
+//    // ✅ Observe API response
+//    LaunchedEffect(loginState) {
+//        when (loginState) {
+//
+//            is Resource.Success -> {
+//                snackbarHostState.showSnackbar("Login Successful")
+//            }
+//
+//            is Resource.Error -> {
+//                snackbarHostState.showSnackbar(
+//                    (loginState as Resource.Error).message
+//                        ?: "Something went wrong"
+//                )
+//            }
+//
+//            is Resource.Loading -> {
+//                // optional loader
+//            }
+//
+//            else -> {}
+//        }
+//    }
+//
+//    // ✅ Root Box for Snackbar
 //    Box(
 //        modifier = Modifier
 //            .fillMaxSize()
 //            .background(Color(0xFFF5F7FA))
 //    ) {
 //
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(
-//                    horizontal = dimens.screenPaddingHorizontal,
-//                    vertical = dimens.screenPaddingVertical
-//                )
-//                .verticalScroll(rememberScrollState()),
-//            horizontalAlignment = Alignment.CenterHorizontally
+//        // ✅ Snackbar UI
+//        SnackbarHost(
+//            hostState = snackbarHostState,
+//            modifier = Modifier.align(Alignment.BottomCenter)
+//        )
+//
+//        BoxWithConstraints(
+//            modifier = Modifier.fillMaxSize()
 //        ) {
 //
-//            HeaderSection()
+//            val screenWidth = maxWidth
 //
-//            Spacer(modifier = Modifier.height(dimens.spaceXL))
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(horizontal = dimens.screenPaddingHorizontal)
+//                    .verticalScroll(rememberScrollState()),
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
 //
-//            LoginInputSection(
-//                loginType = loginType,
-//                mobile = mobile,
-//                password = password,
-//                aadhaar = aadhaar,
-//                spacing = dimens.spaceM,
-//                onMobileChange = { mobile = it },
-//                onPasswordChange = { password = it },
-//                onAadhaarChange = { aadhaar = it }
-//            )
+//                Spacer(modifier = Modifier.height(dimens.spaceXL))
+//                Spacer(modifier = Modifier.height(dimens.spaceXL))
 //
-//            Spacer(modifier = Modifier.height(dimens.spaceL))
+//                Icon(
+//                    Icons.Default.Shield,
+//                    contentDescription = null,
+//                    tint = Color(0xFF2563EB),
+//                    modifier = Modifier.size(dimens.iconXL)
+//                )
 //
-//            SwitchLoginButtons(
-//                loginType = loginType,
-//                onSwitch = { loginType = it }
-////                onOtp = { loginType = it }
-//            )
+//                Text(
+//                    stringResource(R.string.esop),
+//                    fontSize = (screenWidth.value * 0.10).sp,
+//                    fontWeight = FontWeight.Bold,
+//                    color = Color(0xFF2563EB)
+//                )
+//
+//                Text(
+//                    text = stringResource(R.string.electronic_standard_operation_process),
+//                    textAlign = TextAlign.Center,
+//                    fontSize = 15.sp
+//                )
+//
+//                Spacer(modifier = Modifier.height(dimens.spaceM))
+//
+//                Text(
+//                    stringResource(R.string.welcome_back),
+//                    fontWeight = FontWeight.Bold,
+//                    fontSize = 20.sp
+//                )
+//
+//                Text(
+//                    stringResource(R.string.login_to_continue),
+//                    fontSize = 15.sp
+//                )
+//
+//                Spacer(modifier = Modifier.height(dimens.spaceL))
+//
+//                // ================= INPUT =================
+//                when (loginType) {
+//
+//                    LoginType.AADHAAR -> {
+//                        OutlinedTextField(
+//                            value = aadhaar,
+//                            onValueChange = {
+//                                if (it.length <= 12 && it.all { ch -> ch.isDigit() }) {
+//                                    aadhaar = it
+//                                }
+//                            },
+//                            label = { Text(stringResource(R.string.aadhaar_number)) },
+//                            modifier = Modifier.fillMaxWidth()
+//                        )
+//                    }
+//
+//                    LoginType.MOBILEOTP -> {
+//                        OutlinedTextField(
+//                            value = mobile,
+//                            onValueChange = {
+//                                if (it.length <= 10 && it.all { ch -> ch.isDigit() }) {
+//                                    mobile = it
+//                                }
+//                            },
+//                            label = { Text(stringResource(R.string.mobile_must_be_10_digits)) },
+//                            modifier = Modifier.fillMaxWidth()
+//                        )
+//                    }
+//
+//                    LoginType.PASSWORD -> {
+//
+//                        OutlinedTextField(
+//                            value = loginId,
+//                            onValueChange = {
+//                                loginId = it
+//                            },
+//                            label = { Text(stringResource(R.string.login_id)) },
+//                            modifier = Modifier.fillMaxWidth()
+//                        )
+//
+//                        Spacer(modifier = Modifier.height(dimens.spaceM))
+//
+//                        OutlinedTextField(
+//                            value = password,
+//                            onValueChange = { password = it },
+//                            label = { Text(stringResource(R.string.password)) },
+//                            visualTransformation = PasswordVisualTransformation(),
+//                            modifier = Modifier.fillMaxWidth()
+//                        )
+//                    }
+//                }
+//
+//                Spacer(modifier = Modifier.height(dimens.spaceM))
+//
+//                if (error.isNotEmpty()) {
+//                    Text(error, color = Color.Red)
+//                }
+//
+//                Spacer(modifier = Modifier.height(dimens.spaceM))
+//
+//                val buttonText = stringResource(R.string.submit)
+//
+//                // ================= BUTTON =================
+//                Button(
+//                    onClick = {
+//                        error = ""
+//
+//                        if (loginType == LoginType.AADHAAR) {
+//
+//                            error = if (aadhaar.length != 12)
+//                                context.getString(R.string.aadhaar_must_be_12_digits)
+//                            else
+//                                "Aadhaar Valid"
+//
+//                        } else {
+//
+//                            when {
+//                                loginId.isEmpty() -> {
+//                                    error = context.getString(R.string.must_be_login)
+//                                }
+//
+//                                password.isEmpty() -> {
+//                                    error = context.getString(R.string.enter_password)
+//                                }
+//
+//                                else -> {
+//                                    viewModel.login(loginId, password)
+//                                }
+//                            }
+//                        }
+//                    },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(dimens.buttonHeight)
+//                ) {
+//                    Text(buttonText)
+//                }
+//
+//                Spacer(modifier = Modifier.height(dimens.spaceM))
+//
+//                // ================= SWITCH BUTTONS =================
+//
+//                Button(
+//                    onClick = { loginType = LoginType.AADHAAR },
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Text("Login with Aadhaar")
+//                }
+//
+//                Spacer(modifier = Modifier.height(dimens.spaceS))
+//
+//                Button(
+//                    onClick = { loginType = LoginType.PASSWORD },
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Text("Login with Password")
+//                }
+//
+//                Spacer(modifier = Modifier.height(dimens.spaceS))
+//
+//                Button(
+//                    onClick = { loginType = LoginType.MOBILEOTP },
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Text("Login with OTP")
+//                }
+//
+//                Spacer(modifier = Modifier.height(dimens.spaceM))
+//            }
 //        }
 //    }
 //}
 
-
-
 //@Preview(
-//    name = "Small Phone",
-//    device = "spec:width=360dp,height=640dp,dpi=320",
-//    showBackground = true
+//    showBackground = true,
+//    showSystemUi = true,
+//    name = "Login Screen Preview"
 //)
 //@Composable
-//fun PreviewSmallPhone() {
-//    LoginScreen()
+//fun LoginScreenPreview() {
+//    LoginScreen(navController)
 //}
-//
-//@Preview(
-//    name = "Large Phone",
-//    device = "spec:width=411dp,height=891dp,dpi=420",
-//    showBackground = true
-//)
-//@Composable
-//fun PreviewLargePhone() {
-//    LoginScreen()
-//}
-//
-//@Preview(
-//    name = "Tablet",
-//    device = "spec:width=800dp,height=1280dp,dpi=240",
-//    showBackground = true
-//)
-//@Composable
-//fun PreviewTablet() {
-//    LoginScreen()
-//}
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewLoginScreen() {
-//    LoginScreen()
-//}
-
-@Preview(
-    showBackground = true,
-    showSystemUi = true,
-    name = "Login Screen Preview"
-)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen()
-}
