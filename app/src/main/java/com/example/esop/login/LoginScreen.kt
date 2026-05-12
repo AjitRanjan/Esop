@@ -1,4 +1,4 @@
-package com.example.esop
+package com.example.esop.login
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,11 +9,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.tooling.preview.Preview
 
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
@@ -30,12 +30,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.esop.login.LoginResponse
+import com.example.esop.AadhaarMaskTransformation
+import com.example.esop.R
 import com.example.esop.network.AppPreferences
-import com.example.esop.network.AuthViewModel
 import com.example.esop.network.Resource
 import com.example.esop.ui.theme.dimens
-import com.example.esop.login.UserDataStore
 
 //// 🔥 Login Mode Enum
 
@@ -83,6 +82,14 @@ fun LoginScreen(navController: NavHostController) {
                 dialogMessage = response.message ?: "Login Successful"
                 showDialog = true
 
+
+//                if (!isNavigated) {
+//                    isNavigated = true
+//                    navController.navigate("welcome") {
+//                        popUpTo("login") { inclusive = true }
+//                        launchSingleTop = true
+//                    }
+//                }
                 if (response.message == "Login Successful") {
 
                     val user = response.data
@@ -101,9 +108,9 @@ fun LoginScreen(navController: NavHostController) {
                             )
                         )
                     }
-//                    navController.navigate("welcome") {
-//                        popUpTo("login") { inclusive = true }
-//                        launchSingleTop = true
+                    navController.navigate("welcome") {
+                        popUpTo("login") { inclusive = true }
+                        launchSingleTop = true}
                     // ✅ YAHAN USE KARNA HAI
                     if (!isNavigated) {
                         isNavigated = true
@@ -449,7 +456,6 @@ fun LoginScreen(navController: NavHostController) {
 //                Text(buttonText)   // ✅ changed here
             }
             Spacer(modifier = Modifier.height(dimens.spaceM))
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -466,9 +472,32 @@ fun LoginScreen(navController: NavHostController) {
                 Text(
                     text = "Register Now",
                     color = primaryColor,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable {
+                        navController.navigate("signup")   // ✅ NAVIGATION HERE
+                    }
                 )
             }
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(vertical = 16.dp),
+//                horizontalArrangement = Arrangement.Center,
+//                verticalAlignment = Alignment.CenterVertically
+//            )
+//            {
+//
+//                Text(
+//                    text = "New user? ",
+//                    color = Color.Gray
+//                )
+//
+//                Text(
+//                    text = "Register Now",
+//                    color = primaryColor,
+//                    fontWeight = FontWeight.Bold
+//                )
+//            }
         }
     }
 

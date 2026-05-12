@@ -1,7 +1,7 @@
 package com.example.esop.validation
 
 import android.content.Context
-import com.example.esop.LoginType
+import com.example.esop.login.LoginType
 import com.example.esop.R
 
 

@@ -1,4 +1,4 @@
-package com.example.esop.network
+package com.example.esop.login
 
 import android.Manifest
 import android.content.Context
@@ -7,8 +7,7 @@ import android.net.NetworkCapabilities
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.esop.login.LoginRequest
-import com.example.esop.login.LoginResponse
+import com.example.esop.network.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
