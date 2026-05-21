@@ -73,247 +73,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import com.example.esop.FunctionaryDropdown.FunctionaryViewModel
 import com.example.esop.OrgnazationDropdown.RoleViewModel
+import com.example.esop.state.StateViewModel
 import com.example.esop.util.CommonDropdown
 import kotlinx.coroutines.launch
-
-
-//@SuppressLint("UnusedBoxWithConstraintsScope")
-//@Composable
-//fun SignupScreen(
-//    navController: NavController,
-//    viewModel: SignupViewModel = viewModel()
-//) {
-//
-//    val dimens = MaterialTheme.dimens
-//    val context = LocalContext.current
-//    val state = viewModel.state
-//    val scrollState = rememberScrollState()
-//
-//    // 🔹 ALL FIELDS
-//    var email by remember { mutableStateOf("") }
-//    var confirmEmail by remember { mutableStateOf("") }
-//    var password by remember { mutableStateOf("") }
-//
-//    var firstName by remember { mutableStateOf("") }
-//    var lastName by remember { mutableStateOf("") }
-//
-//    var alternateEmail by remember { mutableStateOf("") }
-//
-//    var aadhaar by remember { mutableStateOf("") }
-//    var pan by remember { mutableStateOf("") }
-//    var dl by remember { mutableStateOf("") }
-//
-//    var age by remember { mutableStateOf("") }
-//    var gender by remember { mutableStateOf("") }
-//
-//    var address by remember { mutableStateOf("") }
-//    var mobile by remember { mutableStateOf("") }
-//    var telephone by remember { mutableStateOf("") }
-//
-//    // ✅ Dropdown State
-//    var processGroupName by remember { mutableStateOf("") }
-//    var processGroupCode by remember { mutableStateOf("") }
-//
-//    var organization by remember { mutableStateOf("") }
-//    var functionary by remember { mutableStateOf("") }
-//
-//    var country by remember { mutableStateOf("") }
-//    var stateField by remember { mutableStateOf("") }
-//    var district by remember { mutableStateOf("") }
-//    var city by remember { mutableStateOf("") }
-//
-//    var designation by remember { mutableStateOf("") }
-//
-//    var error by remember { mutableStateOf("") }
-//
-//    // ✅ ViewModel for dropdown (IMPORTANT FIX)
-//    val processGroupViewModel: ProcessGroupViewModel = viewModel()
-//
-//    // ✅ API Call
-//    LaunchedEffect(Unit) {
-//        processGroupViewModel.fetchProcessGroups()
-//    }
-//
-//    Scaffold(
-//
-//        topBar = {
-//            BoxWithConstraints(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .background(Color(0xFFF5F7FA))
-//            ) {
-//
-//                val screenWidth = maxWidth
-//
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(top = dimens.spaceXL),
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-//
-//                    Icon(
-//                        Icons.Default.Shield,
-//                        contentDescription = null,
-//                        tint = Color(0xFF2563EB),
-//                        modifier = Modifier.size(dimens.iconXL)
-//                    )
-//
-//                    Text(
-//                        text = "ESOP",
-//                        fontSize = (screenWidth.value * 0.08).sp,
-//                        fontWeight = FontWeight.Bold,
-//                        color = Color(0xFF2563EB)
-//                    )
-//
-//                    Text(
-//                        text = "Create your account",
-//                        fontSize = 14.sp
-//                    )
-//
-//                    Spacer(modifier = Modifier.height(dimens.spaceM))
-//                }
-//            }
-//        },
-//
-//        bottomBar = {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(16.dp)
-//            ) {
-//
-//                if (error.isNotEmpty()) {
-//                    Text(error, color = Color.Red)
-//                }
-//
-//                Button(
-//                    onClick = {
-//
-//                        val request = SignupRequest(
-//                            email, confirmEmail, password,
-//                            firstName, lastName,
-//                            alternateEmail,
-//                            aadhaar, pan, dl,
-//                            age.toIntOrNull() ?: 0,
-//                            gender,
-//                            address, mobile, telephone,
-//                            processGroupCode,   // ✅ dropdown code
-//                            organization, functionary,
-//                            country, stateField, district, city,
-//                            designation
-//                        )
-//
-//                        val validationError = SignupValidator.validate(request)
-//
-//                        if (validationError != null) {
-//                            error = validationError
-//                        } else {
-//                            error = ""
-//                            viewModel.signup(context, request)
-//                        }
-//                    },
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(dimens.buttonHeight),
-//                    shape = RoundedCornerShape(dimens.radiusM)
-//                ) {
-//                    Text("Submit")
-//                }
-//            }
-//        }
-//
-//    )
-//
-//    { padding ->
-//
-//        Column(
-//            modifier = Modifier
-//                .padding(padding)
-//                .verticalScroll(scrollState)
-//                .padding(horizontal = dimens.screenPaddingHorizontal)
-//        ) {
-//
-//            Spacer(modifier = Modifier.height(dimens.spaceM))
-//
-//            SectionTitle("Account Details")
-//            InputField(email, { email = it }, "Email")
-//            InputField(confirmEmail, { confirmEmail = it }, "Confirm Email")
-//            InputField(password, { password = it }, "Password", isPassword = true)
-//
-//            SectionTitle("Personal Info")
-//            InputField(firstName, { firstName = it }, "First Name")
-//            InputField(lastName, { lastName = it }, "Last Name")
-//
-//            SectionTitle("Work Info")
-//
-//            // 🔥 DEBUG (remove later)
-//            Text("List Size: ${processGroupViewModel.processGroupList.size}")
-//
-//            // ✅ Loading
-//            if (processGroupViewModel.isLoading) {
-//                CircularProgressIndicator()
-//            }
-//
-//            // ❌ Error
-//            if (processGroupViewModel.error.isNotEmpty()) {
-//                Text(processGroupViewModel.error, color = Color.Red)
-//            }
-//
-//            // ✅ DROPDOWN (FINAL)
-//            ProcessGroupDropdown(
-//                list = processGroupViewModel.processGroupList,
-//                selectedText = processGroupName,
-//                onItemSelected = { item ->
-//                    processGroupName = item.level_short_name ?: ""
-//                    processGroupCode = item.level_admin_cd ?: ""
-//                }
-//            )
-//
-//            InputField(organization, { organization = it }, "Organization")
-//
-//            Spacer(modifier = Modifier.height(120.dp))
-//        }
-//    }
-//
-//    // 🔄 STATE HANDLE
-//    when (state) {
-//
-//        is SignupState.Loading -> {
-//            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//                CircularProgressIndicator()
-//            }
-//        }
-//
-//        is SignupState.Success -> {
-//            LaunchedEffect(Unit) {
-//                navController.navigate("login") {
-//                    popUpTo("signup") { inclusive = true }
-//                }
-//            }
-//        }
-//
-//        is SignupState.Error -> {
-//            error = state.message
-//        }
-//
-//        else -> {}
-//    }
-//}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -366,6 +128,9 @@ fun SignupScreen(
     var OrganizationCode by remember { mutableStateOf("") }
     var FunctionaryCode by remember { mutableStateOf("") }
 
+    var stateName by remember { mutableStateOf("") }
+    var stateCode by remember { mutableStateOf("") }
+
     var organization by remember { mutableStateOf("") }
     var functionary by remember { mutableStateOf("") }
 
@@ -382,10 +147,13 @@ fun SignupScreen(
     val processGroupViewModel: ProcessGroupViewModel = viewModel()
     val roleViewModel: RoleViewModel = viewModel()
     val functionaryviewModel: FunctionaryViewModel = viewModel()
+    val stateviewModel: StateViewModel = viewModel()
 
     // ✅ API Call
     LaunchedEffect(Unit) {
+
         processGroupViewModel.fetchProcessGroups()
+        stateviewModel.fetchState()
     }
     LaunchedEffect(errorMap.size) {
         if (errorMap.isNotEmpty()) {
@@ -550,7 +318,6 @@ fun SignupScreen(
                 onItemSelected = { item ->
                     processGroupName = item.level_short_name ?: ""
                     processGroupCode = item.level_admin_cd ?: ""
-
                     roleViewModel.fetchRoles(processGroupCode) // API call
                 }
             )
@@ -585,7 +352,44 @@ fun SignupScreen(
             // 🔹 Location
             SectionTitle("Location")
             InputField(country, { country = it }, "Country")
-            InputField(stateField, { stateField = it }, "State")
+
+            CommonDropdown(
+
+                list = stateviewModel.stateList,
+
+                selectedText = stateName,
+
+                label = "State",
+
+                itemText = { it.statename },
+
+                onItemSelected = { item ->
+
+                    stateName = item.statename
+
+                    stateCode = item.statecode
+
+
+
+
+
+                }
+            )
+//            SectionTitle("State")
+//            CommonDropdown(
+//                list = stateviewModel.stateList,
+//                selectedText = stateName,
+//                label = "State",
+//                itemText = { it.statename ?: "" },
+//                onItemSelected = { item ->
+//                    stateName = item.statename ?: ""
+//                    stateCode = item.statecode ?: ""
+//
+////
+//                }
+//            )
+
+
             InputField(district, { district = it }, "District")
             InputField(city, { city = it }, "City")
 

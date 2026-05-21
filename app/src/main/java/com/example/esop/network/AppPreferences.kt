@@ -6,6 +6,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.esop.login.UserDataStore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
 // ✅ Ye class ke bahar hona chahiye
 private val Context.dataStore by preferencesDataStore(name = "app_prefs")
 class AppPreferences(
@@ -34,4 +37,31 @@ class AppPreferences(
             prefs[Keys.LOGGED_IN] = true
         }
     }
+    // =========================
+    // LOGOUT / CLEAR DATA
+    // =========================
+
+    suspend fun clearUser() {
+
+        context.dataStore.edit { prefs ->
+            prefs.clear()
+        }
+    }
+    // =========================
+    // GET NAME
+    // =========================
+
+    val userName: Flow<String?> =
+        context.dataStore.data.map { prefs ->
+            prefs[Keys.NAME]
+        }
+
+    // =========================
+    // GET EMAIL
+    // =========================
+
+    val userEmail: Flow<String?> =
+        context.dataStore.data.map { prefs ->
+            prefs[Keys.EMAIL]
+        }
 }

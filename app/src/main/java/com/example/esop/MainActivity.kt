@@ -3,6 +3,8 @@ package com.example.esop
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -1463,43 +1465,101 @@ import signup.SignupScreen
 
 
 
-
-
-
-
 class MainActivity : ComponentActivity() {
-    val context = LocalContext.current
-    val appPrefs = AppPreferences(context)
+
+    private lateinit var appPrefs: AppPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        appPrefs = AppPreferences(this)
 
         setContent {
 
             val navController = rememberNavController()
 
+            // =========================
+            // GET USER DATA FROM DATASTORE
+            // =========================
+
+            val userName by appPrefs.userName.collectAsState(initial = null)
+
+            val userEmail by appPrefs.userEmail.collectAsState(initial = null)
+
+            // =========================
+            // CHECK LOGIN
+            // =========================
+
+            val startDestination =
+                if (!userName.isNullOrEmpty() && !userEmail.isNullOrEmpty()) {
+                    "welcome"
+                } else {
+                    "login"
+                }
+
+            // =========================
+            // NAV HOST
+            // =========================
+
             NavHost(
                 navController = navController,
-                startDestination = "login"
+                startDestination = startDestination
             ) {
 
                 composable("login") {
                     LoginScreen(navController)
                 }
 
-                composable("signup") {   // ✅ ADD THIS
+                composable("signup") {
                     SignupScreen(navController)
                 }
 
                 composable("welcome") {
                     WelcomeScreen(navController)
                 }
-                composable("TestScreen") {
 
+                composable("TestScreen") {
                     TestScreen()
                 }
             }
         }
-    }}
+    }
+}
+
+
+
+//class MainActivity : ComponentActivity() {
+//    private lateinit var appPrefs: AppPreferences
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        appPrefs = AppPreferences(this)
+//        setContent {
+//
+//            val navController = rememberNavController()
+//
+//            NavHost(
+//                navController = navController,
+//                startDestination = "login"
+//            ) {
+//
+//                composable("login") {
+//                    LoginScreen(navController)
+//                }
+//
+//                composable("signup") {   // ✅ ADD THIS
+//                    SignupScreen(navController)
+//                }
+//
+//                composable("welcome") {
+//                    WelcomeScreen(navController)
+//                }
+//                composable("TestScreen") {
+//
+//                    TestScreen()
+//                }
+//            }
+//        }
+//    }}
 
 
 

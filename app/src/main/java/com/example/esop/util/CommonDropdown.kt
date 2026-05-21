@@ -68,11 +68,11 @@ fun <T> CommonDropdown(
                     onClick = {
                         expanded = false
 
-                        Toast.makeText(
-                            context,
-                            itemText(item),
-                            Toast.LENGTH_SHORT
-                        ).show()
+//                        Toast.makeText(
+//                            context,
+//                            itemText(item),
+//                            Toast.LENGTH_SHORT
+//                        ).show()
 
                         onItemSelected(item)
                     }

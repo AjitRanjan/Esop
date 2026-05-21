@@ -7,6 +7,7 @@ import com.example.esop.ProcessGroup.ProcessGroupItem
 //import com.example.esop.ProcessGroup.ProcessGroupResponse
 import com.example.esop.login.LoginRequest
 import com.example.esop.login.LoginResponse
+import com.example.esop.state.StateResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -49,4 +50,12 @@ interface ApiServices {
 
         @Path("orgId") orgId: String
     ): AssignRoleResponse
+
+//    @GET("esop/api/state")
+//    suspend fun getStateList(): List<Item>
+
+
+
+    @GET("esop/api/state")
+    suspend fun getStateList(): StateResponse
 }
