@@ -96,7 +96,19 @@ fun LoginScreen(navController: NavHostController) {
         when (loginState) {
 
             is Resource.Success -> {
+                if (!isNavigated) {
 
+                    isNavigated = true
+
+                    navController.navigate("welcome") {
+
+                        popUpTo("login") {
+                            inclusive = true
+                        }
+
+                        launchSingleTop = true
+                    }
+                }
                 val response =
                     (loginState as Resource.Success<LoginResponse>).data
 
@@ -115,21 +127,25 @@ fun LoginScreen(navController: NavHostController) {
                                 isLoggedIn = true
                             )
                         )
-                    }
 
-                    if (!isNavigated) {
 
-                        isNavigated = true
 
-                        navController.navigate("welcome") {
+                        if (!isNavigated) {
 
-                            popUpTo("login") {
-                                inclusive = true
+                            isNavigated = true
+
+                            navController.navigate("welcome") {
+
+                                popUpTo("login") {
+                                    inclusive = true
+                                }
+
+                                launchSingleTop = true
                             }
-
-                            launchSingleTop = true
                         }
                     }
+
+
                 }
             }
 

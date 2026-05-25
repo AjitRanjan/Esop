@@ -4,6 +4,7 @@ package com.example.esop.network
 import com.example.esop.FunctionaryDropdown.AssignRoleResponse
 import com.example.esop.OrgnazationDropdown.RoleResponse
 import com.example.esop.ProcessGroup.ProcessGroupItem
+import com.example.esop.district.DistrictResponse
 //import com.example.esop.ProcessGroup.ProcessGroupResponse
 import com.example.esop.login.LoginRequest
 import com.example.esop.login.LoginResponse
@@ -13,6 +14,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 import retrofit2.http.Url
 import signup.SignupResponse
 import signup.request.SignupRequest
@@ -58,4 +60,12 @@ interface ApiServices {
 
     @GET("esop/api/state")
     suspend fun getStateList(): StateResponse
+
+
+
+    @GET("esop/api/distict")
+    suspend fun getDistrict(
+        @Query("statecode") statecode: String
+    ): DistrictResponse
+
 }

@@ -2,7 +2,7 @@ package com.example.esop.district
 
 data class DistrictItem(
 
-    val statename: String,
+    val districtcode: String,
 
-    val statecode: String
+    val districtname: String
 )

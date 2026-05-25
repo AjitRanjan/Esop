@@ -55,10 +55,14 @@ import signup.request.SignupRequest
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -71,13 +75,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import com.example.esop.FunctionaryDropdown.FunctionaryViewModel
 import com.example.esop.OrgnazationDropdown.RoleViewModel
+import com.example.esop.district.DistrictViewModel
 import com.example.esop.state.StateViewModel
 import com.example.esop.util.CommonDropdown
 import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun SignupScreen(
@@ -126,13 +135,18 @@ fun SignupScreen(
     var FunctionaryName by remember { mutableStateOf("") }
     var processGroupCode by remember { mutableStateOf("") }
     var OrganizationCode by remember { mutableStateOf("") }
-    var FunctionaryCode by remember { mutableStateOf("") }
 
     var stateName by remember { mutableStateOf("") }
     var stateCode by remember { mutableStateOf("") }
 
-    var organization by remember { mutableStateOf("") }
-    var functionary by remember { mutableStateOf("") }
+
+
+    var districtname by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
+    val genderOptions = listOf("Male", "Female", "Other")
+//    var districtcode by remember { mutableStateOf("") }
+//    var organization by remember { mutableStateOf("") }
+//    var functionary by remember { mutableStateOf("") }
 
     var country by remember { mutableStateOf("") }
     var stateField by remember { mutableStateOf("") }
@@ -143,17 +157,45 @@ fun SignupScreen(
 
     var error by remember { mutableStateOf("") }
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+
+// Keyboard change handler
+    val dlKeyboardType =
+        when (dl.length) {
+
+            // First 2 = State Code Alphabets
+            in 0..1 -> KeyboardType.Text
+
+            // Remaining = Numbers
+            else -> KeyboardType.Number
+        }
+
+
+// Indian State Codes
+    val stateCodes = listOf(
+        "AP","AR","AS","BR","CG","CH","DD","DL","DN","GA",
+        "GJ","HR","HP","JH","JK","KA","KL","LD","MH","ML",
+        "MN","MP","MZ","NL","OD","PB","PY","RJ","SK","TN",
+        "TR","TS","UK","UP","WB","AN","LA"
+    )
+
+
     // ✅ ViewModel for dropdown
     val processGroupViewModel: ProcessGroupViewModel = viewModel()
     val roleViewModel: RoleViewModel = viewModel()
     val functionaryviewModel: FunctionaryViewModel = viewModel()
     val stateviewModel: StateViewModel = viewModel()
+    val districtviewModel: DistrictViewModel = viewModel()
+
+
+
 
     // ✅ API Call
     LaunchedEffect(Unit) {
 
         processGroupViewModel.fetchProcessGroups()
-        stateviewModel.fetchState()
+//        stateviewModel.fetchState()
     }
     LaunchedEffect(errorMap.size) {
         if (errorMap.isNotEmpty()) {
@@ -293,19 +335,271 @@ fun SignupScreen(
 
             // 🔹 Identity
             SectionTitle("Identity")
-            InputField(aadhaar, { aadhaar = it }, "Aadhaar", KeyboardType.Number)
-            InputField(pan, { pan = it }, "PAN")
-            InputField(dl, { dl = it }, "Driving License")
+//            InputField(aadhaar, { aadhaar = it }, "Aadhaar", KeyboardType.Number)
+//            InputField(pan, { pan = it }, "PAN")
+//            InputField(dl, { dl = it }, "Driving License")
+
+            InputField(
+                aadhaar,
+                {
+                    if (it.length <= 12 && it.all { char -> char.isDigit() }) {
+                        aadhaar = it
+                    }
+                },
+                "Aadhaar",
+                KeyboardType.Number
+            )
+
+            var pan by remember { mutableStateOf("") }
+
+            val keyboardController = LocalSoftwareKeyboardController.current
+            val focusManager = LocalFocusManager.current
+
+            val keyboardType =
+                when (pan.length) {
+
+                    // First 5 = Alphabets
+                    in 0..4 -> KeyboardType.Text
+
+                    // Next 4 = Numbers
+                    in 5..8 -> KeyboardType.Number
+
+                    // Last 1 = Alphabet
+                    9 -> KeyboardType.Text
+
+                    else -> KeyboardType.Text
+                }
+
+
+            InputField(
+
+                pan,
+
+                { input ->
+
+                    val value = input.uppercase()
+
+                    if (value.length <= 10) {
+
+                        val valid = value.withIndex().all { (index, char) ->
+
+                            when (index) {
+
+                                // First 5 letters
+                                in 0..4 -> char.isLetter()
+
+                                // Next 4 numbers
+                                in 5..8 -> char.isDigit()
+
+                                // Last character letter
+                                9 -> char.isLetter()
+
+                                else -> false
+                            }
+                        }
+
+                        if (valid || value.isEmpty()) {
+
+                            pan = value
+
+                            // Auto close keyboard after complete PAN
+                            if (value.length == 10) {
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
+                            }
+                        }
+                    }
+                },
+
+                "PAN",
+
+                keyboardType
+            )
+            OutlinedTextField(
+
+                value = dl,
+
+                onValueChange = { input ->
+
+                    val value = input.uppercase()
+
+                    // Max length 16
+                    if (value.length <= 16) {
+
+                        val valid = value.withIndex().all { (index, char) ->
+
+                            when (index) {
+
+                                // First 2 = Alphabets
+                                0,1 -> char.isLetter()
+
+                                // Remaining = Numbers
+                                else -> char.isDigit()
+                            }
+                        }
+
+                        if (valid || value.isEmpty()) {
+
+                            // Validate state code
+                            if (
+                                value.length < 2 ||
+                                stateCodes.contains(value.take(2))
+                            ) {
+
+                                dl = value
+
+                                // Auto dismiss keyboard
+                                if (value.length == 16) {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                }
+                            }
+                        }
+                    }
+                },
+
+                label = {
+                    Text("Driving License")
+                },
+
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = dlKeyboardType,
+                    capitalization = KeyboardCapitalization.Characters
+                ),
+
+                modifier = Modifier.fillMaxWidth()
+            )
+
+//            InputField(dl, { dl = it }, "Driving License")
+
+
+
+
+// Indian State Codes
+
+
+
+            InputField(
+
+                dl,
+
+                { input ->
+
+                    val value = input.uppercase()
+
+                    // Max Length 16
+                    if (value.length <= 16) {
+
+                        val valid = value.withIndex().all { (index, char) ->
+
+                            when (index) {
+
+                                // First 2 characters = Alphabets
+                                0,1 -> char.isLetter()
+
+                                // Remaining = Numbers
+                                else -> char.isDigit()
+                            }
+                        }
+
+                        if (valid || value.isEmpty()) {
+
+                            // Validate state code after first 2 chars
+                            if (
+                                value.length < 2 ||
+                                stateCodes.contains(value.take(2))
+                            ) {
+
+                                dl = value
+
+                                // Auto close keyboard after full DL
+                                if (value.length == 16) {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                }
+                            }
+                        }
+                    }
+                },
+
+                "Driving License",
+
+                keyboardType
+            )
+
+
+
+//            InputField(
+//                dl,
+//                {
+//                    val value = it.uppercase()
+//
+//                    if (
+//                        value.length <= 16 &&
+//                        value.matches(Regex("[A-Z0-9]*"))
+//                    ) {
+//                        dl = value
+//                    }
+//                },
+//                "Driving License"
+//            )
 
             // 🔹 Basic
             SectionTitle("Basic Info")
             InputField(age, { age = it }, "Age", KeyboardType.Number)
-            InputField(gender, { gender = it }, "Gender")
+//            InputField(gender, { gender = it }, "Gender")
+
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+
+                OutlinedTextField(
+                    value = gender,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Gender") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    genderOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                gender = option
+                                expanded = false
+
+                            }
+                        )
+                    }
+                }
+            }
 
             // 🔹 Contact
             SectionTitle("Contact")
             InputField(address, { address = it }, "Address")
-            InputField(mobile, { mobile = it }, "Mobile", KeyboardType.Number)
+//            InputField(mobile, { mobile = it }, "Mobile", KeyboardType.Number)
+            InputField(
+                value = mobile,
+                onValueChange = {
+                    // Allow only 10 digit numbers
+                    if (it.length <= 10 && it.all { char -> char.isDigit() }) {
+                        mobile = it
+                    }
+                },
+                label = "Mobile",
+                keyboardType = KeyboardType.Number
+            )
             InputField(telephone, { telephone = it }, "Telephone")
 
             // 🔹 Work
@@ -345,7 +639,7 @@ fun SignupScreen(
                     FunctionaryName = item.user_design ?: ""
                     OrganizationCode = (item.user_design ?: "")?: ""
 
-
+                    stateviewModel.fetchState()
                 }
             )
 
@@ -365,33 +659,39 @@ fun SignupScreen(
 
                 onItemSelected = { item ->
 
+//                    stateField = item.statename
                     stateName = item.statename
 
                     stateCode = item.statecode
-
-
-
-
-
+                    districtviewModel.fetchDistrict(stateCode)
                 }
             )
-//            SectionTitle("State")
-//            CommonDropdown(
-//                list = stateviewModel.stateList,
-//                selectedText = stateName,
-//                label = "State",
-//                itemText = { it.statename ?: "" },
-//                onItemSelected = { item ->
-//                    stateName = item.statename ?: ""
-//                    stateCode = item.statecode ?: ""
-//
-////
-//                }
-//            )
+            CommonDropdown(
 
+                list = districtviewModel.districtList,
 
-            InputField(district, { district = it }, "District")
+                selectedText = districtname,
+
+                label = "District",
+                itemText = { it.districtname },
+
+                onItemSelected = { item ->
+
+                    districtname = item.districtname
+                    district = item.districtname
+
+//                    district = item.districtcode
+//                    districtviewModel.fetchDistrict(stateCode)
+                }
+            )
+
             InputField(city, { city = it }, "City")
+
+            SectionTitle("Location")
+            InputField(country, { country = it }, "Country")
+
+
+//            InputField(district, { district = it }, "District")
 
             // 🔹 Other
             SectionTitle("Other")
