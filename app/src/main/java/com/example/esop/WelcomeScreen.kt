@@ -46,6 +46,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -75,15 +77,7 @@ fun WelcomeScreen(navController: NavController) {
     val appPrefs = remember {
         AppPreferences(context)
     }
-
-//    val scope = rememberCoroutineScope()
-    // You can later change dynamically:
-    // val dimens = when(windowSize){
-    //     Compact -> CompactDimens
-    //     Medium -> MediumDimens
-    //     Expanded -> ExpandedDimens
-    //     else -> CompactSmallDimens
-    // }
+    val userName by appPrefs.userName.collectAsState(initial = null)
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
 
@@ -110,13 +104,20 @@ fun WelcomeScreen(navController: NavController) {
                     fontWeight = FontWeight.Bold
                 )
 
-                NavigationDrawerItem(
-                    label = {
-                        Text("Profile")
-                    },
-                    selected = false,
-                    onClick = {}
-                )
+//                NavigationDrawerItem(
+//                    label = {
+//                        Text("Profile")
+//                    },
+//                    selected = false,
+//                    onClick = {
+//                        navController.navigate("CompleteProfileScreen") {
+//
+//                            popUpTo("Profile") {
+//                                inclusive = false
+//                            }
+//                        }
+//                    }
+//                )
 
                 NavigationDrawerItem(
                     label = {
@@ -164,21 +165,6 @@ fun WelcomeScreen(navController: NavController) {
                         }
                     }
                 )
-//                NavigationDrawerItem(
-//                    label = {
-//                        Text("Logout")
-//                    },
-//                    selected = false,
-//                    onClick = {
-//
-//                        navController.navigate("login") {
-//
-//                            popUpTo("welcome") {
-//                                inclusive = true
-//                            }
-//                        }
-//                    }
-//                )
             }
         }
     ) {
@@ -202,7 +188,7 @@ fun WelcomeScreen(navController: NavController) {
                         Column {
 
                             Text(
-                                text = "Hello, Rahul Kumar",
+                                text = userName.toString(),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -316,12 +302,34 @@ fun WelcomeScreen(navController: NavController) {
                             )
                         },
                         label = {
-                            Text("Profile")
+                            Text(
+                                text = "Profile",
+                                modifier = Modifier.clickable {
+
+                                    navController.navigate("CompleteProfileScreen") {
+
+                                        popUpTo("Profile") {
+                                            inclusive = false
+                                        }
+                                    }
+                                }
+                            )
                         }
+//                        label = {
+//                            Text("Profile")
+//
+//                        },
+
+
                     )
                 }
             }
-        ) { paddingValues ->
+        )
+
+
+
+
+        { paddingValues ->
 
             Column(
 
@@ -537,7 +545,18 @@ fun WelcomeScreen(navController: NavController) {
 
                     DashboardCard(
                         dimens = dimens,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+
+                                navController.navigate("CompleteProfileScreen") {
+
+                                    popUpTo("Profile") {
+                                        inclusive = false
+                                    }
+                                }
+                            },
+
                         title = "Profile",
                         subtitle = "View & Edit"
                     )

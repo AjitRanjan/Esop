@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.esop.login.LoginScreen
 import com.example.esop.network.AppPreferences
+import com.example.esop.profile.CompleteProfileScreen
 import faceembedding.TestScreen
 import signup.SignupScreen
 
@@ -1520,6 +1521,10 @@ class MainActivity : ComponentActivity() {
 
                 composable("TestScreen") {
                     TestScreen()
+                }
+
+                composable("CompleteProfileScreen") {
+                    CompleteProfileScreen(navController)
                 }
             }
         }

@@ -78,9 +78,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 import com.example.esop.FunctionaryDropdown.FunctionaryViewModel
 import com.example.esop.OrgnazationDropdown.RoleViewModel
 import com.example.esop.district.DistrictViewModel
+import com.example.esop.profile.CompleteProfileScreen
 import com.example.esop.state.StateViewModel
 import com.example.esop.util.CommonDropdown
 import kotlinx.coroutines.launch
@@ -92,7 +95,9 @@ import kotlinx.coroutines.launch
 fun SignupScreen(
     navController: NavController,
     viewModel: SignupViewModel = viewModel()
-) {
+)
+
+{
 
     val dimens = MaterialTheme.dimens
     val context = LocalContext.current
@@ -157,8 +162,6 @@ fun SignupScreen(
 
     var error by remember { mutableStateOf("") }
 
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
 
 // Keyboard change handler
     val dlKeyboardType =
@@ -205,7 +208,7 @@ fun SignupScreen(
         }
     }
 
-    Scaffold(
+    Scaffold(containerColor = Color.White,
 
         // 🔝 TOP UI SAME
         topBar = {
@@ -528,22 +531,6 @@ fun SignupScreen(
             )
 
 
-
-//            InputField(
-//                dl,
-//                {
-//                    val value = it.uppercase()
-//
-//                    if (
-//                        value.length <= 16 &&
-//                        value.matches(Regex("[A-Z0-9]*"))
-//                    ) {
-//                        dl = value
-//                    }
-//                },
-//                "Driving License"
-//            )
-
             // 🔹 Basic
             SectionTitle("Basic Info")
             InputField(age, { age = it }, "Age", KeyboardType.Number)
@@ -763,5 +750,12 @@ fun SignupScreen(
 }
 
 
+@Preview(showBackground = true)
+@Composable
+fun SignupScreen() {
 
+    SignupScreen(
+        navController = rememberNavController()
+    )
+}
 
