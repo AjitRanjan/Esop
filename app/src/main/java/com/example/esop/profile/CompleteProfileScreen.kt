@@ -83,6 +83,8 @@ import signup.request.SignupRequest
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -93,9 +95,23 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 
 import coil.compose.rememberAsyncImagePainter
+import com.example.esop.login.AuthViewModel
+import com.example.esop.login.LoginResponse
+import com.example.esop.login.UserDataStore
+import com.example.esop.network.AppPreferences
+import com.example.esop.network.Resource
+import com.example.esop.token.GetToken
+import com.example.esop.token.TokenViewModel
+import com.example.esop.util.Base64Utils
+import com.example.esop.util.ImeiUtils
+import com.google.android.gms.common.wrappers.Wrappers.packageManager
+
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
@@ -103,7 +119,7 @@ fun CompleteProfileScreen(
     navController: NavController,
     viewModel: CompletePofileScreenViewModel = viewModel()
 ) {
-
+     lateinit var appPrefs: AppPreferences
     val dimens = MaterialTheme.dimens
     val state = viewModel.state
     val context = LocalContext.current
@@ -151,6 +167,7 @@ fun CompleteProfileScreen(
     var designation by remember { mutableStateOf("") }
 
     var error by remember { mutableStateOf("") }
+    var Token by remember { mutableStateOf("") }
 
     val processGroupViewModel: ProcessGroupViewModel = viewModel()
     val roleViewModel: RoleViewModel = viewModel()
@@ -158,11 +175,41 @@ fun CompleteProfileScreen(
     val stateviewModel: StateViewModel = viewModel()
     val districtviewModel: DistrictViewModel = viewModel()
 
+    var profileBitmap by remember {
+        mutableStateOf<Bitmap?>(null)
+    }
+
+   
+    val deviceId = ImeiUtils.getAndroidId(context)
+
+
+
+
+    val versionName = remember {
+        context.packageManager
+            .getPackageInfo(context.packageName, 0)
+            .versionName
+    }
+    appPrefs = AppPreferences(context)
+    val authToken by appPrefs.authToken.collectAsState(initial = null)
+
+
+
     // ================= IMAGE =================
 
     var imageUri by remember {
         mutableStateOf<Uri?>(null)
     }
+    Log.d("authToken", authToken.toString())
+//    Toast.makeText(
+//        context,
+//        authToken.toString(),
+//        Toast.LENGTH_LONG
+//    ).show()
+
+    val profileViewModel: ProfileViewModel = viewModel()
+//    val authToken by appPrefs.authToken.collectAsState(initial = null)
+
 
     val galleryLauncher =
         rememberLauncherForActivityResult(
@@ -338,29 +385,64 @@ fun CompleteProfileScreen(
 
                         contentAlignment = Alignment.Center
                     ) {
+                        when {
 
-                        if (imageUri != null) {
+                            imageUri != null -> {
 
-                            Image(
-                                painter = rememberAsyncImagePainter(imageUri),
-                                contentDescription = null,
+                                Image(
+                                    painter = rememberAsyncImagePainter(imageUri),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
 
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(CircleShape),
+                            profileBitmap != null -> {
 
-                                contentScale = ContentScale.Crop
-                            )
+                                Image(
+                                    bitmap = profileBitmap!!.asImageBitmap(),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
 
-                        } else {
+                            else -> {
 
-                            Icon(
-                                Icons.Default.Person,
-                                contentDescription = null,
-                                tint = Color(0xFF2563EB),
-                                modifier = Modifier.size(50.dp)
-                            )
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = Color(0xFF2563EB),
+                                    modifier = Modifier.size(50.dp)
+                                )
+                            }
                         }
+//                        if (imageUri != null) {
+//
+//                            Image(
+//                                painter = rememberAsyncImagePainter(imageUri),
+//                                contentDescription = null,
+//
+//                                modifier = Modifier
+//                                    .fillMaxSize()
+//                                    .clip(CircleShape),
+//
+//                                contentScale = ContentScale.Crop
+//                            )
+//
+//                        } else {
+//
+//                            Icon(
+//                                Icons.Default.Person,
+//                                contentDescription = null,
+//                                tint = Color(0xFF2563EB),
+//                                modifier = Modifier.size(50.dp)
+//                            )
+//                        }
                     }
 
                     // CAMERA BUTTON
@@ -423,6 +505,8 @@ fun CompleteProfileScreen(
             // ================= ACCOUNT =================
 
             SectionTitle("Account Details")
+            Spacer(modifier = Modifier.height(20.dp))
+
 
             InputField(
                 email,
@@ -446,11 +530,11 @@ fun CompleteProfileScreen(
                 "Last Name"
             )
 
-            InputField(
-                alternateEmail,
-                { alternateEmail = it },
-                "Alternate Email"
-            )
+//            InputField(
+//                alternateEmail,
+//                { alternateEmail = it },
+//                "Alternate Email"
+//            )
 
             // ================= BASIC =================
 
@@ -542,11 +626,11 @@ fun CompleteProfileScreen(
                 keyboardType = KeyboardType.Number
             )
 
-            InputField(
-                telephone,
-                { telephone = it },
-                "Telephone"
-            )
+//            InputField(
+//                telephone,
+//                { telephone = it },
+//                "Telephone"
+//            )
 
             // ================= WORK =================
 
@@ -725,7 +809,79 @@ fun CompleteProfileScreen(
 
         else -> {}
     }
+    LaunchedEffect(authToken) {
+
+        authToken?.let { tokenData ->
+
+            profileViewModel.getProfile(
+//                token = authToken.toString(),
+                token = "RtqSw0gNXSxGSbtUzN/8Qg==",
+                appVersion = "1.0",
+                loginId = "2532003643",
+                email = "eva@gmail.com"
+            )
+        }
+    }
+    val profileState by profileViewModel.profileState.collectAsState()
+
+    LaunchedEffect(profileState) {
+
+        when (val state = profileState) {
+
+            is Resource.Success -> {
+
+                val response = state.data
+
+                if (response.responseDesc == "OK") {
+
+                            response.wrappedList.forEach { item ->
+
+
+
+
+                                email=item.email
+                                firstName=item.firstname
+                                lastName=item.lastname
+                                age=item.age.toString()
+                                gender=item.gender.toString()
+                                address=item.address.toString()
+                                mobile=item.mobile.toString()
+                                designation=item.designation.toString()
+                                processGroupName=item.process_group
+//                        OrganizationName=item.organization
+                                FunctionaryName=item.functionary
+                                stateName=item.state
+                                districtname=item.district
+                                profileBitmap =
+                                    Base64Utils.base64ToBitmap(
+                                        item.profileFile
+                                    )
+                    }
+                }
+            }
+
+            is Resource.Error -> {
+
+                Log.e(
+                    "PROFILE",
+                    state.message
+                )
+            }
+
+            is Resource.Loading -> {
+
+                Log.d(
+                    "PROFILE",
+                    "Loading..."
+                )
+            }
+
+            else -> {}
+        }
+    }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable

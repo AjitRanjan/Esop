@@ -8,18 +8,26 @@ import com.example.esop.district.DistrictResponse
 //import com.example.esop.ProcessGroup.ProcessGroupResponse
 import com.example.esop.login.LoginRequest
 import com.example.esop.login.LoginResponse
+import com.example.esop.profile.ProfileRequest
+import com.example.esop.profile.ProfileResponse
+import com.example.esop.token.GetToken
+import com.example.esop.token.TokenRequest
 import com.example.esop.state.StateResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
-import retrofit2.http.Url
 import signup.SignupResponse
 import signup.request.SignupRequest
 
 interface ApiServices {
+
+
+
+
 
     @POST("esop/api/login")
     suspend fun login(
@@ -67,5 +75,18 @@ interface ApiServices {
     suspend fun getDistrict(
         @Query("statecode") statecode: String
     ): DistrictResponse
+
+
+    @POST("esop/api/generateToken")
+    suspend fun getToken(
+        @Body request: TokenRequest
+    ): Response<GetToken>
+
+    @POST("esop/api/getinsertProfile")
+    suspend fun getProfile(
+        @Header("Authorization") token: String,
+        @Body request: ProfileRequest
+    ): Response<ProfileResponse>
+
 
 }

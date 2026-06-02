@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.esop.login.UserDataStore
+import com.example.esop.token.GetToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -16,6 +17,7 @@ class AppPreferences(
 ) {
 
     private object Keys {
+        val AUTHTOKEN = stringPreferencesKey("authToken")
         val USER_ID = stringPreferencesKey("user_id")
         val NAME = stringPreferencesKey("name")
         val EMAIL = stringPreferencesKey("email")
@@ -37,6 +39,19 @@ class AppPreferences(
             prefs[Keys.LOGGED_IN] = true
         }
     }
+
+
+
+    suspend fun saveToke(user: GetToken) {
+        context.dataStore.edit { prefs ->
+
+            prefs[Keys.AUTHTOKEN] = user.authToken.toString()
+
+            prefs[Keys.LOGGED_IN] = true
+        }
+    }
+
+
     // =========================
     // LOGOUT / CLEAR DATA
     // =========================
@@ -51,6 +66,11 @@ class AppPreferences(
     // GET NAME
     // =========================
 
+
+    val authToken: Flow<String?> =
+        context.dataStore.data.map { prefs ->
+            prefs[Keys.AUTHTOKEN]
+        }
     val userName: Flow<String?> =
         context.dataStore.data.map { prefs ->
             prefs[Keys.NAME]

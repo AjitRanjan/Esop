@@ -32,3 +32,11 @@ data class SignupRequest(
 
     val designation: String
 )
+//"usertype": "internal",
+//    "usertypedesc":"
+//pincode
+//loginId
+// "districtCode": "1710",
+//    "district": "sonipat",
+//    "stateCode": "17",
+//    "state": "Haryana",

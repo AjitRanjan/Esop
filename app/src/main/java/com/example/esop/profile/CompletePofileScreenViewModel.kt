@@ -23,12 +23,6 @@ class CompletePofileScreenViewModel : ViewModel() {
         private set
 
     fun signup(context: Context, request: SignupRequest) {
-
-//        if (!isInternetAvailable(context)) {
-//            state = SignupState.Error("No Internet Connection")
-//            return
-//        }
-
         viewModelScope.launch {
             state = SignupState.Loading
 

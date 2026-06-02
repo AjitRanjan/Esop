@@ -98,6 +98,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
 
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation(libs.androidx.compose.foundation.layout)
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
