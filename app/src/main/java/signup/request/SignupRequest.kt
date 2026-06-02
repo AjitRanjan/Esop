@@ -29,6 +29,12 @@ data class SignupRequest(
     val state: String,
     val district: String,
     val city: String,
+    val districtCode: String,
+    val stateCode: String,
+    val pincode: String,
+    val usertypedesc: String,
+    val usertype: String,
+    val loginId: String,
 
     val designation: String
 )

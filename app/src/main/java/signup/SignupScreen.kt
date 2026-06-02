@@ -106,6 +106,7 @@ fun SignupScreen(
     val scrollState = rememberScrollState()
 
     // 🔹 ALL FIELDS (UNCHANGED)
+    var userid by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var confirmEmail by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -143,20 +144,17 @@ fun SignupScreen(
 
     var stateName by remember { mutableStateOf("") }
     var stateCode by remember { mutableStateOf("") }
+    var ditricteCode by remember { mutableStateOf("") }
 
 
 
     var districtname by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val genderOptions = listOf("Male", "Female", "Other")
-//    var districtcode by remember { mutableStateOf("") }
-//    var organization by remember { mutableStateOf("") }
-//    var functionary by remember { mutableStateOf("") }
-
-    var country by remember { mutableStateOf("") }
     var stateField by remember { mutableStateOf("") }
     var district by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
+    var pincode by remember { mutableStateOf("") }
 
     var designation by remember { mutableStateOf("") }
 
@@ -284,13 +282,24 @@ fun SignupScreen(
                             processGroupName,   // ✅ IMPORTANT CHANGE
                             OrganizationName,
                             FunctionaryName,
-                            country,
+                            "India",
                             stateField,
                             district,
                             city,
+                            ditricteCode,
+                            stateCode,
+                            pincode,
+                            "Fianance",
+                            "External",
+                            userid,
                             designation
                         )
-
+                        designation
+//                            val stateCode: String,
+//    val pincode: String,
+//    val usertypedesc: String,
+//    val usertype: String,
+//    val loginId: String,
                         val validationError = SignupValidator.validate(request)
 
                         if (validationError != null) {
@@ -326,6 +335,7 @@ fun SignupScreen(
 
             // 🔹 Account
             SectionTitle("Account Details")
+            InputField(address, { address = it }, "User Id")
             InputField(email, { email = it }, "Email")
             InputField(confirmEmail, { confirmEmail = it }, "Confirm Email")
             InputField(password, { password = it }, "Password", isPassword = true)
@@ -632,7 +642,7 @@ fun SignupScreen(
 
             // 🔹 Location
             SectionTitle("Location")
-            InputField(country, { country = it }, "Country")
+
 
             CommonDropdown(
 
@@ -665,17 +675,17 @@ fun SignupScreen(
                 onItemSelected = { item ->
 
                     districtname = item.districtname
-                    district = item.districtname
+                    ditricteCode = item.districtcode
 
 //                    district = item.districtcode
 //                    districtviewModel.fetchDistrict(stateCode)
                 }
             )
-
-            InputField(city, { city = it }, "City")
-
             SectionTitle("Location")
-            InputField(country, { country = it }, "Country")
+            InputField(city, { city = it }, "City")
+            InputField(pincode, { pincode = it }, "Pincode", KeyboardType.Number)
+
+
 
 
 //            InputField(district, { district = it }, "District")
@@ -717,6 +727,7 @@ fun SignupScreen(
 
         errorMap.clear()
 
+        if (userid.isBlank()) errorMap["userid"] = "Enter User Id"
         if (email.isBlank()) errorMap["email"] = "Enter Email"
         if (confirmEmail != email) errorMap["confirmEmail"] = "Email mismatch"
         if (password.length < 6) errorMap["password"] = "Min 6 char"
@@ -738,7 +749,8 @@ fun SignupScreen(
         if (OrganizationName.isBlank()) errorMap["org"] = "Select Organization"
         if (FunctionaryName.isBlank()) errorMap["func"] = "Select Functionary"
 
-        if (country.isBlank()) errorMap["country"] = "Enter Country"
+
+        if (pincode.isBlank()) errorMap["state"] = "Enter Pincode"
         if (stateField.isBlank()) errorMap["state"] = "Enter State"
         if (district.isBlank()) errorMap["district"] = "Enter District"
         if (city.isBlank()) errorMap["city"] = "Enter City"
