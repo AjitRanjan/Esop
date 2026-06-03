@@ -102,67 +102,6 @@ fun LoginScreen(navController: NavHostController) {
         AppPreferences(context)
     }
     val deviceId = ImeiUtils.getAndroidId(context)
-
-//    if (deviceId.isNotEmpty()) {
-//
-//        Toast.makeText(
-//            context,
-//            "Device ID : $deviceId",
-//            Toast.LENGTH_LONG
-//        ).show()
-//
-//
-//
-//    }
-
-
-
-    // =========================
-    // LOGIN RESPONSE
-    // =========================
-
-
-
-
-
-//    LaunchedEffect(tokenState) {
-//
-//        when (tokenState) {
-//
-//            is Resource.Success -> {
-//
-//                val response =
-//                    (tokenState as Resource.Success<GetToken>).data
-//
-//                if (response.responseDesc == "OK") {
-//                    viewModel.login(
-//                        loginId,
-//                        password
-//                    )
-//                    authToken=response.authToken
-//
-//
-//                }
-//            }
-//
-//
-//
-//
-//            is Resource.Error -> {
-//                // Handle Error
-//            }
-//
-//            is Resource.Loading -> {
-//                // Show Loader
-//            }
-//
-//            else -> {
-//
-//
-//
-//            }
-//        }
-//    }
     LaunchedEffect(tokenState) {
 
         // Button click nahi hua to kuch mat karo
@@ -233,12 +172,12 @@ fun LoginScreen(navController: NavHostController) {
                             )
                         )
 
-                        appPrefs.saveToke(
-                            GetToken(
-                                authToken = authToken,
-                                responseDesc = ""
-                            )
-                        )
+//                        appPrefs.saveToke(
+//                            GetToken(
+//                                authToken = authToken,
+//                                responseDesc = ""
+//                            )
+//                        )
 
                         if (!isNavigated) {
                             isNavigated = true
@@ -553,9 +492,10 @@ fun LoginScreen(navController: NavHostController) {
 
                                 tokenRequestStarted = true
                                 loginApiCalled = false
-                                viewModelToken.getToke(
+                                viewModelToken.getToken(
                                     versionName.toString(),
-                                    deviceId
+                                    deviceId,
+                                    ""
 
                                 )
 

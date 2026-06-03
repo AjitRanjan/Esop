@@ -32,14 +32,15 @@ class TokenViewModel : ViewModel() {
     val tokenState: StateFlow<Resource<GetToken>?> =
         _tokenState
 
-    fun getToke(appVersion: String, imeiNo: String) {
+    fun getToken(appVersion: String, imeiNo: String,loginId: String) {
         viewModelScope.launch {
 
             _tokenState.value = Resource.Loading()
 
             val request = TokenRequest(
                 appVersion = appVersion,
-                imeiNo = imeiNo
+                imeiNo = imeiNo,
+                loginId= loginId
             )
 
             _tokenState.value = repository.getToken(request)

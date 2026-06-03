@@ -97,6 +97,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 
@@ -178,8 +179,11 @@ fun CompleteProfileScreen(
     var profileBitmap by remember {
         mutableStateOf<Bitmap?>(null)
     }
+    val viewModelToken: TokenViewModel = viewModel()
 
-   
+    val tokenState by viewModelToken.tokenState.collectAsState()
+    var loginApiCalled by remember { mutableStateOf(false) }
+    var tokenRequestStarted by remember { mutableStateOf(false) }
     val deviceId = ImeiUtils.getAndroidId(context)
 
 
@@ -191,37 +195,92 @@ fun CompleteProfileScreen(
             .versionName
     }
     appPrefs = AppPreferences(context)
-    val authToken by appPrefs.authToken.collectAsState(initial = null)
+//    val authToken by appPrefs.authToken.collectAsState(initial = null)
     val userEmail by appPrefs.userEmail.collectAsState(initial = null)
+    val profileViewModel: ProfileViewModel = viewModel()
+
+    val authToken by appPrefs.authToken.collectAsState(initial = null)
+
+    var tokenApiCalled by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var profileApiCalled by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+//    LaunchedEffect(authToken) {
+//
+//        if (authToken == null && !tokenApiCalled) {
+//
+//            tokenApiCalled = true
+//
+//            viewModelToken.getToken(
+//                versionName.toString(),
+//                deviceId,
+//                "2532003643"
+//            )
+//        }
+//    }
 
 
+//    LaunchedEffect(tokenState) {
+//
+//        // Button click nahi hua to kuch mat karo
+////        if (!tokenRequestStarted) return@LaunchedEffect
+//
+//        when (val state = tokenState) {
+//
+//            is Resource.Success -> {
+//
+//                val response = state.data
+//
+//                if (response.responseDesc == "OK") {
+//
+//                    appPrefs.saveToke(
+//                        GetToken(
+//                            authToken = response.authToken,
+//                            responseDesc = ""
+//                        )
+//                    )
+//                    profileViewModel.getProfile(
+//                        token = response.authToken,
+////                token = "RtqSw0gNXSxGSbtUzN/8Qg==",
+//                        appVersion =versionName.toString(),
+//                        loginId = "2532003643",
+//                        email = userEmail.toString()
+//
+//                    )
+//
+//                }
+//            }
+//
+//            is Resource.Error -> {
+//
+//                val errorMessage = (tokenState as Resource.Error).message
+//
+//                Toast.makeText(
+//                    context,
+//                    errorMessage,
+//                    Toast.LENGTH_LONG
+//                ).show()
+//
+////                tokenRequestStarted = false
+//            }
+//
+//            else -> {}
+//        }
+//    }
     // ================= IMAGE =================
 
     var imageUri by remember {
         mutableStateOf<Uri?>(null)
     }
-    Log.d("authToken", authToken.toString())
-//    Toast.makeText(
-//        context,
-//        authToken.toString(),
-//        Toast.LENGTH_LONG
-//    ).show()
-
-    val profileViewModel: ProfileViewModel = viewModel()
-//    val authToken by appPrefs.authToken.collectAsState(initial = null)
 
 
-    authToken?.let { tokenData ->
 
-        profileViewModel.getProfile(
-            token = authToken.toString(),
-//                token = "RtqSw0gNXSxGSbtUzN/8Qg==",
-            appVersion =versionName.toString(),
-            loginId = "2532003643",
-            email = userEmail.toString()
 
-        )
-    }
+
     val galleryLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.PickVisualMedia()
@@ -823,8 +882,33 @@ fun CompleteProfileScreen(
 //    LaunchedEffect(authToken) {
 //
 //    }
-    val profileState by profileViewModel.profileState.collectAsState()
 
+    authToken?.let { tokenData ->
+
+        profileViewModel.getProfile(
+            token = authToken.toString(),
+//                token = "RtqSw0gNXSxGSbtUzN/8Qg==",
+            appVersion =versionName.toString(),
+            loginId = "2532003643",
+            email = userEmail.toString()
+
+        )
+    }
+
+
+//    tokenRequestStarted = true
+//    loginApiCalled = false
+//    viewModelToken.getToken(
+//        versionName.toString(),
+//        deviceId,
+//        "2532003643"
+//
+//    )
+
+
+
+
+    val profileState by profileViewModel.profileState.collectAsState()
     LaunchedEffect(profileState) {
 
         when (val state = profileState) {
@@ -835,51 +919,71 @@ fun CompleteProfileScreen(
 
                 if (response.responseDesc == "OK") {
 
-                            response.wrappedList.forEach { item ->
+                    response.wrappedList.forEach { item ->
 
+                        email = item.email
+                        firstName = item.firstname
+                        lastName = item.lastname
+                        age = item.age.toString()
+                        gender = item.gender.toString()
+                        address = item.address.toString()
+                        mobile = item.mobile.toString()
+                        designation = item.designation.toString()
+                        processGroupName = item.process_group
+                        FunctionaryName = item.functionary
+                        stateName = item.state
+                        districtname = item.district
 
-
-
-                                email=item.email
-                                firstName=item.firstname
-                                lastName=item.lastname
-                                age=item.age.toString()
-                                gender=item.gender.toString()
-                                address=item.address.toString()
-                                mobile=item.mobile.toString()
-                                designation=item.designation.toString()
-                                processGroupName=item.process_group
-//                        OrganizationName=item.organization
-                                FunctionaryName=item.functionary
-                                stateName=item.state
-                                districtname=item.district
-                                profileBitmap =
-                                    Base64Utils.base64ToBitmap(
-                                        item.profileFile
-                                    )
+                        profileBitmap =
+                            Base64Utils.base64ToBitmap(item.profileFile)
                     }
+
+                } else {
+                    Toast.makeText(
+                        context,
+                        response.responseDesc ?: "Something went wrong",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
 
             is Resource.Error -> {
 
-                Log.e(
-                    "PROFILE",
-                    state.message
-                )
+                Toast.makeText(
+                    context,
+                    state.message ?: "Unknown Error",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                Log.e("PROFILE", state.message ?: "Unknown Error")
             }
 
             is Resource.Loading -> {
 
-                Log.d(
-                    "PROFILE",
-                    "Loading..."
-                )
+//                Toast.makeText(
+//                    context,
+//                    "Loading Profile...",
+//                    Toast.LENGTH_SHORT
+//                ).show()
+
+                Log.d("PROFILE", "Loading...")
             }
 
-            else -> {}
+            else -> {
+
+                Toast.makeText(
+                    context,
+                    "No Data Found",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                Log.d("PROFILE", "No Data Found")
+            }
         }
     }
+
+
+
 }
 
 
