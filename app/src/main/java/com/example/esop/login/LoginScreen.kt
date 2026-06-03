@@ -75,6 +75,8 @@ fun LoginScreen(navController: NavHostController) {
     var passwordVisible by remember {
         mutableStateOf(false)
     }
+    var loginApiCalled by remember { mutableStateOf(false) }
+    var tokenRequestStarted by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val viewModel: AuthViewModel = viewModel()
 
@@ -123,42 +125,82 @@ fun LoginScreen(navController: NavHostController) {
 
 
 
+//    LaunchedEffect(tokenState) {
+//
+//        when (tokenState) {
+//
+//            is Resource.Success -> {
+//
+//                val response =
+//                    (tokenState as Resource.Success<GetToken>).data
+//
+//                if (response.responseDesc == "OK") {
+//                    viewModel.login(
+//                        loginId,
+//                        password
+//                    )
+//                    authToken=response.authToken
+//
+//
+//                }
+//            }
+//
+//
+//
+//
+//            is Resource.Error -> {
+//                // Handle Error
+//            }
+//
+//            is Resource.Loading -> {
+//                // Show Loader
+//            }
+//
+//            else -> {
+//
+//
+//
+//            }
+//        }
+//    }
     LaunchedEffect(tokenState) {
 
-        when (tokenState) {
+        // Button click nahi hua to kuch mat karo
+        if (!tokenRequestStarted) return@LaunchedEffect
+
+        when (val state = tokenState) {
 
             is Resource.Success -> {
 
-                val response =
-                    (tokenState as Resource.Success<GetToken>).data
+                val response = state.data
 
-                if (response.responseDesc == "OK") {
+                if (response.responseDesc == "OK" && !loginApiCalled) {
+
+                    loginApiCalled = true
+
+                    authToken = response.authToken
+
                     viewModel.login(
                         loginId,
                         password
                     )
-                    authToken=response.authToken
-
-
                 }
             }
 
-
-
-
             is Resource.Error -> {
-                // Handle Error
+
+                val errorMessage = (tokenState as Resource.Error).message
+
+                Toast.makeText(
+                    context,
+                    errorMessage,
+                    Toast.LENGTH_LONG
+                ).show()
+
+                tokenRequestStarted = false
             }
 
-            is Resource.Loading -> {
-                // Show Loader
-            }
-
-            else -> {
-
-
-
-            }
+            else -> {}
         }
     }
 
@@ -167,63 +209,69 @@ fun LoginScreen(navController: NavHostController) {
 
     LaunchedEffect(loginState) {
 
-        when (loginState) {
+        val state = loginState
+
+        when (state) {
 
             is Resource.Success -> {
-//                if (!isNavigated) {
-//
-//                    isNavigated = true
-//
-//                    navController.navigate("welcome") {
-//
-//                        popUpTo("login") {
-//                            inclusive = true
-//                        }
-//
-//                        launchSingleTop = true
-//                    }
-//                }
-                val response =
-                    (loginState as Resource.Success<LoginResponse>).data
+
+                val response = state.data
 
                 if (response.message == "Login Successful") {
 
                     response.data?.let { user ->
 
-                        appPrefs.saveUser(UserDataStore(id = user.id.toString(),name = user.fullName, email = user.email, mobile = user.mobile, designation = user.designation, organization = user.organization, isLoggedIn = true))
-                        appPrefs.saveToke(GetToken(authToken = authToken, responseDesc = ""))
+                        appPrefs.saveUser(
+                            UserDataStore(
+                                id = user.id.toString(),
+                                name = user.fullName,
+                                email = user.email,
+                                mobile = user.mobile,
+                                designation = user.designation,
+                                organization = user.organization,
+                                isLoggedIn = true
+                            )
+                        )
 
-
-
-
+                        appPrefs.saveToke(
+                            GetToken(
+                                authToken = authToken,
+                                responseDesc = ""
+                            )
+                        )
 
                         if (!isNavigated) {
-
                             isNavigated = true
 
                             navController.navigate("welcome") {
-
                                 popUpTo("login") {
                                     inclusive = true
                                 }
-
                                 launchSingleTop = true
                             }
                         }
                     }
 
-
-                }
-                else{
-
+                } else {
                     Toast.makeText(
                         context,
-                        response.message,
+                        response.message ?: "Login failed",
                         Toast.LENGTH_LONG
                     ).show()
-
-
                 }
+            }
+
+            is Resource.Error -> {
+
+                Toast.makeText(
+                    context,
+                    state.message,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+
+            is Resource.Loading -> {
+                // Show Loader
             }
 
             else -> {}
@@ -503,12 +551,12 @@ fun LoginScreen(navController: NavHostController) {
 
                             else -> {
 
-
-
+                                tokenRequestStarted = true
+                                loginApiCalled = false
                                 viewModelToken.getToke(
                                     versionName.toString(),
-                                    deviceId,
-                                    "2532003643"
+                                    deviceId
+
                                 )
 
                             }

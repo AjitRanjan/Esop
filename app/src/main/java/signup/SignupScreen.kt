@@ -294,12 +294,7 @@ fun SignupScreen(
                             userid,
                             designation
                         )
-                        designation
-//                            val stateCode: String,
-//    val pincode: String,
-//    val usertypedesc: String,
-//    val usertype: String,
-//    val loginId: String,
+
                         val validationError = SignupValidator.validate(request)
 
                         if (validationError != null) {
@@ -335,7 +330,7 @@ fun SignupScreen(
 
             // 🔹 Account
             SectionTitle("Account Details")
-            InputField(address, { address = it }, "User Id")
+            InputField(userid, { userid = it }, "User Id")
             InputField(email, { email = it }, "Email")
             InputField(confirmEmail, { confirmEmail = it }, "Confirm Email")
             InputField(password, { password = it }, "Password", isPassword = true)
@@ -683,7 +678,10 @@ fun SignupScreen(
             )
             SectionTitle("Location")
             InputField(city, { city = it }, "City")
-            InputField(pincode, { pincode = it }, "Pincode", KeyboardType.Number)
+            InputField(value = pincode, onValueChange = { if (it.length <= 6 && it.all { char -> char.isDigit() }) { pincode = it } },
+                label = "Pincode",
+                keyboardType = KeyboardType.Number
+            )
 
 
 

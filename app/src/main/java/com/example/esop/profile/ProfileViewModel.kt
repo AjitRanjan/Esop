@@ -19,9 +19,10 @@ class ProfileViewModel : ViewModel() {
 
     fun getProfile(
         token: String,
-        appVersion: String,
+
         loginId: String,
-        email: String
+        email: String,
+        appVersion: String
     ) {
 
         viewModelScope.launch {

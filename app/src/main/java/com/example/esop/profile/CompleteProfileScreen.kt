@@ -192,7 +192,7 @@ fun CompleteProfileScreen(
     }
     appPrefs = AppPreferences(context)
     val authToken by appPrefs.authToken.collectAsState(initial = null)
-
+    val userEmail by appPrefs.userEmail.collectAsState(initial = null)
 
 
     // ================= IMAGE =================
@@ -211,6 +211,17 @@ fun CompleteProfileScreen(
 //    val authToken by appPrefs.authToken.collectAsState(initial = null)
 
 
+    authToken?.let { tokenData ->
+
+        profileViewModel.getProfile(
+            token = authToken.toString(),
+//                token = "RtqSw0gNXSxGSbtUzN/8Qg==",
+            appVersion =versionName.toString(),
+            loginId = "2532003643",
+            email = userEmail.toString()
+
+        )
+    }
     val galleryLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.PickVisualMedia()
@@ -809,19 +820,9 @@ fun CompleteProfileScreen(
 
         else -> {}
     }
-    LaunchedEffect(authToken) {
-
-        authToken?.let { tokenData ->
-
-            profileViewModel.getProfile(
-//                token = authToken.toString(),
-                token = "RtqSw0gNXSxGSbtUzN/8Qg==",
-                appVersion = "1.0",
-                loginId = "2532003643",
-                email = "eva@gmail.com"
-            )
-        }
-    }
+//    LaunchedEffect(authToken) {
+//
+//    }
     val profileState by profileViewModel.profileState.collectAsState()
 
     LaunchedEffect(profileState) {

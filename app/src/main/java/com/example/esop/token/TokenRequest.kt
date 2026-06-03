@@ -2,7 +2,6 @@ package com.example.esop.token
 
 data class TokenRequest(
     val appVersion: String,
-    val imeiNo: String,
-    val loginId: String,
+    val imeiNo: String
 
 )
