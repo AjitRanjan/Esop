@@ -1,4 +1,5 @@
 [versions]
+#agp = "8.1.3"
 agp = "9.0.1"
 coreKtx = "1.18.0"
 junit = "4.13.2"
@@ -9,6 +10,8 @@ activityCompose = "1.13.0"
 kotlin = "2.0.21"
 composeBom = "2024.09.00"
 room3CommonJvm = "3.0.0-alpha02"
+material3WindowSizeClass = "1.4.0"
+foundationLayout = "1.11.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -26,6 +29,8 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-room3-common-jvm = { group = "androidx.room3", name = "room3-common-jvm", version.ref = "room3CommonJvm" }
+androidx-compose-material3-window-size-class1 = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3WindowSizeClass" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
