@@ -1,13 +1,9 @@
 package com.example.esop.profile
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,12 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,27 +40,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.esop.FunctionaryDropdown.FunctionaryViewModel
 import com.example.esop.OrgnazationDropdown.RoleViewModel
 import com.example.esop.ProcessGroup.ProcessGroupViewModel
-import com.example.esop.R
 import com.example.esop.district.DistrictViewModel
 import com.example.esop.state.StateViewModel
 import com.example.esop.ui.theme.dimens
@@ -76,9 +60,6 @@ import kotlinx.coroutines.launch
 import signup.InputField
 import signup.SectionTitle
 import signup.SignupState
-import signup.SignupValidator
-import signup.SignupViewModel
-import signup.request.SignupRequest
 
 import android.graphics.Bitmap
 import android.net.Uri
@@ -88,13 +69,10 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -110,29 +88,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.datastore.preferences.core.stringPreferencesKey
 
 import coil.compose.rememberAsyncImagePainter
-import com.example.esop.login.AuthViewModel
-import com.example.esop.login.LoginResponse
-import com.example.esop.login.UserDataStore
 import com.example.esop.network.AppPreferences
-import com.example.esop.network.AppPreferences.Keys
 import com.example.esop.network.Resource
 
 import com.example.esop.profile.Repositry.UpdateProfileViewModel
 import com.example.esop.profile.request.UpadteProfileRequest
-import com.example.esop.token.GetToken
-import com.example.esop.token.TokenViewModel
 import com.example.esop.util.Base64Utils
 import com.example.esop.util.ImeiUtils
-import com.google.android.gms.common.wrappers.Wrappers.packageManager
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -140,16 +105,19 @@ import kotlinx.coroutines.flow.map
 fun CompleteProfileScreen(
     navController: NavController,
     viewModel: CompletePofileScreenViewModel = viewModel(),
+    updateModel: UpdateProfileViewModel = viewModel(),
     updateProfileModel: UpdateProfileViewModel
 ) {
 
     lateinit var appPrefs: AppPreferences
     val dimens = MaterialTheme.dimens
     val state = viewModel.state
+    val UpdateUI = updateModel.Updatestate
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     var loginId by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var usertype by remember { mutableStateOf("") }
 
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -158,6 +126,7 @@ fun CompleteProfileScreen(
 
     var dl by remember { mutableStateOf("") }
 
+    var pincode by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
 
@@ -180,6 +149,7 @@ fun CompleteProfileScreen(
     var stateCode by remember { mutableStateOf("") }
 
     var districtname by remember { mutableStateOf("") }
+    var districtCode by remember { mutableStateOf("") }
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -199,6 +169,7 @@ fun CompleteProfileScreen(
     val stateviewModel: StateViewModel = viewModel()
     val districtviewModel: DistrictViewModel = viewModel()
 
+
     var profileBitmap by remember {
         mutableStateOf<Bitmap?>(null)
     }
@@ -207,7 +178,9 @@ fun CompleteProfileScreen(
     val deviceId = ImeiUtils.getAndroidId(context)
 
 
-
+    var isNavigated by remember {
+        mutableStateOf(false)
+    }
 
     val versionName = remember {
         context.packageManager
@@ -228,13 +201,51 @@ fun CompleteProfileScreen(
 
        loginId=userloginId.toString()
     email=userEmail.toString()
+    usertype=userusertype.toString()
 
 
 
 
 
 
+    LaunchedEffect(UpdateUI) {
+        when (UpdateUI) {
+            is UpdateState.Success -> {
 
+
+
+
+                Toast.makeText(
+                   context,
+                    UpdateUI.response.responseDesc,
+                    Toast.LENGTH_LONG
+                ).show()
+
+
+
+                if (!isNavigated) {
+                    isNavigated = true
+
+                    navController.navigate("CompleteProfileScreen") {
+                        popUpTo("welcome") {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            }
+
+            is UpdateState.Error -> {
+                Toast.makeText(
+                    context,
+                    UpdateUI.message,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+
+            else -> Unit
+        }
+    }
 
 
 
@@ -382,33 +393,30 @@ fun CompleteProfileScreen(
                             "",
                             "",
                             "",
-                            age.toInt(),
-                            "",
-                            "",
-                            "",
-                            "",
-                            "",
+                            38,
+                            gender,
+                            address,
                             mobile,
-                            "",
                             processGroupName,
                             OrganizationName,
-                            "",
+                            FunctionaryName,
                             "India",
+                            stateName,
+                            districtname,
+                            city,
+                            districtCode,
+                            stateCode,
+                            pincode ,
                             "",
-                            "",
-                            "",
-                            "",
-                            "",
-                            "",
-                            "Fianance",
-                            "",
+                            usertype,
+                            loginId,
+                            designation,
+                            processGroupCode,
+                            OrganizationCode,
 
                         )
-//                          UpdateProfileViewModel
 
-//                        val validationError = SignupValidator.validate(request)
-
-                          updateProfileModel.UpdateProfile(context, request)
+                          updateModel.UpdateProfile(context, request)
                     },
 
                     modifier = Modifier
@@ -602,7 +610,6 @@ fun CompleteProfileScreen(
 
             // ================= BASIC =================
 
-            SectionTitle("Basic Info")
 
 
             ExposedDropdownMenuBox(
@@ -785,6 +792,7 @@ fun CompleteProfileScreen(
                 onItemSelected = { item ->
 
                     districtname = item.districtname
+                    districtCode = item.districtcode
                 }
             )
 
@@ -793,7 +801,20 @@ fun CompleteProfileScreen(
                 { city = it },
                 "City"
             )
+            InputField(
+                value = pincode,
+                onValueChange = {
 
+                    if (
+                        it.length <= 6 &&
+                        it.all { char -> char.isDigit() }
+                    ) {
+                        pincode = it
+                    }
+                },
+                label = "Pincode",
+                keyboardType = KeyboardType.Number
+            )
             // ================= OTHER =================
 
             SectionTitle("Other")
@@ -968,6 +989,7 @@ private fun ProfileDetail(
                 )
             }
         }
+
     }
 }
 @Composable
@@ -1004,6 +1026,7 @@ private fun VerificationBadge() {
             modifier = Modifier.size(13.dp)
         )
     }
+
 }
 
 
