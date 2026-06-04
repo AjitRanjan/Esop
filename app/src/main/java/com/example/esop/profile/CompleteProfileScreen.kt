@@ -98,7 +98,10 @@ import com.example.esop.profile.Repositry.UpdateProfileViewModel
 import com.example.esop.profile.request.UpadteProfileRequest
 import com.example.esop.util.Base64Utils
 import com.example.esop.util.ImeiUtils
+import java.io.ByteArrayOutputStream
 
+
+import android.util.Base64
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
@@ -181,7 +184,8 @@ fun CompleteProfileScreen(
     var isNavigated by remember {
         mutableStateOf(false)
     }
-
+    var imagePath by remember { mutableStateOf("") }
+    var imageBase64 by remember { mutableStateOf("") }
     val versionName = remember {
         context.packageManager
             .getPackageInfo(context.packageName, 0)
@@ -217,7 +221,7 @@ fun CompleteProfileScreen(
 
                 Toast.makeText(
                    context,
-                    UpdateUI.response.responseDesc,
+                    UpdateUI.responseDesc.responseDesc,
                     Toast.LENGTH_LONG
                 ).show()
 
@@ -238,7 +242,7 @@ fun CompleteProfileScreen(
             is UpdateState.Error -> {
                 Toast.makeText(
                     context,
-                    UpdateUI.message,
+                    UpdateUI.responseDesc,
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -257,33 +261,79 @@ fun CompleteProfileScreen(
         mutableStateOf<Uri?>(null)
     }
     Log.d("authToken", authToken.toString())
+//    val profileViewModel: ProfileViewModel = viewModel()
     val profileViewModel: ProfileViewModel = viewModel()
+    profileViewModel.getProfile(
+        appVersion =versionName.toString(),
+        loginId = loginId,
+        email = userEmail.toString()
+    )
 
-    authToken?.let { tokenData ->
-
-        profileViewModel.getProfile(
-            token = authToken.toString(),
-//                token = "RtqSw0gNXSxGSbtUzN/8Qg==",
-            appVersion =versionName.toString(),
-            loginId = "2532003643",
-            email = userEmail.toString()
-
-        )
-    }
     val galleryLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.PickVisualMedia()
         ) { uri ->
 
             if (uri != null) {
+
                 imageUri = uri
+                imagePath = uri.toString()
+
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bytes = inputStream?.readBytes()
+
+                imageBase64 = if (bytes != null) {
+                    Base64.encodeToString(bytes, Base64.NO_WRAP)
+                } else {
+                    ""
+                }
             }
+
+
+//            if (uri != null) {
+//
+//                imageUri = uri
+//
+//                val bitmap = MediaStore.Images.Media.getBitmap(
+//                    context.contentResolver,
+//                    uri
+//                )
+//
+//                // Resize image
+//                val resizedBitmap = Bitmap.createScaledBitmap(
+//                    bitmap,
+//                    300, // width
+//                    300, // height
+//                    true
+//                )
+//
+//                val outputStream = ByteArrayOutputStream()
+//
+//                // Compress image (quality 30%)
+//                resizedBitmap.compress(
+//                    Bitmap.CompressFormat.JPEG,
+//                    30,
+//                    outputStream
+//                )
+//
+//                val imageBytes = outputStream.toByteArray()
+//
+//                imageBase64 = Base64.encodeToString(
+//                    imageBytes,
+//                    Base64.NO_WRAP
+//                )
+//            }
+
+
+//            if (uri != null) {
+//                imageUri = uri
+//            }
         }
 
     val cameraLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.TakePicturePreview()
-        ) { bitmap: Bitmap? ->
+        ){ bitmap: Bitmap? ->
 
             bitmap?.let {
 
@@ -295,6 +345,14 @@ fun CompleteProfileScreen(
                 )
 
                 imageUri = Uri.parse(path)
+
+                // Image Path
+
+
+
+
+
+
             }
         }
 
@@ -387,13 +445,14 @@ fun CompleteProfileScreen(
                       onClick = {
 
                         val request = UpadteProfileRequest(
+                            versionName.toString(),
                             email,
                             firstName,
                             lastName,
                             "",
                             "",
                             "",
-                            38,
+                            age.toInt(),
                             gender,
                             address,
                             mobile,
@@ -413,6 +472,7 @@ fun CompleteProfileScreen(
                             designation,
                             processGroupCode,
                             OrganizationCode,
+                            imageBase64
 
                         )
 
@@ -505,6 +565,11 @@ fun CompleteProfileScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 when {
+
+
+
+
+
                                     imageUri != null -> Image(
                                         painter = rememberAsyncImagePainter(imageUri),
                                         contentDescription = "Profile",
@@ -557,13 +622,54 @@ fun CompleteProfileScreen(
                     }
 
                     Spacer(modifier = Modifier.height(18.dp))
+                    ProfileDetail(
+                        "Phone",
+                        mobile,
+                        verified = !mobile.isNullOrBlank(),
+                        showError = mobile.isNullOrBlank()
+                    )
 
-                    ProfileDetail("Phone", mobile, verified = true)
-                    ProfileDetail("Email", email, verified = true)
-                    ProfileDetail("Gender", gender,showError = true)
-                    ProfileDetail("Date of Birth", age,showError = true)
-                    ProfileDetail("Address", address,showError = true)
-                    ProfileDetail("loginId", loginId,verified = true)
+                    ProfileDetail(
+                        "Email",
+                        email,
+                        verified = !email.isNullOrBlank(),
+                        showError = email.isNullOrBlank()
+                    )
+
+                    ProfileDetail(
+                        "Gender",
+                        gender,
+                        verified = !gender.isNullOrBlank(),
+                        showError = gender.isNullOrBlank()
+                    )
+
+                    ProfileDetail(
+                        "Date of Birth",
+                        age,
+                        verified = !age.isNullOrBlank(),
+                        showError = age.isNullOrBlank()
+                    )
+
+                    ProfileDetail(
+                        "Address",
+                        address,
+                        verified = !address.isNullOrBlank(),
+                        showError = address.isNullOrBlank()
+                    )
+
+                    ProfileDetail(
+                        "Login ID",
+                        loginId,
+                        verified = !loginId.isNullOrBlank(),
+                        showError = loginId.isNullOrBlank()
+                    )
+
+//                    ProfileDetail("Phone", mobile, verified = true)
+//                    ProfileDetail("Email", email, verified = true)
+//                    ProfileDetail("Gender", gender,showError = true)
+//                    ProfileDetail("Date of Birth", age,showError = true)
+//                    ProfileDetail("Address", address,showError = true)
+//                    ProfileDetail("loginId", loginId,verified = true)
 
                 }
             }
@@ -889,18 +995,21 @@ fun CompleteProfileScreen(
                         lastName=item.lastname
                         age=item.age.toString()
                         gender=item.gender.toString()
+                        pincode=item.pincode.toString()
+                        city=item.city.toString()
                         address=item.address.toString()
                         mobile=item.mobile.toString()
                         designation=item.designation.toString()
                         processGroupName=item.process_group
 //                        OrganizationName=item.organization
-                        FunctionaryName=item.functionary
+
                         stateName=item.state
                         districtname=item.district
                         profileBitmap =
                             Base64Utils.base64ToBitmap(
                                 item.profileFile
                             )
+                        FunctionaryName=item.functionary
                     }
                 }
             }

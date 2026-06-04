@@ -10,6 +10,7 @@ import com.example.esop.login.LoginRequest
 import com.example.esop.login.LoginResponse
 import com.example.esop.profile.ProfileRequest
 import com.example.esop.profile.ProfileResponse
+import com.example.esop.profile.UpdateProfileResponse
 import com.example.esop.profile.request.UpadteProfileRequest
 import com.example.esop.token.GetToken
 import com.example.esop.token.TokenRequest
@@ -91,12 +92,12 @@ interface ApiServices {
 
     @POST("esop/api/getinsertProfile")
     suspend fun getProfile(
-        @Header("Authorization") token: String,
+//        @Header("Authorization") token: String,
         @Body request: ProfileRequest
     ): Response<ProfileResponse>
 
     @POST("esop/api/insertProfile")
     suspend fun UpdateUser(
         @Body request: UpadteProfileRequest
-    ): SignupResponse
+    ): UpdateProfileResponse
 }

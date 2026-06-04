@@ -22,29 +22,66 @@ class CompletePofileScreenViewModel : ViewModel() {
 
     private val repo = UpdateProfileRepository()
 
-    var state by mutableStateOf<SignupState>(SignupState.Idle)
+    var state by mutableStateOf<UpdateState>(UpdateState.Idle)
         private set
 
-    fun signup(context: Context, request: UpadteProfileRequest) {
+    fun signup(
+        context: Context,
+        request: UpadteProfileRequest
+    ) {
         viewModelScope.launch {
-            state = SignupState.Loading
+
+            state = UpdateState.Loading
 
             val result = repo.UpdateProfile(request)
 
             state = result.fold(
-                onSuccess = {
-                    if (it.success) SignupState.Success(it)
-                    else SignupState.Error(it.message)
+                onSuccess = { response ->
+
+                    if (response.responseDesc.equals("OK", ignoreCase = true)) {
+                        UpdateState.Success(response)
+                    } else {
+                        UpdateState.Error(response.responseDesc)
+                    }
                 },
-                onFailure = {
-                    SignupState.Error(it.message ?: "Error")
+                onFailure = { exception ->
+                    UpdateState.Error(
+                        exception.message ?: "Something went wrong"
+                    )
                 }
             )
         }
     }
-
-
 }
+
+
+//class CompletePofileScreenViewModel : ViewModel() {
+//
+//    private val repo = UpdateProfileRepository()
+//
+//    var state by mutableStateOf<SignupState>(SignupState.Idle)
+//        private set
+//
+//    fun signup(context: Context, request: UpadteProfileRequest) {
+//        viewModelScope.launch {
+//            state = SignupState.Loading
+//
+//            val result = repo.UpdateProfile(request)
+//
+//            state = result.fold(
+//                onSuccess = {
+//                    if (it.success) SignupState.Success(it)
+//                    else SignupState.Error(it.message)
+//                },
+//                onFailure = {
+//                    SignupState.Error(it.message ?: "Error")
+//                }
+//            )
+//        }
+//    }
+//
+//
+//}
 
 @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
 fun Context.isInternetAvailable(): Boolean {

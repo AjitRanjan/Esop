@@ -18,7 +18,7 @@ class ProfileViewModel : ViewModel() {
         _profileState.asStateFlow()
 
     fun getProfile(
-        token: String,
+//        token: String,
 
         loginId: String,
         email: String,
@@ -37,7 +37,7 @@ class ProfileViewModel : ViewModel() {
 
             _profileState.value =
                 repository.getProfile(
-                    token = token,
+//                    token = token,
                     request = request
                 )
         }

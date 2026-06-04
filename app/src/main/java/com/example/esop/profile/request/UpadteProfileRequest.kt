@@ -1,6 +1,7 @@
 package com.example.esop.profile.request
 
 data class UpadteProfileRequest(
+    val appVersion: String,
     val email: String,
     val firstName: String,
     val lastName: String,
@@ -29,6 +30,7 @@ data class UpadteProfileRequest(
     val designation: String,
     val processGroupId: String,
     val organizationId: String,
+    val profileImage: String
 )
 //"usertype": "internal",
 //    "usertypedesc":"

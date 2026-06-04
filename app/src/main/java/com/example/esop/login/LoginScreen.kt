@@ -171,8 +171,10 @@ fun LoginScreen(navController: NavHostController) {
                                 processGroup = user.processGroup,
                                 loginId = user.loginId,
                                 usertype = user.usertype,
-                                processGroupId = user.processGroupId.toInt(),
-                                organizationId = user.organizationId.toInt(),
+                                processGroupId = user.processGroupId?.toIntOrNull() ?: 0,
+                                organizationId = user.organizationId?.toIntOrNull() ?: 0,
+//                                processGroupId = user.processGroupId.toInt(),
+//                                organizationId = user.organizationId.toInt(),
                                 isLoggedIn = true
                             )
                         )

@@ -6,14 +6,14 @@ import com.example.esop.network.RetrofitClient
 class ProfileRepository {
 
     suspend fun getProfile(
-        token: String,
+//        token: String,
         request: ProfileRequest
     ): Resource<ProfileResponse> {
 
         return try {
 
             val response = RetrofitClient.api.getProfile(
-                token = "Bearer $token",
+//                token = "Bearer $token",
                 request = request
             )
 
