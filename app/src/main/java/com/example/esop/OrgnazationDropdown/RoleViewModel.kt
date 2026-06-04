@@ -47,6 +47,10 @@ class RoleViewModel : ViewModel() {
             isLoading = false
         }
     }
+
+    fun clearRoles() {
+        roleList = emptyList()
+    }
 }
 //class RoleViewModel : ViewModel() {
 //

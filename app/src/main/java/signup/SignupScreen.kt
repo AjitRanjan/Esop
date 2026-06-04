@@ -1,6 +1,8 @@
 package signup
 
 import android.annotation.SuppressLint
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -58,6 +60,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -66,6 +70,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -78,13 +83,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.esop.FunctionaryDropdown.FunctionaryViewModel
 import com.example.esop.OrgnazationDropdown.RoleViewModel
 import com.example.esop.district.DistrictViewModel
+import com.example.esop.network.Resource
 import com.example.esop.profile.CompleteProfileScreen
 import com.example.esop.state.StateViewModel
+import com.example.esop.util.Base64Utils
 import com.example.esop.util.CommonDropdown
 import kotlinx.coroutines.launch
 
@@ -108,78 +116,35 @@ fun SignupScreen(
     // 🔹 ALL FIELDS (UNCHANGED)
     var userid by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var confirmEmail by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var usertype by remember { mutableStateOf("") }
 
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-
-    var alternateEmail by remember { mutableStateOf("") }
-
-    var aadhaar by remember { mutableStateOf("") }
-    var pan by remember { mutableStateOf("") }
-    var dl by remember { mutableStateOf("") }
-
-    var age by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("") }
-
-    var address by remember { mutableStateOf("") }
-    var mobile by remember { mutableStateOf("") }
-    var telephone by remember { mutableStateOf("") }
+     var mobile by remember { mutableStateOf("") }
 
     val coroutineScope = rememberCoroutineScope()
 
     val errorMap = remember { mutableStateMapOf<String, String>() }
     val focusMap = remember { mutableMapOf<String, FocusRequester>() }
-
+    var isOrganizationVisible by remember { mutableStateOf(true) }
+    var passwordVisible by remember { mutableStateOf(false) }
     // ❌ OLD
     // var processGroup by remember { mutableStateOf("") }
 
     // ✅ NEW (Dropdown State)
     var processGroupName by remember { mutableStateOf("") }
     var OrganizationName by remember { mutableStateOf("") }
-    var FunctionaryName by remember { mutableStateOf("") }
+//    var FunctionaryName by remember { mutableStateOf("") }
     var processGroupCode by remember { mutableStateOf("") }
     var OrganizationCode by remember { mutableStateOf("") }
 
-    var stateName by remember { mutableStateOf("") }
-    var stateCode by remember { mutableStateOf("") }
-    var ditricteCode by remember { mutableStateOf("") }
-
-
-
-    var districtname by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
-    val genderOptions = listOf("Male", "Female", "Other")
-    var stateField by remember { mutableStateOf("") }
-    var district by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-    var pincode by remember { mutableStateOf("") }
-
-    var designation by remember { mutableStateOf("") }
-
+    val signupState = viewModel.state
     var error by remember { mutableStateOf("") }
-
+    var isNavigated by remember {
+        mutableStateOf(false)
+    }
 
 // Keyboard change handler
-    val dlKeyboardType =
-        when (dl.length) {
 
-            // First 2 = State Code Alphabets
-            in 0..1 -> KeyboardType.Text
-
-            // Remaining = Numbers
-            else -> KeyboardType.Number
-        }
-
-
-// Indian State Codes
-    val stateCodes = listOf(
-        "AP","AR","AS","BR","CG","CH","DD","DL","DN","GA",
-        "GJ","HR","HP","JH","JK","KA","KL","LD","MH","ML",
-        "MN","MP","MZ","NL","OD","PB","PY","RJ","SK","TN",
-        "TR","TS","UK","UP","WB","AN","LA"
-    )
 
 
     // ✅ ViewModel for dropdown
@@ -266,33 +231,33 @@ fun SignupScreen(
 
                         val request = SignupRequest(
                             email,
-                            confirmEmail,
+                            "",
                             password,
-                            firstName,
-                            lastName,
-                            alternateEmail,
-                            aadhaar,
-                            pan,
-                            dl,
-                            age.toIntOrNull() ?: 0,
-                            gender,
-                            address,
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            0,
+                            "",
+                            "",
                             mobile,
-                            telephone,
-                            processGroupName,   // ✅ IMPORTANT CHANGE
+                            "",
+                            processGroupName,
                             OrganizationName,
-                            FunctionaryName,
+                            "",
                             "India",
-                            stateField,
-                            district,
-                            city,
-                            ditricteCode,
-                            stateCode,
-                            pincode,
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
                             "Fianance",
-                            "External",
-                            userid,
-                            designation
+                            usertype,
+                            processGroupName+mobile,
+                            ""
                         )
 
                         val validationError = SignupValidator.validate(request)
@@ -330,257 +295,96 @@ fun SignupScreen(
 
             // 🔹 Account
             SectionTitle("Account Details")
-            InputField(userid, { userid = it }, "User Id")
-            InputField(email, { email = it }, "Email")
-            InputField(confirmEmail, { confirmEmail = it }, "Confirm Email")
-            InputField(password, { password = it }, "Password", isPassword = true)
 
-            // 🔹 Personal
-            SectionTitle("Personal Info")
-            InputField(firstName, { firstName = it }, "First Name")
-            InputField(lastName, { lastName = it }, "Last Name")
-            InputField(alternateEmail, { alternateEmail = it }, "Alternate Email")
+            CommonDropdown(
+                list = processGroupViewModel.processGroupList,
+                selectedText = processGroupName,
+                label = "Process Group",
+                itemText = { it.level_short_name ?: "" },
+                onItemSelected = { item ->
+                    processGroupName = item.level_short_name ?: ""
+                    processGroupCode = item.level_admin_cd ?: ""
 
-            // 🔹 Identity
-            SectionTitle("Identity")
-//            InputField(aadhaar, { aadhaar = it }, "Aadhaar", KeyboardType.Number)
-//            InputField(pan, { pan = it }, "PAN")
-//            InputField(dl, { dl = it }, "Driving License")
+                    roleViewModel.clearRoles()
 
-            InputField(
-                aadhaar,
-                {
-                    if (it.length <= 12 && it.all { char -> char.isDigit() }) {
-                        aadhaar = it
+                    if (processGroupName.equals("OTHERS", ignoreCase = true)) {
+                        OrganizationName = "OTHERS"
+                        OrganizationCode = "OTHERS"
+                        usertype="External"
+                        isOrganizationVisible = false
+                    } else {
+                        OrganizationName = ""
+                        OrganizationCode = ""
+                        isOrganizationVisible = true
+                        usertype="Internal"
+                        roleViewModel.fetchRoles(processGroupCode)
                     }
-                },
-                "Aadhaar",
-                KeyboardType.Number
-            )
-
-            var pan by remember { mutableStateOf("") }
-
-            val keyboardController = LocalSoftwareKeyboardController.current
-            val focusManager = LocalFocusManager.current
-
-            val keyboardType =
-                when (pan.length) {
-
-                    // First 5 = Alphabets
-                    in 0..4 -> KeyboardType.Text
-
-                    // Next 4 = Numbers
-                    in 5..8 -> KeyboardType.Number
-
-                    // Last 1 = Alphabet
-                    9 -> KeyboardType.Text
-
-                    else -> KeyboardType.Text
                 }
-
-
-            InputField(
-
-                pan,
-
-                { input ->
-
-                    val value = input.uppercase()
-
-                    if (value.length <= 10) {
-
-                        val valid = value.withIndex().all { (index, char) ->
-
-                            when (index) {
-
-                                // First 5 letters
-                                in 0..4 -> char.isLetter()
-
-                                // Next 4 numbers
-                                in 5..8 -> char.isDigit()
-
-                                // Last character letter
-                                9 -> char.isLetter()
-
-                                else -> false
-                            }
-                        }
-
-                        if (valid || value.isEmpty()) {
-
-                            pan = value
-
-                            // Auto close keyboard after complete PAN
-                            if (value.length == 10) {
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                            }
-                        }
-                    }
-                },
-
-                "PAN",
-
-                keyboardType
             )
+
+            if (isOrganizationVisible) {
+                CommonDropdown(
+                    list = roleViewModel.roleList,
+                    selectedText = OrganizationName,
+                    label = "Organization",
+                    itemText = { it.name_of_the_org ?: "" },
+                    onItemSelected = { item ->
+                        OrganizationName = item.name_of_the_org ?: ""
+                        OrganizationCode = item.org_id ?: ""
+
+                        functionaryviewModel.fetchFunctionaries(OrganizationCode)
+                    }
+                )
+            }
+//            InputField(userid, { userid = it }, "User Id", enabled = false)
+//            InputField(userid, { userid = it }, "User Id")
+            InputField(email, { email = it }, "Email")
             OutlinedTextField(
 
-                value = dl,
+                value = password,
 
-                onValueChange = { input ->
-
-                    val value = input.uppercase()
-
-                    // Max length 16
-                    if (value.length <= 16) {
-
-                        val valid = value.withIndex().all { (index, char) ->
-
-                            when (index) {
-
-                                // First 2 = Alphabets
-                                0,1 -> char.isLetter()
-
-                                // Remaining = Numbers
-                                else -> char.isDigit()
-                            }
-                        }
-
-                        if (valid || value.isEmpty()) {
-
-                            // Validate state code
-                            if (
-                                value.length < 2 ||
-                                stateCodes.contains(value.take(2))
-                            ) {
-
-                                dl = value
-
-                                // Auto dismiss keyboard
-                                if (value.length == 16) {
-                                    keyboardController?.hide()
-                                    focusManager.clearFocus()
-                                }
-                            }
-                        }
-                    }
+                onValueChange = {
+                    password = it
                 },
 
                 label = {
-                    Text("Driving License")
+                    Text("Password")
                 },
 
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = dlKeyboardType,
-                    capitalization = KeyboardCapitalization.Characters
-                ),
+                modifier = Modifier.fillMaxWidth(),
 
-                modifier = Modifier.fillMaxWidth()
-            )
+                shape = RoundedCornerShape(dimens.radiusM),
 
-//            InputField(dl, { dl = it }, "Driving License")
+                visualTransformation = if (passwordVisible)
+                    VisualTransformation.None
+                else
+                    PasswordVisualTransformation(),
 
+                trailingIcon = {
 
+                    IconButton(
+                        onClick = {
 
-
-// Indian State Codes
-
-
-
-            InputField(
-
-                dl,
-
-                { input ->
-
-                    val value = input.uppercase()
-
-                    // Max Length 16
-                    if (value.length <= 16) {
-
-                        val valid = value.withIndex().all { (index, char) ->
-
-                            when (index) {
-
-                                // First 2 characters = Alphabets
-                                0,1 -> char.isLetter()
-
-                                // Remaining = Numbers
-                                else -> char.isDigit()
-                            }
+                            passwordVisible =
+                                !passwordVisible
                         }
+                    ) {
 
-                        if (valid || value.isEmpty()) {
+                        Icon(
+                            imageVector =
+                                if (passwordVisible)
+                                    Icons.Default.VisibilityOff
+                                else
+                                    Icons.Default.Visibility,
 
-                            // Validate state code after first 2 chars
-                            if (
-                                value.length < 2 ||
-                                stateCodes.contains(value.take(2))
-                            ) {
+                            contentDescription = null,
 
-                                dl = value
-
-                                // Auto close keyboard after full DL
-                                if (value.length == 16) {
-                                    keyboardController?.hide()
-                                    focusManager.clearFocus()
-                                }
-                            }
-                        }
-                    }
-                },
-
-                "Driving License",
-
-                keyboardType
-            )
-
-
-            // 🔹 Basic
-            SectionTitle("Basic Info")
-            InputField(age, { age = it }, "Age", KeyboardType.Number)
-//            InputField(gender, { gender = it }, "Gender")
-
-
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-
-                OutlinedTextField(
-                    value = gender,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Gender") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    genderOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                gender = option
-                                expanded = false
-
-                            }
+                            tint = Color(0xFF2563EB)
                         )
                     }
                 }
-            }
-
-            // 🔹 Contact
-            SectionTitle("Contact")
-            InputField(address, { address = it }, "Address")
-//            InputField(mobile, { mobile = it }, "Mobile", KeyboardType.Number)
+            )
+//            InputField(password, { password = it }, "Password", isPassword = true)
             InputField(
                 value = mobile,
                 onValueChange = {
@@ -592,168 +396,69 @@ fun SignupScreen(
                 label = "Mobile",
                 keyboardType = KeyboardType.Number
             )
-            InputField(telephone, { telephone = it }, "Telephone")
-
-            // 🔹 Work
-            SectionTitle("Work Info")
-            CommonDropdown(
-                list = processGroupViewModel.processGroupList,
-                selectedText = processGroupName,
-                label = "Process Group",
-                itemText = { it.level_short_name ?: "" },
-                onItemSelected = { item ->
-                    processGroupName = item.level_short_name ?: ""
-                    processGroupCode = item.level_admin_cd ?: ""
-                    roleViewModel.fetchRoles(processGroupCode) // API call
-                }
-            )
-
-            CommonDropdown(
-                list = roleViewModel.roleList,
-                selectedText = OrganizationName,
-                label = "Organization",
-                itemText = { it.name_of_the_org ?: "" },
-                onItemSelected = { item ->
-                    OrganizationName = item.name_of_the_org ?: ""
-                    OrganizationCode = (item.org_id ?: "")?: ""
-
-                    functionaryviewModel.fetchFunctionaries(OrganizationCode) // API call
-                }
-            )
-
-
-            CommonDropdown(
-                list = functionaryviewModel.functionaryList,
-                selectedText = FunctionaryName,
-                label = "Functionary",
-                itemText = { it.user_design ?: "" },
-                onItemSelected = { item ->
-                    FunctionaryName = item.user_design ?: ""
-                    OrganizationCode = (item.user_design ?: "")?: ""
-
-                    stateviewModel.fetchState()
-                }
-            )
-
-            // 🔹 Location
-            SectionTitle("Location")
-
-
-            CommonDropdown(
-
-                list = stateviewModel.stateList,
-
-                selectedText = stateName,
-
-                label = "State",
-
-                itemText = { it.statename },
-
-                onItemSelected = { item ->
-
-//                    stateField = item.statename
-                    stateName = item.statename
-
-                    stateCode = item.statecode
-                    districtviewModel.fetchDistrict(stateCode)
-                }
-            )
-            CommonDropdown(
-
-                list = districtviewModel.districtList,
-
-                selectedText = districtname,
-
-                label = "District",
-                itemText = { it.districtname },
-
-                onItemSelected = { item ->
-
-                    districtname = item.districtname
-                    ditricteCode = item.districtcode
-
-//                    district = item.districtcode
-//                    districtviewModel.fetchDistrict(stateCode)
-                }
-            )
-            SectionTitle("Location")
-            InputField(city, { city = it }, "City")
-            InputField(value = pincode, onValueChange = { if (it.length <= 6 && it.all { char -> char.isDigit() }) { pincode = it } },
-                label = "Pincode",
-                keyboardType = KeyboardType.Number
-            )
-
-
-
-
-//            InputField(district, { district = it }, "District")
-
-            // 🔹 Other
-            SectionTitle("Other")
-            InputField(designation, { designation = it }, "Designation")
+        }
 
             Spacer(modifier = Modifier.height(120.dp))
-        }
-    }
 
-    // 🔄 STATE HANDLE SAME
-    when (state) {
 
-        is SignupState.Loading -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
         }
 
-        is SignupState.Success -> {
-            LaunchedEffect(Unit) {
-                navController.navigate("login") {
-                    popUpTo("signup") { inclusive = true }
+
+    LaunchedEffect(signupState) {
+        when (signupState) {
+            is SignupState.Success -> {
+
+
+
+
+                Toast.makeText(
+                    context,
+                    signupState.response.message,
+                    Toast.LENGTH_LONG
+                ).show()
+
+
+
+                if (!isNavigated) {
+                    isNavigated = true
+
+                    navController.navigate("login") {
+                        popUpTo("signup") {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
                 }
             }
+
+            is SignupState.Error -> {
+                Toast.makeText(
+                    context,
+                    signupState.message,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+
+            else -> Unit
         }
-
-        is SignupState.Error -> {
-            error = state.message
-        }
-
-        else -> {}
-
-
     }
+
+
     fun validateFields(): Boolean {
 
         errorMap.clear()
-
-        if (userid.isBlank()) errorMap["userid"] = "Enter User Id"
-        if (email.isBlank()) errorMap["email"] = "Enter Email"
-        if (confirmEmail != email) errorMap["confirmEmail"] = "Email mismatch"
-        if (password.length < 6) errorMap["password"] = "Min 6 char"
-
-        if (firstName.isBlank()) errorMap["firstName"] = "Enter First Name"
-        if (lastName.isBlank()) errorMap["lastName"] = "Enter Last Name"
-
-        if (aadhaar.length != 12) errorMap["aadhaar"] = "Invalid Aadhaar"
-        if (pan.length != 10) errorMap["pan"] = "Invalid PAN"
-        if (dl.isBlank()) errorMap["dl"] = "Enter DL"
-
-        if (age.isBlank()) errorMap["age"] = "Enter Age"
-        if (gender.isBlank()) errorMap["gender"] = "Select Gender"
-
-        if (address.isBlank()) errorMap["address"] = "Enter Address"
-        if (mobile.length != 10) errorMap["mobile"] = "Invalid Mobile"
-
         if (processGroupName.isBlank()) errorMap["pg"] = "Select Process Group"
         if (OrganizationName.isBlank()) errorMap["org"] = "Select Organization"
-        if (FunctionaryName.isBlank()) errorMap["func"] = "Select Functionary"
+
+//        if (userid.isBlank()) errorMap["userid"] = "Enter User Id"
+        if (email.isBlank()) errorMap["email"] = "Enter Email"
+
+        if (password.length < 6) errorMap["password"] = "Min 6 char"
 
 
-        if (pincode.isBlank()) errorMap["state"] = "Enter Pincode"
-        if (stateField.isBlank()) errorMap["state"] = "Enter State"
-        if (district.isBlank()) errorMap["district"] = "Enter District"
-        if (city.isBlank()) errorMap["city"] = "Enter City"
+        if (mobile.length != 10) errorMap["mobile"] = "Invalid Mobile"
 
-        if (designation.isBlank()) errorMap["designation"] = "Enter Designation"
+
 
         return errorMap.isEmpty()
     }

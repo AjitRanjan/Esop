@@ -168,16 +168,12 @@ fun LoginScreen(navController: NavHostController) {
                                 mobile = user.mobile,
                                 designation = user.designation,
                                 organization = user.organization,
+                                processGroup = user.processGroup,
+                                loginId = user.loginId,
+                                usertype = user.usertype,
                                 isLoggedIn = true
                             )
                         )
-
-//                        appPrefs.saveToke(
-//                            GetToken(
-//                                authToken = authToken,
-//                                responseDesc = ""
-//                            )
-//                        )
 
                         if (!isNavigated) {
                             isNavigated = true

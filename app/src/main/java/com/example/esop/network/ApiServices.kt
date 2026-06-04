@@ -77,6 +77,12 @@ interface ApiServices {
     ): DistrictResponse
 
 
+    @GET("esop/api/getinsertProfile")
+    suspend fun insertProfile(
+        @Query("statecode") statecode: String
+    ): DistrictResponse
+
+
     @POST("esop/api/generateToken")
     suspend fun getToken(
         @Body request: TokenRequest

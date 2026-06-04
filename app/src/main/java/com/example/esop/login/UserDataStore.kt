@@ -5,6 +5,9 @@ data class UserDataStore(
     val name: String,
     val email: String,
     val mobile: String,
+    val processGroup: String,
+    val loginId: String,
+    val usertype: String,
     val designation: String,
     val organization: String,
     val isLoggedIn: Boolean

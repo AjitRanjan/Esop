@@ -127,6 +127,7 @@ fun CompleteProfileScreen(
     val scrollState = rememberScrollState()
 
     var email by remember { mutableStateOf("") }
+    var loginId by remember { mutableStateOf("") }
 
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -205,72 +206,17 @@ fun CompleteProfileScreen(
         mutableStateOf(false)
     }
 
-    var profileApiCalled by rememberSaveable {
-        mutableStateOf(false)
-    }
+    val userMobile by appPrefs.mobile.collectAsState(initial = null)
+    val processGroup by appPrefs.processGroup.collectAsState(initial = null)
+    val organization by appPrefs.organization.collectAsState(initial = null)
+    val loginID by appPrefs.loginId.collectAsState(initial = null)
 
-//    LaunchedEffect(authToken) {
-//
-//        if (authToken == null && !tokenApiCalled) {
-//
-//            tokenApiCalled = true
-//
-//            viewModelToken.getToken(
-//                versionName.toString(),
-//                deviceId,
-//                "2532003643"
-//            )
-//        }
-//    }
+    loginId = loginID.toString()
+    email = userEmail.toString()
+    processGroupName = processGroup.toString()
+    OrganizationName = organization.toString()
+    mobile = userMobile.toString()
 
-
-//    LaunchedEffect(tokenState) {
-//
-//        // Button click nahi hua to kuch mat karo
-////        if (!tokenRequestStarted) return@LaunchedEffect
-//
-//        when (val state = tokenState) {
-//
-//            is Resource.Success -> {
-//
-//                val response = state.data
-//
-//                if (response.responseDesc == "OK") {
-//
-//                    appPrefs.saveToke(
-//                        GetToken(
-//                            authToken = response.authToken,
-//                            responseDesc = ""
-//                        )
-//                    )
-//                    profileViewModel.getProfile(
-//                        token = response.authToken,
-////                token = "RtqSw0gNXSxGSbtUzN/8Qg==",
-//                        appVersion =versionName.toString(),
-//                        loginId = "2532003643",
-//                        email = userEmail.toString()
-//
-//                    )
-//
-//                }
-//            }
-//
-//            is Resource.Error -> {
-//
-//                val errorMessage = (tokenState as Resource.Error).message
-//
-//                Toast.makeText(
-//                    context,
-//                    errorMessage,
-//                    Toast.LENGTH_LONG
-//                ).show()
-//
-////                tokenRequestStarted = false
-//            }
-//
-//            else -> {}
-//        }
-//    }
     // ================= IMAGE =================
 
     var imageUri by remember {
@@ -578,9 +524,15 @@ fun CompleteProfileScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
 
+
+            InputField(
+                value = loginId,
+                onValueChange = {},
+                label = "Login ID",
+            )
             InputField(
                 email,
-                { email = it },
+                { },
                 "Email"
             )
 
@@ -681,15 +633,16 @@ fun CompleteProfileScreen(
             InputField(
                 value = mobile,
 
-                onValueChange = {
-
-                    if (
-                        it.length <= 10 &&
-                        it.all { char -> char.isDigit() }
-                    ) {
-                        mobile = it
-                    }
-                },
+//                onValueChange = {
+//
+//                    if (
+//                        it.length <= 10 &&
+//                        it.all { char -> char.isDigit() }
+//                    ) {
+//                        mobile = it
+//                    }
+//                },
+                onValueChange = {},
 
                 label = "Mobile",
 
@@ -921,15 +874,15 @@ fun CompleteProfileScreen(
 
                     response.wrappedList.forEach { item ->
 
-                        email = item.email
+
                         firstName = item.firstname
                         lastName = item.lastname
                         age = item.age.toString()
                         gender = item.gender.toString()
                         address = item.address.toString()
-                        mobile = item.mobile.toString()
+
                         designation = item.designation.toString()
-                        processGroupName = item.process_group
+
                         FunctionaryName = item.functionary
                         stateName = item.state
                         districtname = item.district

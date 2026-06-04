@@ -1,5 +1,8 @@
 package com.example.esop.util
 
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 
@@ -32,5 +35,18 @@ object Constants {
     val DESIGNATION = stringPreferencesKey("designation")
     val ORGANIZATION = stringPreferencesKey("organization")
 
-
+//    @Composable
+//    fun InputField(
+//        value: String,
+//        onValueChange: (String) -> Unit,
+//        label: String,
+//        readOnly: Boolean = false
+//    ) {
+//        TextField(
+//            value = value,
+//            onValueChange = onValueChange,
+//            label = { Text(label) },
+//            readOnly = readOnly
+//        )
+//    }
 }

@@ -9,8 +9,11 @@ data class LoginResponse(
 data class UserData(
     val id: Int,
     val fullName: String,
+    val loginId: String,
     val email: String,
     val mobile: String,
     val designation: String,
+    val processGroup: String,
+    val usertype: String,
     val organization: String
 )

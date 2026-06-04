@@ -51,11 +51,11 @@ class MainActivity : ComponentActivity() {
 
             val navController = rememberNavController()
 
-            val userName by appPrefs.userName.collectAsState(initial = null)
+            val userMobile by appPrefs.mobile.collectAsState(initial = null)
             val userEmail by appPrefs.userEmail.collectAsState(initial = null)
 
             val startDestination =
-                if (!userName.isNullOrEmpty() &&
+                if (!userMobile.isNullOrEmpty() &&
                     !userEmail.isNullOrEmpty()
                 ) {
                     "welcome"
@@ -91,72 +91,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-//class MainActivity : ComponentActivity() {
-//
-//    private lateinit var appPrefs: AppPreferences
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        appPrefs = AppPreferences(this)
-//        // Android ID Fetch
-//
-//        setContent {
-//
-//            val navController = rememberNavController()
-//
-//            // =========================
-//            // GET USER DATA FROM DATASTORE
-//            // =========================
-//
-//            val userName by appPrefs.userName.collectAsState(initial = null)
-//
-//            val userEmail by appPrefs.userEmail.collectAsState(initial = null)
-//
-//            // =========================
-//            // CHECK LOGIN
-//            // =========================
-//
-//            val startDestination =
-//                if (!userName.isNullOrEmpty() && !userEmail.isNullOrEmpty()) {
-//                    "welcome"
-//                } else {
-//                    "login"
-//                }
-//
-//            // =========================
-//            // NAV HOST
-//            // =========================
-//
-//            NavHost(
-//                navController = navController,
-//                startDestination = startDestination
-//            ) {
-//
-//                composable("login") {
-//                    LoginScreen(navController)
-//                }
-//
-//                composable("signup") {
-//                    SignupScreen(navController)
-//                }
-//
-//                composable("welcome") {
-//                    WelcomeScreen(navController)
-//                }
-//
-//                composable("TestScreen") {
-//                    TestScreen()
-//                }
-//
-//                composable("CompleteProfileScreen") {
-//                    CompleteProfileScreen(navController)
-//                }
-//            }
-//        }
-//    }
-//}
-
-
-
