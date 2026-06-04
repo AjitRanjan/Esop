@@ -15,5 +15,7 @@ data class UserData(
     val designation: String,
     val processGroup: String,
     val usertype: String,
-    val organization: String
+    val organization: String,
+    val processGroupId: String,
+    val organizationId: String,
 )

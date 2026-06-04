@@ -7,12 +7,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.esop.login.LoginScreen
 import com.example.esop.network.AppPreferences
 import com.example.esop.profile.CompleteProfileScreen
+import com.example.esop.profile.Repositry.UpdateProfileViewModel
 import com.example.esop.util.ImeiUtils
 import faceembedding.TestScreen
 import signup.SignupScreen
@@ -85,7 +87,12 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("CompleteProfileScreen") {
-                    CompleteProfileScreen(navController)
+                    val updateProfileViewModel: UpdateProfileViewModel = viewModel()
+
+                    CompleteProfileScreen(
+                        navController = navController,
+                        updateProfileModel = updateProfileViewModel
+                    )
                 }
             }
         }

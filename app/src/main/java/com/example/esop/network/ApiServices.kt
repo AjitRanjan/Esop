@@ -10,6 +10,7 @@ import com.example.esop.login.LoginRequest
 import com.example.esop.login.LoginResponse
 import com.example.esop.profile.ProfileRequest
 import com.example.esop.profile.ProfileResponse
+import com.example.esop.profile.request.UpadteProfileRequest
 import com.example.esop.token.GetToken
 import com.example.esop.token.TokenRequest
 import com.example.esop.state.StateResponse
@@ -94,5 +95,8 @@ interface ApiServices {
         @Body request: ProfileRequest
     ): Response<ProfileResponse>
 
-
+    @POST("esop/api/insertProfile")
+    suspend fun UpdateUser(
+        @Body request: UpadteProfileRequest
+    ): SignupResponse
 }

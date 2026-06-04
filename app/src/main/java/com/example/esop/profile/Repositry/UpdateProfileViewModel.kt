@@ -1,4 +1,4 @@
-package com.example.esop.profile
+package com.example.esop.profile.Repositry
 
 import android.Manifest
 import android.content.Context
@@ -10,22 +10,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room3.Update
-import com.example.esop.profile.Repositry.UpdateProfileRepository
 import com.example.esop.profile.request.UpadteProfileRequest
 import kotlinx.coroutines.launch
 import signup.Repositry.SignupRepository
 import signup.SignupState
 import signup.request.SignupRequest
 
-class CompletePofileScreenViewModel : ViewModel() {
+class UpdateProfileViewModel : ViewModel() {
+
+
+
 
     private val repo = UpdateProfileRepository()
 
     var state by mutableStateOf<SignupState>(SignupState.Idle)
         private set
 
-    fun signup(context: Context, request: UpadteProfileRequest) {
+    fun UpdateProfile(context: Context,request: UpadteProfileRequest) {
         viewModelScope.launch {
             state = SignupState.Loading
 
@@ -43,17 +44,4 @@ class CompletePofileScreenViewModel : ViewModel() {
         }
     }
 
-
-}
-
-@RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-fun Context.isInternetAvailable(): Boolean {
-    val connectivityManager =
-        getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-    val network = connectivityManager.activeNetwork ?: return false
-    val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
-
-    return activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
 }

@@ -1,26 +1,16 @@
-package signup.request
+package com.example.esop.profile.request
 
-data class SignupRequest(
+data class UpadteProfileRequest(
     val email: String,
-    val confirmEmail: String,
-    val password: String,
-
     val firstName: String,
     val lastName: String,
-
-    val alternateEmail: String?,
-
     val aadhaarId: String,
     val panNo: String,
     val drivingLicense: String,
-
     val age: Int,
     val gender: String,
-
     val address: String,
     val mobile: String,
-    val telephone: String,
-
     val processGroup: String,
 
     val organization: String,
@@ -36,7 +26,6 @@ data class SignupRequest(
     val usertypedesc: String,
     val usertype: String,
     val loginId: String,
-
     val designation: String,
     val processGroupId: String,
     val organizationId: String,

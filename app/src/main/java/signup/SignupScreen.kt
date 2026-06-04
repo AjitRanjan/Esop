@@ -257,7 +257,9 @@ fun SignupScreen(
                             "Fianance",
                             usertype,
                             processGroupName+mobile,
-                            ""
+                            "",
+                            processGroupCode,
+                            OrganizationCode
                         )
 
                         val validationError = SignupValidator.validate(request)
@@ -309,7 +311,8 @@ fun SignupScreen(
 
                     if (processGroupName.equals("OTHERS", ignoreCase = true)) {
                         OrganizationName = "OTHERS"
-                        OrganizationCode = "OTHERS"
+                        OrganizationCode = 0.toString()
+                        processGroupCode = 0.toString()
                         usertype="External"
                         isOrganizationVisible = false
                     } else {
@@ -329,9 +332,17 @@ fun SignupScreen(
                     label = "Organization",
                     itemText = { it.name_of_the_org ?: "" },
                     onItemSelected = { item ->
-                        OrganizationName = item.name_of_the_org ?: ""
-                        OrganizationCode = item.org_id ?: ""
 
+                        if (OrganizationName.equals("OTHERS", ignoreCase = true)) {
+                            OrganizationName = "OTHERS"
+                            OrganizationCode = 0.toString()
+                            usertype="External"
+
+                        } else {
+                            OrganizationName = item.name_of_the_org ?: ""
+                            OrganizationCode = item.org_id ?: ""
+                            usertype="Internal"
+                        }
                         functionaryviewModel.fetchFunctionaries(OrganizationCode)
                     }
                 )

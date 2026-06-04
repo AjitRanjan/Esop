@@ -26,6 +26,10 @@ class AppPreferences(
         val PROCESSGROUP = stringPreferencesKey("processGroup")
         val LOGINID = stringPreferencesKey("loginId")
         val USERTYPE = stringPreferencesKey("usertype")
+        val PROCESSGROUPID = stringPreferencesKey("processGroupId")
+        val ORGANIZATIONID = stringPreferencesKey("organizationId")
+
+
         val ORGANIZATION = stringPreferencesKey("organization")
         val LOGGED_IN = booleanPreferencesKey("logged_in")
     }
@@ -38,9 +42,11 @@ class AppPreferences(
             prefs[Keys.EMAIL] = user.email
             prefs[Keys.MOBILE] = user.mobile
             prefs[Keys.PROCESSGROUP] = user.processGroup
+            prefs[Keys.PROCESSGROUPID] = user.processGroupId.toString()
             prefs[Keys.LOGINID] = user.loginId
             prefs[Keys.USERTYPE] = user.usertype
             prefs[Keys.DESIGNATION] = user.designation
+            prefs[Keys.ORGANIZATIONID] = user.organizationId.toString()
             prefs[Keys.ORGANIZATION] = user.organization
             prefs[Keys.LOGGED_IN] = true
         }
@@ -113,7 +119,14 @@ class AppPreferences(
         context.dataStore.data.map { prefs ->
             prefs[Keys.USERTYPE]
         }
-
+    val processGroupId: Flow<String?> =
+        context.dataStore.data.map { prefs ->
+            prefs[Keys.PROCESSGROUPID]
+        }
+    val organizationId: Flow<String?> =
+        context.dataStore.data.map { prefs ->
+            prefs[Keys.ORGANIZATIONID]
+        }
 
 
 }

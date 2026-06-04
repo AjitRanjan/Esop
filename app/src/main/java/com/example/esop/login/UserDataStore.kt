@@ -10,5 +10,7 @@ data class UserDataStore(
     val usertype: String,
     val designation: String,
     val organization: String,
+    val processGroupId: Int,
+    val organizationId: Int,
     val isLoggedIn: Boolean
 )
