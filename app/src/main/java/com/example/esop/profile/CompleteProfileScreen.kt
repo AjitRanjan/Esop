@@ -102,6 +102,16 @@ import java.io.ByteArrayOutputStream
 
 
 import android.util.Base64
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.window.Dialog
 
 //use all field PAN AADHAR DL  05/06/2026 08:38AM
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,7 +121,7 @@ fun CompleteProfileScreen(
     navController: NavController,
     viewModel: CompletePofileScreenViewModel = viewModel(),
     updateModel: UpdateProfileViewModel = viewModel(),
-    updateProfileModel: UpdateProfileViewModel
+
 ) {
 
     lateinit var appPrefs: AppPreferences
@@ -181,7 +191,7 @@ fun CompleteProfileScreen(
 
 
     val deviceId = ImeiUtils.getAndroidId(context)
-
+    var showLoading by remember { mutableStateOf(false) }
 
     var isNavigated by remember {
         mutableStateOf(false)
@@ -210,16 +220,31 @@ fun CompleteProfileScreen(
     usertype=userusertype.toString()
 
 
+    var personalInfoExpanded by remember { mutableStateOf(false) }
+    var workInfoExpanded by remember { mutableStateOf(false) }
+    var locationExpanded by remember { mutableStateOf(false) }
+    val currentLoginId = loginId
+    val currentEmail = userEmail?.toString().orEmpty()
+    val currentVersion = versionName?.toString().orEmpty()
+    val profileViewModel: ProfileViewModel = viewModel()
+    LaunchedEffect(currentLoginId, currentEmail, currentVersion) {
+        if (currentLoginId.isNotBlank() && currentEmail.isNotBlank()) {
+            showLoading = true
 
-
-
+            profileViewModel.getProfile(
+                appVersion = currentVersion,
+                loginId = currentLoginId,
+                email = currentEmail
+            )
+        }
+    }
 
     LaunchedEffect(UpdateUI) {
         when (UpdateUI) {
             is UpdateState.Success -> {
 
 
-
+                showLoading=false
 
                 Toast.makeText(
                    context,
@@ -232,8 +257,8 @@ fun CompleteProfileScreen(
                 if (!isNavigated) {
                     isNavigated = true
 
-                    navController.navigate("CompleteProfileScreen") {
-                        popUpTo("welcome") {
+                    navController.navigate("welcome") {
+                        popUpTo("CompleteProfileScreen") {
                             inclusive = true
                         }
                         launchSingleTop = true
@@ -242,6 +267,7 @@ fun CompleteProfileScreen(
             }
 
             is UpdateState.Error -> {
+                showLoading=false
                 Toast.makeText(
                     context,
                     UpdateUI.responseDesc,
@@ -263,13 +289,14 @@ fun CompleteProfileScreen(
         mutableStateOf<Uri?>(null)
     }
     Log.d("authToken", authToken.toString())
-//    val profileViewModel: ProfileViewModel = viewModel()
-    val profileViewModel: ProfileViewModel = viewModel()
-    profileViewModel.getProfile(
-        appVersion =versionName.toString(),
-        loginId = loginId,
-        email = userEmail.toString()
-    )
+
+//    showLoading = false
+//
+//    profileViewModel.getProfile(
+//        appVersion =versionName.toString(),
+//        loginId = loginId,
+//        email = userEmail.toString()
+//    )
 
     val galleryLauncher =
         rememberLauncherForActivityResult(
@@ -290,46 +317,6 @@ fun CompleteProfileScreen(
                     ""
                 }
             }
-
-
-//            if (uri != null) {
-//
-//                imageUri = uri
-//
-//                val bitmap = MediaStore.Images.Media.getBitmap(
-//                    context.contentResolver,
-//                    uri
-//                )
-//
-//                // Resize image
-//                val resizedBitmap = Bitmap.createScaledBitmap(
-//                    bitmap,
-//                    300, // width
-//                    300, // height
-//                    true
-//                )
-//
-//                val outputStream = ByteArrayOutputStream()
-//
-//                // Compress image (quality 30%)
-//                resizedBitmap.compress(
-//                    Bitmap.CompressFormat.JPEG,
-//                    30,
-//                    outputStream
-//                )
-//
-//                val imageBytes = outputStream.toByteArray()
-//
-//                imageBase64 = Base64.encodeToString(
-//                    imageBytes,
-//                    Base64.NO_WRAP
-//                )
-//            }
-
-
-//            if (uri != null) {
-//                imageUri = uri
-//            }
         }
 
     val cameraLauncher =
@@ -345,16 +332,7 @@ fun CompleteProfileScreen(
                     "Profile",
                     null
                 )
-
                 imageUri = Uri.parse(path)
-
-                // Image Path
-
-
-
-
-
-
             }
         }
 
@@ -445,7 +423,9 @@ fun CompleteProfileScreen(
 
                 Button(
                       onClick = {
-
+                          if (imageBase64.isNullOrEmpty()) {
+                              imageBase64 = imagePath
+                          }
                         val request = UpadteProfileRequest(
                             versionName.toString(),
                             email,
@@ -477,7 +457,7 @@ fun CompleteProfileScreen(
                             imageBase64
 
                         )
-
+                           showLoading=true
                           updateModel.UpdateProfile(context, request)
                     },
 
@@ -537,24 +517,35 @@ fun CompleteProfileScreen(
                                 .weight(1f)
                                 .padding(end = 16.dp)
                         ) {
-                            Text(
-                                text = "View details",
-                                color = Color(0xFF123B35),
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                                textDecoration =
-                                    androidx.compose.ui.text.style.TextDecoration.Underline
-                            )
 
-                            Spacer(modifier = Modifier.height(50.dp))
+
+//                            Spacer(modifier = Modifier.height(50.dp))
 
                             Text(
-                                text = "$firstName $lastName".trim()
+                                text = "$firstName$lastName".trim()
                                     .ifBlank { "Candidate name" },
                                 color = Color(0xFF123B35),
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
                             )
+                            Spacer(modifier = Modifier.height(20.dp))
+//                            loginId
+
+                            Text(
+                                text = "Candidate ID: $loginId".ifBlank { "Candidate ID" },
+                                color = Color(0xFF123B35),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+
+                            )
+
+
+
+
+
+
+
                         }
 
                         Box {
@@ -623,7 +614,7 @@ fun CompleteProfileScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     ProfileDetail(
                         "Phone",
                         mobile,
@@ -658,13 +649,13 @@ fun CompleteProfileScreen(
                         verified = !address.isNullOrBlank(),
                         showError = address.isNullOrBlank()
                     )
-
-                    ProfileDetail(
-                        "Login ID",
-                        loginId,
-                        verified = !loginId.isNullOrBlank(),
-                        showError = loginId.isNullOrBlank()
-                    )
+//
+//                    ProfileDetail(
+//                        "Login ID",
+//                        loginId,
+//                        verified = !loginId.isNullOrBlank(),
+//                        showError = loginId.isNullOrBlank()
+//                    )
 
 //                    ProfileDetail("Phone", mobile, verified = true)
 //                    ProfileDetail("Email", email, verified = true)
@@ -680,258 +671,689 @@ fun CompleteProfileScreen(
 
             // ================= ACCOUNT =================
 
-            SectionTitle("Account Details")
+//            SectionTitle("Account Details")
             Spacer(modifier = Modifier.height(20.dp))
 
 
 
             // ================= PERSONAL =================
 
-            SectionTitle("Personal Info")
-
-            InputField(
-                firstName,
-                { firstName = it },
-                "First Name"
-            )
-
-            InputField(
-                lastName,
-                { lastName = it },
-                "Last Name"
-            )
-
-            InputField(
-                value = age,
-                onValueChange = {
-
-                    if (
-                        it.length <= 3 &&
-                        it.all { char -> char.isDigit() }
-                    ) {
-                        age = it
-                    }
-                },
-                label = "Age",
-                keyboardType = KeyboardType.Number
-            )
-
-            // ================= BASIC =================
-
-
-
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = {
-                    expanded = !expanded
-                }
-            ) {
-
-                OutlinedTextField(
-                    value = gender,
-                    onValueChange = {},
-                    readOnly = true,
-
-                    label = {
-                        Text("Gender")
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clickable {
+//                        personalInfoExpanded = !personalInfoExpanded
+//                    }
+//                    .padding(vertical = 12.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Text(
+//                    text = "Personal Info",
+//                    fontSize = 18.sp,
+//                    fontWeight = FontWeight.Bold,
+//                    color = Color.Black,
+//                    modifier = Modifier.weight(1f)
+//                )
+//
+//                Icon(
+//                    imageVector = if (personalInfoExpanded) {
+//                        Icons.Default.KeyboardArrowDown
+//                    } else {
+//                        Icons.Default.KeyboardArrowRight
+//                    },
+//                    contentDescription = "Personal Info",
+//                    tint = Color.Black
+//                )
+//            }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clickable {
+                        personalInfoExpanded = !personalInfoExpanded
                     },
-
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = expanded
-                        )
-                    },
-
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Color(0xFFE0E0E0)
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 4.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
                 )
-
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = {
-                        expanded = false
-                    }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 14.dp,
+                            vertical = 12.dp
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Text(
+                        text = "Personal Info",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
 
-                    genderOptions.forEach { option ->
+                    Icon(
+                        imageVector = if (personalInfoExpanded) {
+                            Icons.Default.KeyboardArrowDown
+                        } else {
+                            Icons.Default.KeyboardArrowRight
+                        },
+                        contentDescription = "Personal Info",
+                        tint = Color.Black
+                    )
+                }
+            }
+            AnimatedVisibility(
+                visible = personalInfoExpanded
+            ) {
+                Column {
 
-                        DropdownMenuItem(
-                            text = {
-                                Text(option)
+                    InputField(
+                        value = firstName ?: "",
+                        onValueChange = { firstName = it },
+                        label = "First Name",
+                        showError = firstName.isNullOrBlank(),
+                        verified = !firstName.isNullOrBlank(),
+                        editable = true
+                    )
+
+                    InputField(
+                        value = lastName ?: "",
+                        onValueChange = { lastName = it },
+                        label = "Last Name",
+                        showError = lastName.isNullOrBlank(),
+                        verified = !lastName.isNullOrBlank(),
+                        editable = true
+                    )
+
+                    InputField(
+                        value = age,
+                        onValueChange = {
+                            if (
+                                it.length <= 3 &&
+                                it.all { char -> char.isDigit() }
+                            ) {
+                                age = it
+                            }
+                        },
+                        label = "Age",
+                        showError = age.isBlank(),
+                        verified = age.isNotBlank(),
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        )
+                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = {
+                            expanded = !expanded
+                        }
+                    ) {
+                        OutlinedTextField(
+                            value = gender,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = {
+                                Text("Gender")
                             },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = expanded
+                                )
+                            },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                        )
 
-                            onClick = {
-
-                                gender = option
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = {
                                 expanded = false
                             }
-                        )
+                        ) {
+                            genderOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(option)
+                                    },
+                                    onClick = {
+                                        gender = option
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
                     }
+
+                    InputField(
+                        value = designation ?: "",
+                        onValueChange = { designation = it },
+                        label = "Designation",
+                        showError = designation.isNullOrBlank(),
+                        verified = !designation.isNullOrBlank(),
+                        editable = true
+                    )
                 }
             }
 
-            // ================= CONTACT =================
+//            SectionTitle("Personal Info")
+//
+//            InputField(
+//                value = firstName ?: "",
+//                onValueChange = { firstName = it },
+//                label = "First Name",
+//                showError = firstName.isNullOrBlank(),
+//                verified = !firstName.isNullOrBlank(),
+//                editable = true
+//            )
+//            InputField(
+//                value = lastName ?: "",
+//                onValueChange = { lastName = it },
+//                label = "Last Name",
+//                showError = lastName.isNullOrBlank(),
+//                verified = !lastName.isNullOrBlank(),
+//                editable = true
+//            )
+//
+//            InputField(
+//                value = age,
+//                onValueChange = {
+//
+//                    if (
+//                        it.length <= 3 &&
+//                        it.all { char -> char.isDigit() }
+//                    ) {
+//                        age = it
+//                    }
+//                },
+//                label = "Age",
+//                showError = age.isNullOrBlank(),
+//                verified = !age.isNullOrBlank(),
+//                keyboardOptions = KeyboardOptions(
+//                    capitalization = KeyboardCapitalization.Words,
+//                    keyboardType = KeyboardType.Number,
+//                    imeAction = ImeAction.Next)
+//            )
+//
+//
+//
+//            // ================= BASIC =================
+//
+//
+//
+//            ExposedDropdownMenuBox(
+//                expanded = expanded,
+//                onExpandedChange = {
+//                    expanded = !expanded
+//                }
+//            ) {
+//
+//                OutlinedTextField(
+//                    value = gender,
+//                    onValueChange = {},
+//                    readOnly = true,
+//
+//                    label = {
+//                        Text("Gender")
+//                    },
+//
+//                    trailingIcon = {
+//                        ExposedDropdownMenuDefaults.TrailingIcon(
+//                            expanded = expanded
+//                        )
+//                    },
+//
+//                    modifier = Modifier
+//                        .menuAnchor()
+//                        .fillMaxWidth()
+//                )
+//
+//                ExposedDropdownMenu(
+//                    expanded = expanded,
+//                    onDismissRequest = {
+//                        expanded = false
+//                    }
+//                ) {
+//
+//                    genderOptions.forEach { option ->
+//
+//                        DropdownMenuItem(
+//                            text = {
+//                                Text(option)
+//                            },
+//
+//                            onClick = {
+//
+//                                gender = option
+//                                expanded = false
+//                            }
+//                        )
+//                    }
+//                }
+//
+//            }
+//
+//
+//
+//
+//            InputField(
+//                value = designation ?: "",
+//                onValueChange = { designation = it },
+//                label = "Designation",
+//                showError = designation.isNullOrBlank(),
+//                verified = !designation.isNullOrBlank(),
+//                editable = true
+//            )
 
-            SectionTitle("Contact")
 
-            InputField(
-                address,
-                { address = it },
-                "Address"
-            )
+
+
 
             // ================= WORK =================
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clickable {
+                        workInfoExpanded = !workInfoExpanded
+                    },
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Color(0xFFE0E0E0)
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 4.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 14.dp,
+                            vertical = 12.dp
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Work Info",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
 
-            SectionTitle("Work Info")
-
-            CommonDropdown(
-                list = processGroupViewModel.processGroupList,
-
-                selectedText = processGroupName,
-
-                label = "Process Group",
-
-                itemText = {
-                    it.level_short_name ?: ""
-                },
-
-                onItemSelected = { item ->
-
-                    processGroupName =
-                        item.level_short_name ?: ""
-
-                    processGroupCode =
-                        item.level_admin_cd ?: ""
-
-                    roleViewModel.fetchRoles(processGroupCode)
-                }
-            )
-
-            CommonDropdown(
-                list = roleViewModel.roleList,
-
-                selectedText = OrganizationName,
-
-                label = "Organization",
-
-                itemText = {
-                    it.name_of_the_org ?: ""
-                },
-
-                onItemSelected = { item ->
-
-                    OrganizationName =
-                        item.name_of_the_org ?: ""
-
-                    OrganizationCode =
-                        item.org_id ?: ""
-
-                    functionaryviewModel.fetchFunctionaries(
-                        OrganizationCode
+                    Icon(
+                        imageVector = if (workInfoExpanded) {
+                            Icons.Default.KeyboardArrowDown
+                        } else {
+                            Icons.Default.KeyboardArrowRight
+                        },
+                        contentDescription = "Work Info",
+                        tint = Color.Black
                     )
                 }
-            )
+            }
 
-            CommonDropdown(
-                list = functionaryviewModel.functionaryList,
+            AnimatedVisibility(
+                visible = workInfoExpanded
+            ) {
+                Column {
 
-                selectedText = FunctionaryName,
+                    CommonDropdown(
+                        list = processGroupViewModel.processGroupList,
+                        selectedText = processGroupName,
+                        label = "Process Group",
+                        itemText = {
+                            it.level_short_name ?: ""
+                        },
+                        onItemSelected = { item ->
+                            processGroupName =
+                                item.level_short_name ?: ""
 
-                label = "Functionary",
+                            processGroupCode =
+                                item.level_admin_cd ?: ""
 
-                itemText = {
-                    it.user_design ?: ""
-                },
+                            roleViewModel.fetchRoles(processGroupCode)
+                        }
+                    )
 
-                onItemSelected = { item ->
+                    CommonDropdown(
+                        list = roleViewModel.roleList,
+                        selectedText = OrganizationName,
+                        label = "Organization",
+                        itemText = {
+                            it.name_of_the_org ?: ""
+                        },
+                        onItemSelected = { item ->
+                            OrganizationName =
+                                item.name_of_the_org ?: ""
 
-                    FunctionaryName =
-                        item.user_design ?: ""
+                            OrganizationCode =
+                                item.org_id ?: ""
 
-                    stateviewModel.fetchState()
+                            functionaryviewModel.fetchFunctionaries(
+                                OrganizationCode
+                            )
+                        }
+                    )
+
+                    CommonDropdown(
+                        list = functionaryviewModel.functionaryList,
+                        selectedText = FunctionaryName,
+                        label = "Functionary",
+                        itemText = {
+                            it.user_design ?: ""
+                        },
+                        onItemSelected = { item ->
+                            FunctionaryName =
+                                item.user_design ?: ""
+
+                            stateviewModel.fetchState()
+                        }
+                    )
                 }
-            )
+            }
+//            SectionTitle("Work Info")
+//
+//            CommonDropdown(
+//                list = processGroupViewModel.processGroupList,
+//
+//                selectedText = processGroupName,
+//
+//                label = "Process Group",
+//
+//                itemText = {
+//                    it.level_short_name ?: ""
+//                },
+//
+//                onItemSelected = { item ->
+//
+//                    processGroupName =
+//                        item.level_short_name ?: ""
+//
+//                    processGroupCode =
+//                        item.level_admin_cd ?: ""
+//
+//                    roleViewModel.fetchRoles(processGroupCode)
+//                }
+//            )
+//
+//            CommonDropdown(
+//                list = roleViewModel.roleList,
+//
+//                selectedText = OrganizationName,
+//
+//                label = "Organization",
+//
+//                itemText = {
+//                    it.name_of_the_org ?: ""
+//                },
+//
+//                onItemSelected = { item ->
+//
+//                    OrganizationName =
+//                        item.name_of_the_org ?: ""
+//
+//                    OrganizationCode =
+//                        item.org_id ?: ""
+//
+//                    functionaryviewModel.fetchFunctionaries(
+//                        OrganizationCode
+//                    )
+//                }
+//            )
+//
+//            CommonDropdown(
+//                list = functionaryviewModel.functionaryList,
+//
+//                selectedText = FunctionaryName,
+//
+//                label = "Functionary",
+//
+//                itemText = {
+//                    it.user_design ?: ""
+//                },
+//
+//                onItemSelected = { item ->
+//
+//                    FunctionaryName =
+//                        item.user_design ?: ""
+//
+//                    stateviewModel.fetchState()
+//                }
+//            )
 
             // ================= LOCATION =================
 
-            SectionTitle("Location")
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clickable {
+                        locationExpanded = !locationExpanded
+                    },
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Color(0xFFE0E0E0)
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 4.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 14.dp,
+                            vertical = 12.dp
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Location",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
 
-            InputField(
-                country,
-                { country = it },
-                "Country"
-            )
-
-            CommonDropdown(
-
-                list = stateviewModel.stateList,
-
-                selectedText = stateName,
-
-                label = "State",
-
-                itemText = {
-                    it.statename
-                },
-
-                onItemSelected = { item ->
-
-                    stateName = item.statename
-
-                    stateCode = item.statecode
-
-                    districtviewModel.fetchDistrict(stateCode)
+                    Icon(
+                        imageVector = if (locationExpanded) {
+                            Icons.Default.KeyboardArrowDown
+                        } else {
+                            Icons.Default.KeyboardArrowRight
+                        },
+                        contentDescription = "Location",
+                        tint = Color.Black
+                    )
                 }
-            )
+            }
 
-            CommonDropdown(
+            AnimatedVisibility(
+                visible = locationExpanded
+            ) {
+                Column {
 
-                list = districtviewModel.districtList,
+                    CommonDropdown(
+                        list = stateviewModel.stateList,
+                        selectedText = stateName,
+                        label = "State",
+                        itemText = {
+                            it.statename
+                        },
+                        onItemSelected = { item ->
+                            stateName = item.statename
+                            stateCode = item.statecode
 
-                selectedText = districtname,
+                            districtviewModel.fetchDistrict(stateCode)
+                        }
+                    )
 
-                label = "District",
+                    CommonDropdown(
+                        list = districtviewModel.districtList,
+                        selectedText = districtname,
+                        label = "District",
+                        itemText = {
+                            it.districtname
+                        },
+                        onItemSelected = { item ->
+                            districtname = item.districtname
+                            districtCode = item.districtcode
+                        }
+                    )
 
-                itemText = {
-                    it.districtname
-                },
+                    InputField(
+                        value = city ?: "",
+                        onValueChange = { city = it },
+                        label = "City",
+                        showError = city.isNullOrBlank(),
+                        verified = !city.isNullOrBlank(),
+                        editable = true
+                    )
 
-                onItemSelected = { item ->
+                    InputField(
+                        value = address ?: "",
+                        onValueChange = { address = it },
+                        label = "Address",
+                        showError = address.isNullOrBlank(),
+                        verified = !address.isNullOrBlank(),
+                        editable = true
+                    )
 
-                    districtname = item.districtname
-                    districtCode = item.districtcode
+                    InputField(
+                        value = pincode,
+                        onValueChange = {
+                            if (
+                                it.length <= 6 &&
+                                it.all { char -> char.isDigit() }
+                            ) {
+                                pincode = it
+                            }
+                        },
+                        label = "Pincode",
+                        showError = pincode.isBlank(),
+                        verified = pincode.isNotBlank(),
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        )
+                    )
                 }
-            )
+            }
+//            SectionTitle("Location")
+//
+//
+//            CommonDropdown(
+//
+//                list = stateviewModel.stateList,
+//
+//                selectedText = stateName,
+//
+//                label = "State",
+//
+//                itemText = {
+//                    it.statename
+//                },
+//
+//                onItemSelected = { item ->
+//
+//                    stateName = item.statename
+//
+//                    stateCode = item.statecode
+//
+//                    districtviewModel.fetchDistrict(stateCode)
+//                }
+//            )
+//
+//            CommonDropdown(
+//
+//                list = districtviewModel.districtList,
+//
+//                selectedText = districtname,
+//
+//                label = "District",
+//
+//                itemText = {
+//                    it.districtname
+//                },
+//
+//                onItemSelected = { item ->
+//
+//                    districtname = item.districtname
+//                    districtCode = item.districtcode
+//                }
+//            )
+//
+//
+//
+//
+//
+//            InputField(
+//                value = city ?: "",
+//                onValueChange = { city = it },
+//                label = "City",
+//                showError = city.isNullOrBlank(),
+//                verified = !city.isNullOrBlank(),
+//                editable = true
+//            )
+//            InputField(
+//                value = address ?: "",
+//                onValueChange = { address = it },
+//                label = "Address",
+//                showError = address.isNullOrBlank(),
+//                verified = !address.isNullOrBlank(),
+//                editable = true
+//            )
+//
+//
+//            InputField(
+//                value = pincode,
+//                onValueChange = {
+//
+//                    if (
+//                        it.length <= 6 &&
+//                        it.all { char -> char.isDigit() }
+//                    ) {
+//                        pincode = it
+//                    }
+//                },
+//                label = "Pincode",
+//                showError = pincode.isNullOrBlank(),
+//                verified = !pincode.isNullOrBlank(),
+//                keyboardOptions = KeyboardOptions(
+//                    capitalization = KeyboardCapitalization.Words,
+//                    keyboardType = KeyboardType.Number,
+//                    imeAction = ImeAction.Next)
+//            )
 
-            InputField(
-                city,
-                { city = it },
-                "City"
-            )
-            InputField(
-                value = pincode,
-                onValueChange = {
 
-                    if (
-                        it.length <= 6 &&
-                        it.all { char -> char.isDigit() }
-                    ) {
-                        pincode = it
-                    }
-                },
-                label = "Pincode",
-                keyboardType = KeyboardType.Number
-            )
             // ================= OTHER =================
 
-            SectionTitle("Other")
 
-            InputField(
-                designation,
-                { designation = it },
-                "Designation"
-            )
+
+
 
             Spacer(modifier = Modifier.height(120.dp))
         }
@@ -972,9 +1394,6 @@ fun CompleteProfileScreen(
 
         else -> {}
     }
-//    LaunchedEffect(authToken) {
-//
-//    }
     val profileState by profileViewModel.profileState.collectAsState()
 
     LaunchedEffect(profileState) {
@@ -988,7 +1407,7 @@ fun CompleteProfileScreen(
                 if (response.responseDesc == "OK") {
 
                     response.wrappedList.forEach { item ->
-
+                        showLoading = false
 
 
 
@@ -1011,13 +1430,14 @@ fun CompleteProfileScreen(
                             Base64Utils.base64ToBitmap(
                                 item.profileFile
                             )
+                        imagePath=item.profileFile
                         FunctionaryName=item.functionary
                     }
                 }
             }
 
             is Resource.Error -> {
-
+                showLoading = false
                 Log.e(
                     "PROFILE",
                     state.message
@@ -1025,14 +1445,30 @@ fun CompleteProfileScreen(
             }
 
             is Resource.Loading -> {
-
+                showLoading = false
                 Log.d(
                     "PROFILE",
                     "Loading..."
                 )
             }
 
-            else -> {}
+            else -> {
+                showLoading = false
+            }
+        }
+    }
+    if (showLoading) {
+        Dialog(onDismissRequest = { }) {
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .background(Color.White, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Color.Blue
+                )
+            }
         }
     }
 }
@@ -1140,6 +1576,160 @@ private fun VerificationBadge() {
 
 }
 
+@Composable
+fun InputField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    showError: Boolean = false,
+    verified: Boolean = false,
+    editable: Boolean = false,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(
+        capitalization = KeyboardCapitalization.Words,
+        keyboardType = KeyboardType.Text,
+        imeAction = ImeAction.Next
+    )
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = {
+            Text(text = label)
+        },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        isError = showError,
+        keyboardOptions = keyboardOptions,
+        trailingIcon = {
+            when {
+                showError -> {
+                    Box(
+                        modifier = Modifier
+                            .size(19.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Error",
+                            tint = Color.White,
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
+                }
+
+                verified -> {
+                    Box(
+                        modifier = Modifier
+                            .size(19.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF18B98B)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Verified",
+                            tint = Color.White,
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
+                }
+
+                editable -> {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF858585)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit $label",
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+//@Composable
+//fun InputField(
+//    value: String,
+//    onValueChange: (String) -> Unit,
+//    label: String,
+//    showError: Boolean = false,
+//    verified: Boolean = false,
+//    editable: Boolean = false
+//) {
+//    OutlinedTextField(
+//        value = value,
+//        onValueChange = onValueChange,
+//        label = {
+//            Text(text = label)
+//        },
+//        modifier = Modifier.fillMaxWidth(),
+//        singleLine = true,
+//        isError = showError,
+//        trailingIcon = {
+//            when {
+//                showError -> {
+//                    Box(
+//                        modifier = Modifier
+//                            .size(19.dp)
+//                            .clip(CircleShape)
+//                            .background(Color(0xFFE53935)),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Close,
+//                            contentDescription = "Error",
+//                            tint = Color.White,
+//                            modifier = Modifier.size(13.dp)
+//                        )
+//                    }
+//                }
+//
+//                verified -> {
+//                    Box(
+//                        modifier = Modifier
+//                            .size(19.dp)
+//                            .clip(CircleShape)
+//                            .background(Color(0xFF18B98B)),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Check,
+//                            contentDescription = "Verified",
+//                            tint = Color.White,
+//                            modifier = Modifier.size(13.dp)
+//                        )
+//                    }
+//                }
+//
+//                editable -> {
+//                    Box(
+//                        modifier = Modifier
+//                            .size(20.dp)
+//                            .clip(CircleShape)
+//                            .background(Color(0xFF858585)),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Edit,
+//                            contentDescription = "Edit $label",
+//                            tint = Color.White,
+//                            modifier = Modifier.size(12.dp)
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    )
+//}
 
 
 

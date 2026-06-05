@@ -86,11 +86,10 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("CompleteProfileScreen") {
-                    val updateProfileViewModel: UpdateProfileViewModel = viewModel()
+
 
                     CompleteProfileScreen(
-                        navController = navController,
-                        updateProfileModel = updateProfileViewModel
+                        navController = navController
                     )
                 }
             }
