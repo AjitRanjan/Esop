@@ -102,6 +102,8 @@ import java.io.ByteArrayOutputStream
 
 
 import android.util.Base64
+
+//use all field PAN AADHAR DL  05/06/2026 08:38AM
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
