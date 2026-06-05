@@ -3,6 +3,7 @@ package com.example.esop.profile
 data class ProfileItem(
 
     val process_group: String,
+    val process_groupId: String,
     val pincode: String,
     val usertypedesc: String,
     val firstname: String,
@@ -15,6 +16,7 @@ data class ProfileItem(
     val lastname: String,
     val profileFile: String,
     val organization: String,
+    val organization_id: String,
     val district: String,
     val state: String,
     val designation: String,

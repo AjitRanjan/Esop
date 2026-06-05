@@ -15,6 +15,9 @@ import com.example.esop.network.AppPreferences
 import com.example.esop.profile.CompleteProfileScreen
 import com.example.esop.profile.Repositry.UpdateProfileViewModel
 import com.example.esop.util.ImeiUtils
+import faceembedding.ESOPCertificateScreen
+import faceembedding.ESOPResultScreen
+import faceembedding.TestInstructionsScreen
 import faceembedding.TestScreen
 import signup.SignupScreen
 
@@ -84,6 +87,19 @@ class MainActivity : ComponentActivity() {
                 composable("TestScreen") {
                     TestScreen()
                 }
+                composable("TestInstructionsScreen") {
+                    TestInstructionsScreen(navController)
+                }
+
+                composable("ESOPResultScreen") {
+                    ESOPResultScreen(navController)
+                }
+
+                composable("ESOPCertificateScreen") {
+                    ESOPCertificateScreen(navController)
+                }
+
+
 
                 composable("CompleteProfileScreen") {
 

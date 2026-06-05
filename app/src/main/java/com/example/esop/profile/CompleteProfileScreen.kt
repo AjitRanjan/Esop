@@ -204,13 +204,8 @@ fun CompleteProfileScreen(
             .versionName
     }
     appPrefs = AppPreferences(context)
-//    val authToken by appPrefs.authToken.collectAsState(initial = null)
     val userEmail by appPrefs.userEmail.collectAsState(initial = null)
     val userMobile by appPrefs.mobile.collectAsState(initial = null)
-//    val userprocessGroup by appPrefs.processGroup.collectAsState(initial = null)
-//    val userorganization by appPrefs.organization.collectAsState(initial = null)
-//    val organization_id by appPrefs.processGroupId.collectAsState(initial = null)
-//    val process_groupId by appPrefs.organizationId.collectAsState(initial = null)
     val userloginId by appPrefs.loginId.collectAsState(initial = null)
     val userusertype by appPrefs.usertype.collectAsState(initial = null)
        mobile=userMobile.toString()
@@ -1127,7 +1122,9 @@ fun CompleteProfileScreen(
                         mobile=item.mobile.toString()
                         designation=item.designation.toString()
                         processGroupName=item.process_group
-//                        OrganizationName=item.organization
+                        processGroupCode=item.process_groupId
+                        OrganizationName=item.organization
+                        OrganizationCode=item.organization_id
 
                         stateName=item.state
                         districtname=item.district

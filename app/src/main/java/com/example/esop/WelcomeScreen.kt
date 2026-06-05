@@ -126,7 +126,14 @@ fun WelcomeScreen(navController: NavController) {
                     selected = false,
                     onClick = {
 
-                        navController.navigate("TestScreen") {
+//                        navController.navigate("TestScreen") {
+//
+//                            popUpTo("welcome") {
+//                                inclusive = false
+//                            }
+//                        }
+
+                        navController.navigate("TestInstructionsScreen") {
 
                             popUpTo("welcome") {
                                 inclusive = false
@@ -276,7 +283,9 @@ fun WelcomeScreen(navController: NavController) {
 
                     NavigationBarItem(
                         selected = false,
-                        onClick = {},
+                        onClick = {
+                            navController.navigate("ESOPResultScreen")
+                        },
                         icon = {
 
                             Icon(
@@ -430,7 +439,8 @@ fun WelcomeScreen(navController: NavController) {
                         .height(dimens.actionCardTotalSyncHeight)
                         .clickable {
 
-                            navController.navigate("TestScreen")
+//                            navController.navigate("TestScreen")
+                            navController.navigate("TestInstructionsScreen")
                         },
 
                     shape = RoundedCornerShape(dimens.radiusL),
@@ -452,13 +462,21 @@ fun WelcomeScreen(navController: NavController) {
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
-
                             Text(
                                 text = "Start New Test",
                                 color = Color.White,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold
                             )
+//                            Text(
+//                                text = "Start New Test",
+//                                color = Color.White,
+//                                fontSize = 20.sp,
+//                                fontWeight = FontWeight.Bold,
+//                                modifier = Modifier.clickable {
+//                                    navController.navigate("TestScreen")
+//                                }
+//                            )
 
                             Spacer(
                                 modifier = Modifier.height(dimens.space2XS)
@@ -518,7 +536,10 @@ fun WelcomeScreen(navController: NavController) {
 
                     DashboardCard(
                         dimens = dimens,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f)
+                            .clickable {
+                                navController.navigate("ESOPResultScreen")
+                            },
                         title = "Results",
                         subtitle = "View your results"
                     )
@@ -534,7 +555,10 @@ fun WelcomeScreen(navController: NavController) {
 
                     DashboardCard(
                         dimens = dimens,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f)
+                            .clickable {
+                                navController.navigate("ESOPCertificateScreen")
+                            },
                         title = "Certificate",
                         subtitle = "View & Download"
                     )
