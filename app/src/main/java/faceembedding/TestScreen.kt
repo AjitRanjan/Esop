@@ -85,52 +85,6 @@ fun TestScreen(
     }
 
 
-    var email by remember { mutableStateOf("") }
-    var usertype by remember { mutableStateOf("") }
-
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-
-    var alternateEmail by remember { mutableStateOf("") }
-
-    var dl by remember { mutableStateOf("") }
-
-    var pincode by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("") }
-
-    var address by remember { mutableStateOf("") }
-    var mobile by remember { mutableStateOf("") }
-    var telephone by remember { mutableStateOf("") }
-
-    val coroutineScope = rememberCoroutineScope()
-
-    val errorMap = remember { mutableStateMapOf<String, String>() }
-
-    var processGroupName by remember { mutableStateOf("") }
-    var OrganizationName by remember { mutableStateOf("") }
-    var FunctionaryName by remember { mutableStateOf("") }
-
-    var processGroupCode by remember { mutableStateOf("") }
-    var OrganizationCode by remember { mutableStateOf("") }
-
-    var stateName by remember { mutableStateOf("") }
-    var stateCode by remember { mutableStateOf("") }
-
-    var districtname by remember { mutableStateOf("") }
-    var districtCode by remember { mutableStateOf("") }
-
-    var expanded by remember { mutableStateOf(false) }
-
-    val genderOptions = listOf("Male", "Female", "Other")
-
-    var country by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-
-    var designation by remember { mutableStateOf("") }
-
-
-
     val versionName = remember {
         context.packageManager
             .getPackageInfo(context.packageName, 0)
@@ -167,18 +121,6 @@ fun TestScreen(
         }
     }
 
-
-//    LaunchedEffect(currentLoginId, currentEmail, currentVersion) {
-//        if (currentLoginId.isNotBlank() && currentEmail.isNotBlank()) {
-//            showLoading = true
-//
-//            profileViewModel.getProfile(
-//                appVersion = currentVersion,
-//                loginId = currentLoginId,
-//                email = currentEmail
-//            )
-//        }
-//    }
     val profileState by profileViewModel.profileState.collectAsState()
     LaunchedEffect(profileState) {
 
@@ -223,17 +165,7 @@ fun TestScreen(
                                 Toast.LENGTH_LONG
                             ).show()
 
-//                            navController.navigate("Profile")
-//                            return@forEach
-
                         } else
-
-//                            Toast.makeText(
-//                                context,
-//                                "Profile completed successfully. You can start the exam.",
-//                                Toast.LENGTH_LONG
-//                            ).show()
-
 
 
                             {
