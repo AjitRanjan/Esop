@@ -109,6 +109,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.window.Dialog
@@ -189,7 +190,9 @@ fun CompleteProfileScreen(
         mutableStateOf<Bitmap?>(null)
     }
 
-
+    var profilePercentage by remember {
+        mutableIntStateOf(0)
+    }
     val deviceId = ImeiUtils.getAndroidId(context)
     var showLoading by remember { mutableStateOf(false) }
 
@@ -246,7 +249,7 @@ fun CompleteProfileScreen(
 
 
 
-
+//    ProfileCompletion(progress = profilePercentage)
 
     LaunchedEffect(currentLoginId, currentEmail, currentVersion) {
         if (currentLoginId.isNotBlank() && currentEmail.isNotBlank()) {
@@ -381,34 +384,101 @@ fun CompleteProfileScreen(
         topBar = {
 
             TopAppBar(
-
                 title = {
-
                     Text(
                         text = "Complete Profile",
                         fontWeight = FontWeight.SemiBold
                     )
                 },
-
                 navigationIcon = {
-
                     IconButton(
-                        onClick = {
-                            navController.popBackStack()
-                        }
+                        onClick = { navController.popBackStack() }
                     ) {
-
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
+                actions = {
 
+                    ProfileCompletionTopBar(
+                        progress = profilePercentage
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
                 )
             )
+//            TopAppBar(
+//                title = {
+//                    Text(
+//                        text = "Complete Profile",
+//                        fontWeight = FontWeight.SemiBold
+//                    )
+//                },
+//                navigationIcon = {
+//                    IconButton(
+//                        onClick = { navController.popBackStack() }
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.ArrowBack,
+//                            contentDescription = "Back"
+//                        )
+//                    }
+//                },
+//                actions = {
+//
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        modifier = Modifier.padding(end = 12.dp)
+//                    ) {
+//
+//                        ProfileCompletionTopBar(
+//                            progress = profilePercentage
+//                        )
+//
+//                        Text(
+//                            text = "$profilePercentage%",
+//                            fontSize = 10.sp
+//                        )
+//                    }
+//                },
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = Color.White
+//                )
+//            )
+//            TopAppBar(
+//
+//                title = {
+//
+//                    Text(
+//                        text = "Complete Profile",
+//                        fontWeight = FontWeight.SemiBold
+//                    )
+//                },
+//
+//                navigationIcon = {
+//
+//                    IconButton(
+//                        onClick = {
+//                            navController.popBackStack()
+//                        }
+//                    ) {
+//
+//                        Icon(
+//                            imageVector = Icons.Default.ArrowBack,
+//                            contentDescription = "Back"
+//                        )
+//                    }
+//                },
+//
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = Color.White
+//                )
+//            )
         },
 
         // ================= BOTTOM BUTTON =================
@@ -491,7 +561,10 @@ fun CompleteProfileScreen(
             }
         }
 
-    ) { padding ->
+    )
+
+
+    { padding ->
 
         Column(
             modifier = Modifier
@@ -657,21 +730,6 @@ fun CompleteProfileScreen(
                         verified = !address.isNullOrBlank(),
                         showError = address.isNullOrBlank()
                     )
-//
-//                    ProfileDetail(
-//                        "Login ID",
-//                        loginId,
-//                        verified = !loginId.isNullOrBlank(),
-//                        showError = loginId.isNullOrBlank()
-//                    )
-
-//                    ProfileDetail("Phone", mobile, verified = true)
-//                    ProfileDetail("Email", email, verified = true)
-//                    ProfileDetail("Gender", gender,showError = true)
-//                    ProfileDetail("Date of Birth", age,showError = true)
-//                    ProfileDetail("Address", address,showError = true)
-//                    ProfileDetail("loginId", loginId,verified = true)
-
                 }
             }
 
@@ -729,9 +787,17 @@ fun CompleteProfileScreen(
                     )
                 }
             }
+
+
+
+
+//            Start code
+
+
             AnimatedVisibility(
                 visible = personalInfoExpanded
-            ) {
+            )
+            {
                 Column {
 
                     InputField(
@@ -861,7 +927,6 @@ fun CompleteProfileScreen(
                         color = Color.Black,
                         modifier = Modifier.weight(1f)
                     )
-
                     Icon(
                         imageVector = if (workInfoExpanded) {
                             Icons.Default.KeyboardArrowDown
@@ -876,8 +941,7 @@ fun CompleteProfileScreen(
 
             AnimatedVisibility(
                 visible = workInfoExpanded
-            ) {
-                Column {
+            ) { Column {
 
                     CommonDropdown(
                         list = processGroupViewModel.processGroupList,
@@ -931,10 +995,8 @@ fun CompleteProfileScreen(
                             stateviewModel.fetchState()
                         }
                     )
-                }
-            }
+                } }
             // ================= LOCATION =================
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -953,8 +1015,7 @@ fun CompleteProfileScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = Color.White
                 )
-            ) {
-                Row(
+            ) { Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
@@ -962,8 +1023,7 @@ fun CompleteProfileScreen(
                             vertical = 12.dp
                         ),
                     verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
+                ) { Text(
                         text = "Location",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -985,8 +1045,7 @@ fun CompleteProfileScreen(
 
             AnimatedVisibility(
                 visible = locationExpanded
-            ) {
-                Column {
+            ) { Column {
 
                     CommonDropdown(
                         list = stateviewModel.stateList,
@@ -1053,8 +1112,17 @@ fun CompleteProfileScreen(
                             imeAction = ImeAction.Next
                         )
                     )
-                }
-            }
+                }}
+
+
+
+//            End code
+
+
+
+
+
+
             Spacer(modifier = Modifier.height(120.dp))
         }
     }
@@ -1125,18 +1193,56 @@ fun CompleteProfileScreen(
                         processGroupCode=item.process_groupId
                         OrganizationName=item.organization
                         OrganizationCode=item.organization_id
-
                         stateName=item.state
                         districtname=item.district
-                        profileBitmap =
-                            Base64Utils.base64ToBitmap(
-                                item.profileFile
-                            )
+                        profileBitmap = Base64Utils.base64ToBitmap(item.profileFile)
                         imagePath=item.profileFile
                         FunctionaryName=item.functionary
-                    }
-                }
+                        FunctionaryName
+                        if (!FunctionaryName.isNullOrBlank()) {
+                            stateviewModel.fetchState()
+                        }
+
+
+
+                        // Profile Completion Calculation
+                        val fields = listOf(
+                            item.email,
+                            item.firstname,
+                            item.lastname,
+                            item.age?.toString(),
+                            item.gender?.toString(),
+                            item.pincode?.toString(),
+                            item.city,
+                            item.address,
+                            item.mobile,
+                            item.designation,
+                            item.process_group,
+                            item.process_groupId,
+                            item.organization,
+                            item.organization_id,
+                            item.profileFile,
+                            item.functionary,
+                            item.state,
+                            item.district
+                        )
+
+                        val filledFields = fields.count {
+                            !it.isNullOrBlank() &&
+                                    it.trim() != "null"
+                        }
+
+                        profilePercentage =
+                            ((filledFields.toFloat() / fields.size) * 100).toInt()
+
+
+                }}
+
+
+
+
             }
+
 
             is Resource.Error -> {
                 showLoading = false
@@ -1172,6 +1278,27 @@ fun CompleteProfileScreen(
                 )
             }
         }
+    }
+}
+@Composable
+fun ProfileCompletionTopBar(progress: Int) {
+
+    Box(
+        modifier = Modifier.size(42.dp),
+        contentAlignment = Alignment.Center
+    ) {
+
+        CircularProgressIndicator(
+            progress = { progress / 100f },
+            modifier = Modifier.fillMaxSize(),
+            strokeWidth = 4.dp
+        )
+
+        Text(
+            text = "$progress",
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 

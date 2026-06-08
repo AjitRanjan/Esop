@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("TestScreen") {
-                    TestScreen()
+                    TestScreen(navController)
                 }
                 composable("TestInstructionsScreen") {
                     TestInstructionsScreen(navController)
