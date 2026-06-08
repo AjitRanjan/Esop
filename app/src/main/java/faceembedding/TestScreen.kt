@@ -12,6 +12,7 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
@@ -35,6 +37,7 @@ import com.example.esop.network.Resource
 import com.example.esop.profile.CompletePofileScreenViewModel
 import com.example.esop.profile.ProfileViewModel
 import com.example.esop.profile.Repositry.UpdateProfileViewModel
+import com.example.esop.quetions_esop.QuestionViewModel
 import com.example.esop.util.Base64Utils
 import com.example.esop.vibrate.FaceVerificationUtils
 import com.example.esop.vibrate.VibrateWhileDialogVisible
@@ -45,16 +48,19 @@ import java.util.concurrent.Executors
 fun TestScreen(
     navController: NavController,
     viewModel: CompletePofileScreenViewModel = viewModel(),
-    updateModel: UpdateProfileViewModel = viewModel()
+    updateModel: UpdateProfileViewModel = viewModel(),
+    questionViewModel: QuestionViewModel = viewModel()
 ) {
     val state = viewModel.state
     val UpdateUI = updateModel.Updatestate
+    val questionState by questionViewModel.questionState.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     lateinit var appPrefs: AppPreferences
     val previewView = remember {
         PreviewView(context)
     }
+//    val questionViewModel: EsopQuestionModel = viewModel()
     var showLoading by remember { mutableStateOf(false) }
     val cameraExecutor = remember {
         Executors.newSingleThreadExecutor()
@@ -68,9 +74,8 @@ fun TestScreen(
         mutableStateOf<FloatArray?>(null)
     }
 
-    var resultText by remember {
-        mutableStateOf("No Face Captured")
-    }
+    var resultText by remember { mutableStateOf("No Face Captured") }
+    var questionCode by remember { mutableStateOf(2) }
 
     var showDialog by remember {
         mutableStateOf(false)
@@ -121,6 +126,53 @@ fun TestScreen(
         }
     }
 
+
+
+    LaunchedEffect(questionState) {
+
+        when (val state = questionState) {
+
+            is Resource.Success -> {
+
+                val response = state.data
+
+                Log.d(
+                    "QUESTION_SUCCESS",
+                    response.toString()
+                )
+                Toast.makeText(
+                    context,
+                    " exam quetions",
+                    Toast.LENGTH_LONG
+                ).show()
+                Toast.makeText(
+                    context,
+                    "Questions Loaded Successfully",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            is Resource.Error -> {
+
+                Toast.makeText(
+                    context,
+                    state.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            is Resource.Loading -> {
+
+                Log.d(
+                    "QUESTION_LOADING",
+                    "Loading..."
+                )
+            }
+
+            else -> {}
+        }
+    }
+
     val profileState by profileViewModel.profileState.collectAsState()
     LaunchedEffect(profileState) {
 
@@ -166,6 +218,8 @@ fun TestScreen(
                             ).show()
 
                         } else
+//                        questionViewModel.fetchQuestions(questionCode.toString())
+
 
 
                             {

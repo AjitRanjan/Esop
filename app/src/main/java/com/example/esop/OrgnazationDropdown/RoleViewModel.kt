@@ -52,31 +52,7 @@ class RoleViewModel : ViewModel() {
         roleList = emptyList()
     }
 }
-//class RoleViewModel : ViewModel() {
-//
-//    var roleList by mutableStateOf<List<RoleItem>>(emptyList())
-//        private set
-//
-//    var isLoading by mutableStateOf(false)
-//    var error by mutableStateOf("")
-//
-//    fun fetchRoles(id: String) {
-//
-//        viewModelScope.launch {
-//
-//            isLoading = true
-//            error = ""
-//
-//            try {
-//                val response = RetrofitClient.api.getRoles(id)
-//
-//                roleList = response
-//
-//            } catch (e: Exception) {
-//                error = e.message ?: "Error"
-//            }
-//
-//            isLoading = false
-//        }
-//    }
-//}
+
+
+
+

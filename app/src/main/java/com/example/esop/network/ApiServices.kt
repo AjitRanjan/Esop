@@ -12,6 +12,7 @@ import com.example.esop.profile.ProfileRequest
 import com.example.esop.profile.ProfileResponse
 import com.example.esop.profile.UpdateProfileResponse
 import com.example.esop.profile.request.UpadteProfileRequest
+import com.example.esop.quetions_esop.QuestionResponse
 import com.example.esop.token.GetToken
 import com.example.esop.token.TokenRequest
 import com.example.esop.state.StateResponse
@@ -56,7 +57,9 @@ interface ApiServices {
 
 
 
-//    @GET("esop/api/assign-roles/{processId}/{orgId}")
+//   https://kaushal.dord.gov.in/demobackend/esop/api/exam
+
+
     @GET("esop/api/assign-roles/{orgId}")
     suspend fun getFunctionaries(
 
@@ -100,4 +103,10 @@ interface ApiServices {
     suspend fun UpdateUser(
         @Body request: UpadteProfileRequest
     ): UpdateProfileResponse
+
+
+    @GET("esop/api/exam/{id}")
+    suspend fun getQuestions(
+        @Path("id") id: String
+    ): QuestionResponse
 }
