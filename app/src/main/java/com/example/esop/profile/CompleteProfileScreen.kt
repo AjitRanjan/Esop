@@ -145,6 +145,7 @@ fun CompleteProfileScreen(
     var pincode by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
+    var departmentType by remember { mutableStateOf("") }
 
     var address by remember { mutableStateOf("") }
     var mobile by remember { mutableStateOf("") }
@@ -170,6 +171,7 @@ fun CompleteProfileScreen(
     var expanded by remember { mutableStateOf(false) }
 
     val genderOptions = listOf("Male", "Female", "Other")
+    val usertypedesc = listOf("Operations", "Finance")
 
     var country by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
@@ -500,10 +502,36 @@ fun CompleteProfileScreen(
                 }
 
                 Button(
-                      onClick = {
-                          if (imageBase64.isNullOrEmpty()) {
-                              imageBase64 = imagePath
-                          }
+
+
+                    onClick = {
+
+                        if (departmentType.isNullOrBlank()) {
+
+                            Toast.makeText(
+                                context,
+                                "Please choose your Department then proceed",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            return@Button
+                        }
+
+                        else if (imageBase64.isNullOrBlank() && imagePath.isNullOrBlank()) {
+
+                            Toast.makeText(
+                                context,
+                                "Please capture Profile Image then proceed",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            return@Button
+                        }
+
+                        if (imageBase64.isNullOrEmpty()) {
+                            imageBase64 = imagePath
+                        }
+
                         val request = UpadteProfileRequest(
                             versionName.toString(),
                             email,
@@ -525,19 +553,61 @@ fun CompleteProfileScreen(
                             city,
                             districtCode,
                             stateCode,
-                            pincode ,
-                            "",
+                            pincode,
+                            departmentType,
                             usertype,
                             loginId,
                             designation,
                             processGroupCode,
                             OrganizationCode,
                             imageBase64
-
                         )
-                           showLoading=true
-                          updateModel.UpdateProfile(context, request)
+//                        imageBase64
+                        showLoading = true
+
+                        updateModel.UpdateProfile(
+                            context,
+                            request
+                        )
                     },
+//                      onClick = {
+//                          if (imageBase64.isNullOrEmpty()) {
+//                              imageBase64 = imagePath
+//                          }
+//                        val request = UpadteProfileRequest(
+//                            versionName.toString(),
+//                            email,
+//                            firstName,
+//                            lastName,
+//                            "",
+//                            "",
+//                            "",
+//                            age.toInt(),
+//                            gender,
+//                            address,
+//                            mobile,
+//                            processGroupName,
+//                            OrganizationName,
+//                            FunctionaryName,
+//                            "India",
+//                            stateName,
+//                            districtname,
+//                            city,
+//                            districtCode,
+//                            stateCode,
+//                            pincode ,
+//                            departmentType,
+//                            usertype,
+//                            loginId,
+//                            designation,
+//                            processGroupCode,
+//                            OrganizationCode,
+//                            imageBase64
+//
+//                        )
+//                           showLoading=true
+//                          updateModel.UpdateProfile(context, request)
+//                    },
 
                     modifier = Modifier
                         .fillMaxWidth()
@@ -843,7 +913,8 @@ fun CompleteProfileScreen(
                         onExpandedChange = {
                             expanded = !expanded
                         }
-                    ) {
+                    )
+                    {
                         OutlinedTextField(
                             value = gender,
                             onValueChange = {},
@@ -942,6 +1013,59 @@ fun CompleteProfileScreen(
             AnimatedVisibility(
                 visible = workInfoExpanded
             ) { Column {
+
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = {
+                        expanded = !expanded
+                    }
+                )
+                {
+                    OutlinedTextField(
+                        value = departmentType,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = {
+                            Text("Please Choose Your Department Type")
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = expanded
+                            )
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = {
+                            expanded = false
+                        }
+                    ) {
+                        usertypedesc.forEach { option ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(option)
+                                },
+                                onClick = {
+                                    departmentType = option
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+
+
+
+
+
+
+
 
                     CommonDropdown(
                         list = processGroupViewModel.processGroupList,
@@ -1198,6 +1322,7 @@ fun CompleteProfileScreen(
                         profileBitmap = Base64Utils.base64ToBitmap(item.profileFile)
                         imagePath=item.profileFile
                         FunctionaryName=item.functionary
+                        departmentType=item.usertypedesc
                         FunctionaryName
                         if (!FunctionaryName.isNullOrBlank()) {
                             stateviewModel.fetchState()
@@ -1224,6 +1349,7 @@ fun CompleteProfileScreen(
                             item.profileFile,
                             item.functionary,
                             item.state,
+                            item.usertypedesc,
                             item.district
                         )
 

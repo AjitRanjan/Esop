@@ -6,6 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,9 +19,11 @@ import com.example.esop.login.LoginScreen
 import com.example.esop.network.AppPreferences
 import com.example.esop.profile.CompleteProfileScreen
 import com.example.esop.profile.Repositry.UpdateProfileViewModel
+import com.example.esop.quetions_esop.Question
 import com.example.esop.util.ImeiUtils
 import faceembedding.ESOPCertificateScreen
 import faceembedding.ESOPResultScreen
+
 import faceembedding.TestInstructionsScreen
 import faceembedding.TestScreen
 import signup.SignupScreen
@@ -29,7 +36,19 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowInsetsControllerCompat(
+            window,
+            window.decorView
+        ).let { controller ->
 
+            controller.hide(
+                WindowInsetsCompat.Type.systemBars()
+            )
+
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat
+                    .BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
         appPrefs = AppPreferences(this)
 
         // Device ID Fetch First
@@ -53,6 +72,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+            var questionList by remember {
+                mutableStateOf<List<Question>>(emptyList())
+            }
             val navController = rememberNavController()
 
             val userMobile by appPrefs.mobile.collectAsState(initial = null)
@@ -99,7 +121,12 @@ class MainActivity : ComponentActivity() {
                     ESOPCertificateScreen(navController)
                 }
 
-
+//                composable("ExamScreen") {
+//                    ExamScreen(
+//                        navController = navController,
+//                        questionList = questionList
+//                    )
+//                }
 
                 composable("CompleteProfileScreen") {
 

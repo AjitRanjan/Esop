@@ -9,17 +9,28 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.widget.Toast
 import androidx.camera.core.*
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetectorOptions
 import java.nio.ByteBuffer
 import java.util.concurrent.ExecutorService
 import kotlin.math.sqrt
 
 object FaceVerificationUtils {
+
+    /** Simple data object forwarded to callers to avoid exposing ML Kit types to other modules */
+    data class FaceData(
+        val leftEyeOpenProbability: Float?,
+        val rightEyeOpenProbability: Float?,
+        val trackingId: Int?
+    )
 
     fun startCamera(
         context: Context,
@@ -130,6 +141,91 @@ object FaceVerificationUtils {
         }
 
         return sqrt(sum)
+    }
+
+    /**
+     * Starts camera preview + image capture + image analysis (ML Kit face detection).
+     * onReady returns the ImageCapture instance so callers can capture stills.
+     * onFace is called for each detected Face (from ML Kit).
+     */
+    fun startCameraWithAnalyzer(
+        context: Context,
+        lifecycleOwner: androidx.lifecycle.LifecycleOwner,
+        previewView: PreviewView,
+        onReady: (ImageCapture) -> Unit,
+        onFace: (FaceData) -> Unit
+    ) {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+
+        val options = FaceDetectorOptions.Builder()
+            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+            .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
+            .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
+            .enableTracking()
+            .build()
+
+        val detector = FaceDetection.getClient(options)
+
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(previewView.surfaceProvider)
+            }
+
+            val imageCapture = ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .build()
+
+            val imageAnalysis = ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+
+            imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy ->
+                val mediaImage = imageProxy.image
+                if (mediaImage != null) {
+                    val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+                    detector.process(image)
+                        .addOnSuccessListener { faces ->
+                            faces.forEach { face ->
+                                try {
+                                    // map ML Kit Face to our lightweight FaceData so callers don't need ML Kit types
+                                    val fd = FaceData(
+                                        leftEyeOpenProbability = face.leftEyeOpenProbability,
+                                        rightEyeOpenProbability = face.rightEyeOpenProbability,
+                                        trackingId = face.trackingId
+                                    )
+                                    onFace(fd)
+                                } catch (e: Exception) {
+                                    // swallow exceptions from caller analyzer
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                        .addOnFailureListener { }
+                        .addOnCompleteListener { imageProxy.close() }
+                } else {
+                    imageProxy.close()
+                }
+            }
+
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.DEFAULT_FRONT_CAMERA,
+                    preview,
+                    imageCapture,
+                    imageAnalysis
+                )
+
+                onReady(imageCapture)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "Camera Start Failed", Toast.LENGTH_SHORT).show()
+            }
+
+        }, ContextCompat.getMainExecutor(context))
     }
 }
 

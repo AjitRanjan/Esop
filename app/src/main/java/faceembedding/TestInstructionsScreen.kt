@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,7 +26,7 @@ fun TestInstructionsScreen(
     onStartTestClick: () -> Unit = {},
     onGoBackClick: () -> Unit = {}
 ) {
-
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -103,28 +104,16 @@ fun TestInstructionsScreen(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.clickable {
+
+
+
+
+
+
                     navController.navigate("TestScreen")
                 }
             )
-//            Text(
-//                text = "Start Test",
-//                fontSize = 17.sp,
-//                fontWeight = FontWeight.Bold,
-//                color = Color.White
-//            )
         }
-
-//        Spacer(modifier = Modifier.height(18.dp))
-//
-//        Text(
-//            text = "Go Back",
-//            fontSize = 16.sp,
-//            fontWeight = FontWeight.SemiBold,
-//            color = Color(0xFF2563EB),
-//            modifier = Modifier.clickable {
-//                onGoBackClick()
-//            }
-//        )
     }
 }
 

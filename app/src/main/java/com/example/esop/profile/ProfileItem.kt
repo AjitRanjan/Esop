@@ -21,5 +21,6 @@ data class ProfileItem(
     val state: String,
     val designation: String,
     val email: String,
+    val loginId: String,
     val age: Int
 )
