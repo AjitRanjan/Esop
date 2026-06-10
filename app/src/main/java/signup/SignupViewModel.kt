@@ -15,10 +15,6 @@ import signup.Repositry.SignupRepository
 import signup.request.SignupRequest
 
 class SignupViewModel : ViewModel() {
-
-
-
-
     private val repo = SignupRepository()
 
     var state by mutableStateOf<SignupState>(SignupState.Idle)

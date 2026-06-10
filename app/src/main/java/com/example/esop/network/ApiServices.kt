@@ -16,6 +16,8 @@ import com.example.esop.quetions_esop.QuestionResponse
 import com.example.esop.token.GetToken
 import com.example.esop.token.TokenRequest
 import com.example.esop.state.StateResponse
+import faceembedding.SubmitExamRequest
+import faceembedding.SubmitResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -109,4 +111,20 @@ interface ApiServices {
     suspend fun getQuestions(
         @Path("id") id: String
     ): QuestionResponse
+
+
+
+
+
+    @POST("esop/api/mbexamsubmit/insertsubmit")
+    suspend fun insertsubmit(
+
+        @Body request: SubmitExamRequest
+
+    ): SubmitResponse
+//    @POST("esop/api/mbexamsubmit/insertsubmit")
+//    suspend fun insertsubmit(
+//        @Body request: SubmitExamRequest
+//    ): SubmitResponse
+
 }

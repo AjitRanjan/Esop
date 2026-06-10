@@ -107,16 +107,20 @@ import com.example.esop.ui.theme.dimens
 import com.example.esop.util.helper.LegendItem
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import faceembedding.Repositry.InsertExamState
+import faceembedding.Repositry.InsertViewModel
 
 @Composable
 fun TestScreen(
     navController: NavController,
     viewModel: CompletePofileScreenViewModel = viewModel(),
     updateModel: UpdateProfileViewModel = viewModel(),
-    questionViewModel: QuestionViewModel = viewModel()
+    questionViewModel: QuestionViewModel = viewModel() ,
+    insertViewModel: InsertViewModel = viewModel()
 ) {
     val state = viewModel.state
     val UpdateUI = updateModel.Updatestate
+    val submitState = insertViewModel.state
     val questionState by questionViewModel.questionState.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -211,6 +215,8 @@ fun TestScreen(
         mutableStateOf(false)
     }
 
+     var submitRequest: SubmitExamRequest? = null
+     var submitRequestJson = ""
     val profileViewModel: ProfileViewModel = viewModel()
     appPrefs = AppPreferences(context)
     val userEmail by appPrefs.userEmail.collectAsState(initial = null)
@@ -240,6 +246,79 @@ fun TestScreen(
         else -> 18.sp                                      // Compact
     }
 //val dimens = MaterialTheme.dimens
+
+
+
+
+
+
+
+//    UI State
+
+    LaunchedEffect(submitState) {
+
+        when (submitState) {
+
+            is InsertExamState.Loading -> {
+
+                Log.d(
+                    "SUBMIT_LOADING",
+                    "Loading..."
+                )
+            }
+
+            is InsertExamState.Success -> {
+
+                val response =
+                    submitState.response
+
+                Toast.makeText(
+                    context,
+                    response.responseDesc,
+                    Toast.LENGTH_LONG
+                ).show()
+
+                Log.d(
+                    "SUBMIT_SUCCESS",
+                    Gson().toJson(response)
+                )
+
+                response.wrappedLista.forEach {
+
+                    Log.d(
+                        "RESULT_DATA",
+                        """
+                    Total Questions : ${it.totalQuestions}
+                    Correct Answer : ${it.correctAns}
+                    Wrong Answer : ${it.wrongAns}
+                    Not Attempted : ${it.notAttempted}
+                    Percentage : ${it.percentage}
+                    Result : ${it.Result}
+                    """.trimIndent()
+                    )
+                }
+            }
+
+            is InsertExamState.Error -> {
+
+                Toast.makeText(
+                    context,
+                    submitState.message,
+                    Toast.LENGTH_LONG
+                ).show()
+
+                Log.d(
+                    "SUBMIT_ERROR",
+                    submitState.message
+                )
+            }
+
+            else -> {}
+        }
+    }
+
+
+
     @Composable
     fun ExamScreen(
         questionList: List<Question>
@@ -747,15 +826,16 @@ fun TestScreen(
                         answers = submitList
                     )
 
-                    val prettyJson = GsonBuilder()
+                    submitRequestJson = GsonBuilder()
                         .setPrettyPrinting()
                         .create()
                         .toJson(request)
+                    println(submitRequestJson)
 
-                    Log.d(
-                        "SUBMIT_REQUEST",
-                        prettyJson
-                    )
+//                    Log.d(
+//                        "SUBMIT_REQUEST",
+//                        prettyJson
+//                    )
 
                         showQuestionPalette = true
 
@@ -1136,11 +1216,46 @@ fun TestScreen(
                         modifier = Modifier.weight(1f),
                         onClick = {
 
-                            Toast.makeText(
-                                context,
-                                "Exam Submitted Successfully",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            val submitList =
+                                answeredQuestions.map { entry ->
+
+                                    SubmitAnswer(
+
+                                        question_id =
+                                            questionList[entry.key].questionId,
+
+                                        answer_given =
+                                            entry.value
+                                    )
+                                }
+
+                            val request =
+                                SubmitExamRequest(
+
+                                    courseType = 2,
+
+                                    courseName = "Operations",
+
+                                    certificateType = "Master",
+
+                                    loginId = currentLoginId,
+
+                                    email = currentEmail,
+
+                                    answers = submitList
+                                )
+
+                            insertViewModel.insertSubmit(
+                                request
+                            )
+
+//                            insertViewModel.insertSubmit(
+//                                submitRequestJson.toString())
+//                            Toast.makeText(
+//                                context,
+//                                "Exam Submitted Successfully",
+//                                Toast.LENGTH_LONG
+//                            ).show()
 
                             // Submit API Call Here
                         }
