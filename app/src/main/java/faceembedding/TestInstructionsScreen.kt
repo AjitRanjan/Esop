@@ -1,6 +1,12 @@
 package faceembedding
 
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.ImageCapture
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +15,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,7 +27,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.example.esop.vibrate.FaceVerificationUtils
+import java.util.concurrent.Executors
 
 
 @Composable
@@ -26,7 +41,36 @@ fun TestInstructionsScreen(
     onStartTestClick: () -> Unit = {},
     onGoBackClick: () -> Unit = {}
 ) {
+
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val cameraExecutor = remember {
+        Executors.newSingleThreadExecutor()
+    }
+
+    var showCameraDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var imageCapture by remember {
+        mutableStateOf<ImageCapture?>(null)
+    }
+
+    var firstEmbedding by remember {
+        mutableStateOf<FloatArray?>(null)
+    }
+
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+
+            if (granted) {
+                showCameraDialog = true
+            }
+        }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -86,13 +130,35 @@ fun TestInstructionsScreen(
         )
 
         Spacer(modifier = Modifier.weight(1f))
-
         Button(
-            onClick = onStartTestClick,
+            onClick = {
+                navController.navigate(
+                    "TestScreen"
+                )
+//                val hasCameraPermission =
+//                    ContextCompat.checkSelfPermission(
+//                        context,
+//                        Manifest.permission.CAMERA
+//                    ) == PackageManager.PERMISSION_GRANTED
+//
+//                if (hasCameraPermission) {
+//
+//                    showCameraDialog = true
+//
+//                } else {
+//
+//                    permissionLauncher.launch(
+//                        Manifest.permission.CAMERA
+//                    )
+//                }
+            },
+
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
+
             shape = RoundedCornerShape(8.dp),
+
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF0B5EF7)
             )
@@ -102,20 +168,120 @@ fun TestInstructionsScreen(
                 text = "Start New Test",
                 color = Color.White,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable {
-
-
-
-
-
-
-                    navController.navigate("TestScreen")
-                }
+                fontWeight = FontWeight.Bold
             )
         }
     }
+
+//    if (showCameraDialog) {
+//
+//        Dialog(
+//            onDismissRequest = {}
+//        ) {
+//
+//            Card(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(500.dp),
+//
+//                shape = RoundedCornerShape(16.dp)
+//            ) {
+//
+//                Column {
+//
+//                    Text(
+//                        text = "Please Look At Camera",
+//                        modifier = Modifier.padding(16.dp),
+//                        fontWeight = FontWeight.Bold
+//                    )
+//
+//                    AndroidView(
+//
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .weight(1f),
+//
+//                        factory = { ctx ->
+//
+//                            PreviewView(ctx)
+//                        },
+//
+//                        update = { previewView ->
+//
+//                            FaceVerificationUtils.startCamera(
+//                                context = context,
+//                                lifecycleOwner = lifecycleOwner,
+//                                previewView = previewView
+//                            ) { capture ->
+//
+//                                imageCapture = capture
+//
+//                                previewView.postDelayed({
+//
+//                                    FaceVerificationUtils.captureImage(
+//                                        imageCapture = imageCapture,
+//                                        cameraExecutor = cameraExecutor,
+//                                        context = context
+//                                    ) { bitmap ->
+//
+//                                        firstEmbedding =
+//                                            FaceVerificationUtils
+//                                                .createEmbedding(bitmap)
+//
+//                                        showCameraDialog = false
+//
+//                                        Toast.makeText(
+//                                            context,
+//                                            "Face Captured Successfully",
+//                                            Toast.LENGTH_SHORT
+//                                        ).show()
+//
+//                                        navController.navigate(
+//                                            "TestScreen"
+//                                        )
+//                                    }
+//
+//                                }, 1500)
+//
+//                            }
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
 }
+
+//        Button(
+//            onClick = onStartTestClick,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(52.dp),
+//            shape = RoundedCornerShape(8.dp),
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = Color(0xFF0B5EF7)
+//            )
+//        )
+//        {
+//
+//            Text(
+//                text = "Start New Test",
+//                color = Color.White,
+//                fontSize = 20.sp,
+//                fontWeight = FontWeight.Bold,
+//                modifier = Modifier.clickable {
+//
+//
+//
+//
+//
+//
+//                    navController.navigate("TestScreen")
+//                }
+//            )
+//        }
+//    }
+//}
 
 @Composable
 private fun InstructionItem(

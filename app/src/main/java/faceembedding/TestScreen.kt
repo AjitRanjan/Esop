@@ -73,6 +73,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 
@@ -81,11 +82,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
@@ -99,7 +102,9 @@ import androidx.compose.ui.text.style.TextAlign
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.example.esop.ui.theme.dimens
+import com.example.esop.util.helper.LegendItem
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 
@@ -141,6 +146,7 @@ fun TestScreen(
 
     var UserName by remember { mutableStateOf("") }
     var CanddidateId by remember { mutableStateOf("") }
+    var usertypedesc by remember { mutableStateOf("") }
     var firstEmbedding by remember {
         mutableStateOf<FloatArray?>(null)
     }
@@ -152,6 +158,10 @@ fun TestScreen(
         mutableStateOf(false)
     }
 
+
+    val markedQuestions = remember {
+        mutableStateListOf<Int>()
+    }
     var questionList by remember {
         mutableStateOf<List<Question>>(emptyList())
     }
@@ -188,7 +198,18 @@ fun TestScreen(
             cameraExecutor.shutdown()
         }
     }
+    val answeredCount = answeredQuestions.size
 
+    val reviewCount = reviewQuestions.size
+
+    val markedCount = markedQuestions.size
+
+    val notAnsweredCount =
+        questionList.size - answeredCount
+
+    var showReviewScreen by remember {
+        mutableStateOf(false)
+    }
 
     val profileViewModel: ProfileViewModel = viewModel()
     appPrefs = AppPreferences(context)
@@ -528,14 +549,6 @@ fun TestScreen(
                                             selectedAnswer = ""
                                         }
                                     }
-//                                    "Save & Next" -> {
-//
-//                                        if (currentQuestionIndex < questionList.lastIndex) {
-//
-//                                            currentQuestionIndex++
-//                                            selectedAnswer = ""
-//                                        }
-//                                    }
                                     "Save & Review" -> {
 
                                         if (!reviewQuestions.contains(currentQuestionIndex)) {
@@ -557,21 +570,29 @@ fun TestScreen(
                                             selectedAnswer = ""
                                         }
                                     }
-//                                    "Save & Review" -> {
-//                                        // Save Review API
-//                                    }
                                     "Mark" -> {
 
-                                        if (!reviewQuestions.contains(currentQuestionIndex)) {
+                                        if (!markedQuestions.contains(currentQuestionIndex)) {
 
-                                            reviewQuestions.add(
-                                                currentQuestionIndex
-                                            )
+                                            markedQuestions.add(currentQuestionIndex)
+
+
+
                                         }
+
                                     }
-//                                    "Mark" -> {
-//                                        // Mark API
+
+
+//                                        {
+//
+//                                        if (!reviewQuestions.contains(currentQuestionIndex)) {
+//
+//                                            reviewQuestions.add(
+//                                                currentQuestionIndex
+//                                            )
+//                                        }
 //                                    }
+
                                 }
                             },
 
@@ -691,6 +712,20 @@ fun TestScreen(
 
                 onClick = {
 
+                    if (answeredQuestions.size != questionList.size) {
+
+                        val remainingQuestions =
+                            questionList.size - answeredQuestions.size
+
+                        Toast.makeText(
+                            context,
+                            "Please attempt all questions. Remaining: $remainingQuestions",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        return@Button
+                    }
+
                     val submitList = answeredQuestions.map { entry ->
 
                         SubmitAnswer(
@@ -705,17 +740,12 @@ fun TestScreen(
                     val request = SubmitExamRequest(
 
                         courseType = 2,
-                        courseName="Master",
-                        certificateType="",
+                        courseName = usertypedesc,
+                        certificateType = "Master",
                         email = currentEmail,
-
                         loginId = currentLoginId,
-
-                        title = "Master",
-
                         answers = submitList
                     )
-
 
                     val prettyJson = GsonBuilder()
                         .setPrettyPrinting()
@@ -727,7 +757,54 @@ fun TestScreen(
                         prettyJson
                     )
 
-                },
+                        showQuestionPalette = true
+
+//                    Toast.makeText(
+//                        context,
+//                        "All Questions Attempted. Submitting Exam...",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+
+                    // API Call Here
+                    // submitExamViewModel.submitExam(request)
+                }
+                ,
+
+//                onClick = {
+//
+//                    val submitList = answeredQuestions.map { entry ->
+//
+//                        SubmitAnswer(
+//                            question_id =
+//                                questionList[entry.key].questionId,
+//
+//                            answer_given =
+//                                entry.value
+//                        )
+//                    }
+//
+//                    val request = SubmitExamRequest(
+//
+//                        courseType = 2,
+//                        courseName=usertypedesc,
+//                        certificateType="Master",
+//                        email = currentEmail,
+//                        loginId = currentLoginId,
+//                        answers = submitList
+//                    )
+//
+//
+//                    val prettyJson = GsonBuilder()
+//                        .setPrettyPrinting()
+//                        .create()
+//                        .toJson(request)
+//
+//                    Log.d(
+//                        "SUBMIT_REQUEST",
+//                        prettyJson
+//                    )
+//
+//                },
 
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
@@ -759,171 +836,321 @@ fun TestScreen(
                 }
             }
         }
-
     if (showQuestionPalette) {
 
-        AlertDialog(
-            onDismissRequest = {
-                showQuestionPalette = false
-            },
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .zIndex(10f)
+        ) {
 
-            confirmButton = {},
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
 
-            text = {
-
-                Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
                     Text(
                         text = "Question Index",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
+                        fontSize = 24.sp
                     )
 
-                    Spacer(
-                        modifier = Modifier.height(
-                            dimens.spaceM
-                        )
-                    )
-
-                    // ================= LEGEND =================
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
+                    IconButton(
+                        onClick = {
+                            showQuestionPalette = false
+                        }
                     ) {
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .background(
-                                        Color(0xFFF44336),
-                                        RoundedCornerShape(4.dp)
-                                    )
-                            )
-
-                            Spacer(
-                                modifier = Modifier.width(
-                                    dimens.spaceXS
-                                )
-                            )
-
-                            Text(
-                                text = "Not Answered",
-                                fontSize = 12.sp
-                            )
-                        }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .background(
-                                        Color(0xFF4CAF50),
-                                        RoundedCornerShape(4.dp)
-                                    )
-                            )
-
-                            Spacer(
-                                modifier = Modifier.width(
-                                    dimens.spaceXS
-                                )
-                            )
-
-                            Text(
-                                text = "Answered",
-                                fontSize = 12.sp
-                            )
-                        }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .background(
-                                        Color(0xFFFFC107),
-                                        RoundedCornerShape(4.dp)
-                                    )
-                            )
-
-                            Spacer(
-                                modifier = Modifier.width(
-                                    dimens.spaceXS
-                                )
-                            )
-
-                            Text(
-                                text = "Review",
-                                fontSize = 12.sp
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close"
+                        )
                     }
+                }
 
-                    Spacer(
-                        modifier = Modifier.height(
-                            dimens.spaceM
-                        )
+                Spacer(
+                    modifier = Modifier.height(20.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+
+                    LegendItem(
+                        Color(0xFF9E9E9E),
+                        "Not Answered"
                     )
 
-                    // ================= QUESTION GRID =================
+                    LegendItem(
+                        Color(0xFF4CAF50),
+                        "Answered"
+                    )
 
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(5),
-                        modifier = Modifier.height(400.dp)
-                    ) {
+                    LegendItem(
+                        Color(0xFFFFC107),
+                        "Review"
+                    )
 
-                        items(questionList.size) { index ->
+                    LegendItem(
+                        Color(0xFF03A9F4),
+                        "Marked"
+                    )
+                }
 
-                            val bgColor = when {
+                Spacer(
+                    modifier = Modifier.height(20.dp)
+                )
 
-                                reviewQuestions.contains(index) ->
-                                    Color(0xFFFFC107)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(5),
+                    modifier = Modifier.weight(1f)
+                ) {
 
-                                answeredQuestions.containsKey(index) ->
-                                    Color(0xFF4CAF50)
+                    items(questionList.size) { index ->
 
-                                else ->
-                                    Color(0xFFF44336)
-                            }
+                        val bgColor = when {
 
-                            Box(
-                                modifier = Modifier
-                                    .padding(4.dp)
-                                    .size(50.dp)
-                                    .background(
-                                        bgColor,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable {
+                            reviewQuestions.contains(index) ->
+                                Color(0xFFFFC107)
 
-                                        currentQuestionIndex = index
-                                        showQuestionPalette = false
-                                    },
+                            markedQuestions.contains(index) ->
+                                Color(0xFF03A9F4)
 
-                                contentAlignment = Alignment.Center
-                            ) {
+                            answeredQuestions.containsKey(index) ->
+                                Color(0xFF4CAF50)
 
-                                Text(
-                                    text = "${index + 1}",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold
+                            else ->
+                                Color(0xFF9E9E9E)
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .padding(6.dp)
+                                .size(60.dp)
+                                .background(
+                                    bgColor,
+                                    RoundedCornerShape(10.dp)
                                 )
-                            }
+                                .clickable {
+
+                                    currentQuestionIndex = index
+                                    showQuestionPalette = false
+                                },
+
+                            contentAlignment = Alignment.Center
+                        ) {
+
+                            Text(
+                                text = "${index + 1}",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.SpaceBetween
+                ) {
+
+                    OutlinedButton(
+                        modifier = Modifier
+                            .width(130.dp)
+                            .height(48.dp),
+
+                        onClick = {
+
+                            if (currentQuestionIndex > 0) {
+
+                                currentQuestionIndex--
+                                showQuestionPalette = false
+                            }
+                        }
+                    ) {
+
+                        Text("Previous")
+                    }
+
+                    OutlinedButton(
+                        modifier = Modifier
+                            .width(130.dp)
+                            .height(48.dp),
+
+                        onClick = {
+                            showQuestionPalette = false
+
+                            showReviewScreen = true
+//                            if (currentQuestionIndex < questionList.lastIndex) {
+//
+//                                currentQuestionIndex++
+//                                showQuestionPalette = false
+//                            }
+                        }
+                    ) {
+
+                        Text("Next")
+                    }
+                }
             }
-        )
+        }
+    }
+
+
+    if (showReviewScreen) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .zIndex(20f)
+        ) {
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+
+                Text(
+                    text = "Review Your Test",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.SpaceEvenly
+                ) {
+
+                    SummaryCard(
+                        "Answered",
+                        answeredCount.toString(),
+                        Color(0xFF4CAF50)
+                    )
+
+                    SummaryCard(
+                        "Not Answered",
+                        notAnsweredCount.toString(),
+                        Color(0xFFF44336)
+                    )
+
+                    SummaryCard(
+                        "Marked",
+                        markedCount.toString(),
+                        Color(0xFFFFC107)
+                    )
+
+                    SummaryCard(
+                        "Total",
+                        questionList.size.toString(),
+                        Color(0xFF2196F3)
+                    )
+                }
+
+                Spacer(
+                    modifier = Modifier.height(20.dp)
+                )
+
+                LazyColumn(
+                    modifier = Modifier.weight(1f)
+                ) {
+
+                    items(questionList.size) { index ->
+
+                        val status = when {
+
+                            reviewQuestions.contains(index) ->
+                                "Marked for Review"
+
+                            markedQuestions.contains(index) ->
+                                "Marked"
+
+                            answeredQuestions.containsKey(index) ->
+                                "Answered"
+
+                            else ->
+                                "Not Answered"
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+
+                            horizontalArrangement =
+                                Arrangement.SpaceBetween
+                        ) {
+
+                            Text(
+                                text = "Q. ${index + 1}"
+                            )
+
+                            Text(
+                                text = status
+                            )
+                        }
+
+                        Divider()
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.spacedBy(12.dp)
+                ) {
+
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+
+                            // Previous = dismiss
+                            showReviewScreen = false
+                        }
+                    ) {
+
+                        Text("Back to Test")
+                    }
+
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+
+                            Toast.makeText(
+                                context,
+                                "Exam Submitted Successfully",
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                            // Submit API Call Here
+                        }
+                    ) {
+
+                        Text("Submit Test")
+                    }
+                }
+            }
+        }
     }
     }
 
@@ -1001,6 +1228,7 @@ fun TestScreen(
                         )
                           UserName =item.firstname+item.lastname
                         CanddidateId =item.loginId
+                        usertypedesc =item.usertypedesc
 
 
                         val missingField = validationFields.firstOrNull {

@@ -13,8 +13,8 @@ data class SubmitExamRequest(
     @SerializedName("certificateType")
     val certificateType: String,
 
-    @SerializedName("title")
-    val title: String,
+//    @SerializedName("title")
+//    val title: String,
 
     @SerializedName("loginId")
     val loginId: String,

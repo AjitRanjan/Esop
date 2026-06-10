@@ -37,7 +37,12 @@ object FaceVerificationUtils {
         lifecycleOwner: LifecycleOwner,
         previewView: PreviewView,
         onReady: (ImageCapture) -> Unit
-    ) {
+    )
+
+
+
+
+    {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
 
         cameraProviderFuture.addListener({
