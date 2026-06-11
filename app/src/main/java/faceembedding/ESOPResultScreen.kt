@@ -331,9 +331,10 @@ fun ESOPResultScreen(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
-
+//                        text = if (result == 0) " 😔" else " 🎉",
                         Text(
-                            text = if (result == 0) " 😔" else " 🎉",
+
+                            text = if (result == 0) "" else " 🎉",
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold

@@ -3,6 +3,8 @@ package faceembedding
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.ImageCapture
@@ -15,7 +17,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,7 +36,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.esop.network.Resource
+import com.example.esop.quetions_esop.Question
+import com.example.esop.quetions_esop.QuestionViewModel
 import com.example.esop.vibrate.FaceVerificationUtils
 import java.util.concurrent.Executors
 
@@ -39,23 +49,32 @@ import java.util.concurrent.Executors
 fun TestInstructionsScreen(
     navController: NavController,
     onStartTestClick: () -> Unit = {},
-    onGoBackClick: () -> Unit = {}
+    onGoBackClick: () -> Unit = {},
+    questionViewModel: QuestionViewModel = viewModel()
 ) {
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
+    var questionCode by remember { mutableStateOf(2) }
     val cameraExecutor = remember {
         Executors.newSingleThreadExecutor()
     }
-
+    val questionState by questionViewModel.questionState.collectAsState()
     var showCameraDialog by remember {
         mutableStateOf(false)
     }
-
+    var questionList by remember { mutableStateOf<List<Question>>(emptyList())}
     var imageCapture by remember {
         mutableStateOf<ImageCapture?>(null)
     }
+    var totalQuestions by remember { mutableIntStateOf(0) }
+    var easyCount by remember { mutableIntStateOf(0) }
+    var mediumCount by remember { mutableIntStateOf(0) }
+    var hardCount by remember { mutableIntStateOf(0) }
+
+    var easyPercentage by remember { mutableDoubleStateOf(0.0) }
+    var mediumPercentage by remember { mutableDoubleStateOf(0.0) }
+    var hardPercentage by remember { mutableDoubleStateOf(0.0) }
 
     var firstEmbedding by remember {
         mutableStateOf<FloatArray?>(null)
@@ -70,6 +89,88 @@ fun TestInstructionsScreen(
                 showCameraDialog = true
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+    LaunchedEffect(questionState) {
+
+        when (val state = questionState) {
+
+            is Resource.Success -> {
+
+                val response = state.data
+
+                questionList = response?.Questions ?: emptyList()
+                questionList =
+                    state.data?.Questions ?: emptyList()
+                questionList = state.data?.Questions ?: emptyList()
+
+
+
+
+//                Log.d("QUESTION_COUNT", questionList.size.toString())
+
+
+                // Summary Data
+                totalQuestions = response?.summary?.totalQuestions ?: 0
+                easyCount = response?.summary?.easyCount ?: 0
+                mediumCount = response?.summary?.mediumCount ?: 0
+                hardCount = response?.summary?.hardCount ?: 0
+
+                easyPercentage = response?.summary?.easyPercentage ?: 0.0
+                mediumPercentage = response?.summary?.mediumPercentage ?: 0.0
+                hardPercentage = response?.summary?.hardPercentage ?: 0.0
+
+                Log.d("QUESTION_COUNT", questionList.size.toString())
+
+                Log.d("TOTAL_QUESTIONS", totalQuestions.toString())
+                Log.d("EASY_COUNT", easyCount.toString())
+                Log.d("MEDIUM_COUNT", mediumCount.toString())
+                Log.d("HARD_COUNT", hardCount.toString())
+
+                Log.d("EASY_PERCENTAGE", easyPercentage.toString())
+                Log.d("MEDIUM_PERCENTAGE", mediumPercentage.toString())
+                Log.d("HARD_PERCENTAGE", hardPercentage.toString())
+
+                questionList.forEach {
+                    Log.d("QUESTION_DATA", it.toString())
+                }
+
+            }
+
+            is Resource.Error -> {
+                Toast.makeText(
+                    context,
+                    state.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            is Resource.Loading -> {
+                Log.d("QUESTION_LOADING", "Loading...")
+            }
+
+            else -> {}
+        }
+    }
+
+
+
+
+
+
+
+
+
 
     Column(
         modifier = Modifier
@@ -95,7 +196,7 @@ fun TestInstructionsScreen(
         InstructionItem(
             icon = Icons.Default.Assignment,
             title = "Total Questions",
-            value = "50"
+            value = totalQuestions.toString()
         )
 
         InstructionItem(
@@ -135,22 +236,6 @@ fun TestInstructionsScreen(
                 navController.navigate(
                     "TestScreen"
                 )
-//                val hasCameraPermission =
-//                    ContextCompat.checkSelfPermission(
-//                        context,
-//                        Manifest.permission.CAMERA
-//                    ) == PackageManager.PERMISSION_GRANTED
-//
-//                if (hasCameraPermission) {
-//
-//                    showCameraDialog = true
-//
-//                } else {
-//
-//                    permissionLauncher.launch(
-//                        Manifest.permission.CAMERA
-//                    )
-//                }
             },
 
             modifier = Modifier
@@ -173,116 +258,10 @@ fun TestInstructionsScreen(
         }
     }
 
-//    if (showCameraDialog) {
-//
-//        Dialog(
-//            onDismissRequest = {}
-//        ) {
-//
-//            Card(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(500.dp),
-//
-//                shape = RoundedCornerShape(16.dp)
-//            ) {
-//
-//                Column {
-//
-//                    Text(
-//                        text = "Please Look At Camera",
-//                        modifier = Modifier.padding(16.dp),
-//                        fontWeight = FontWeight.Bold
-//                    )
-//
-//                    AndroidView(
-//
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .weight(1f),
-//
-//                        factory = { ctx ->
-//
-//                            PreviewView(ctx)
-//                        },
-//
-//                        update = { previewView ->
-//
-//                            FaceVerificationUtils.startCamera(
-//                                context = context,
-//                                lifecycleOwner = lifecycleOwner,
-//                                previewView = previewView
-//                            ) { capture ->
-//
-//                                imageCapture = capture
-//
-//                                previewView.postDelayed({
-//
-//                                    FaceVerificationUtils.captureImage(
-//                                        imageCapture = imageCapture,
-//                                        cameraExecutor = cameraExecutor,
-//                                        context = context
-//                                    ) { bitmap ->
-//
-//                                        firstEmbedding =
-//                                            FaceVerificationUtils
-//                                                .createEmbedding(bitmap)
-//
-//                                        showCameraDialog = false
-//
-//                                        Toast.makeText(
-//                                            context,
-//                                            "Face Captured Successfully",
-//                                            Toast.LENGTH_SHORT
-//                                        ).show()
-//
-//                                        navController.navigate(
-//                                            "TestScreen"
-//                                        )
-//                                    }
-//
-//                                }, 1500)
-//
-//                            }
-//                        }
-//                    )
-//                }
-//            }
-//        }
-//    }
+    questionViewModel.fetchQuestions(questionCode.toString())
+
+
 }
-
-//        Button(
-//            onClick = onStartTestClick,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(52.dp),
-//            shape = RoundedCornerShape(8.dp),
-//            colors = ButtonDefaults.buttonColors(
-//                containerColor = Color(0xFF0B5EF7)
-//            )
-//        )
-//        {
-//
-//            Text(
-//                text = "Start New Test",
-//                color = Color.White,
-//                fontSize = 20.sp,
-//                fontWeight = FontWeight.Bold,
-//                modifier = Modifier.clickable {
-//
-//
-//
-//
-//
-//
-//                    navController.navigate("TestScreen")
-//                }
-//            )
-//        }
-//    }
-//}
-
 @Composable
 private fun InstructionItem(
     icon: ImageVector,

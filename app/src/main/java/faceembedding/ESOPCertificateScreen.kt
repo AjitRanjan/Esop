@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,29 +45,164 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.esop.network.AppPreferences
 import kotlin.math.cos
 import kotlin.math.sin
 
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//
+//fun ESOPCertificateScreen(
+//    navController: NavController,
+//    candidateName: String = "Ajit Ranjan",
+//    score: String = "38 / 50",
+//    result: String = "PASS",
+//    date: String = "05 May 2026",
+//    onDownloadPdfClick: () -> Unit = {},
+//    onShareCertificateClick: () -> Unit = {}
+//)
+//{
+//
+//    var firstName by remember { mutableStateOf("") }
+//    var lastName by remember { mutableStateOf("") }
+//
+//
+//    Scaffold(
+//        containerColor = Color(0xFFF4F7FB),
+//        topBar = {
+//            TopAppBar(
+//                title = {
+//                    Text(
+//                        text = "Certificate",
+//                        fontWeight = FontWeight.Bold,
+//                        color = Color(0xFF111827)
+//                    )
+//                },
+//                navigationIcon = {
+//                    IconButton(
+//                        onClick = {
+//                            navController.popBackStack()
+//                        }
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.ArrowBack,
+//                            contentDescription = "Back",
+//                            tint = Color(0xFF111827)
+//                        )
+//                    }
+//                },
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = Color.White
+//                )
+//            )
+//        },
+//        bottomBar = {
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .background(Color.White)
+//                    .padding(12.dp),
+//                horizontalArrangement = Arrangement.spacedBy(14.dp)
+//            ) {
+//                Button(
+//                    onClick = onDownloadPdfClick,
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .height(46.dp),
+//                    shape = RoundedCornerShape(6.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Color(0xFF075CE8)
+//                    )
+//                ) {
+//                    Text(
+//                        text = "Download PDF",
+//                        color = Color.White,
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                }
+//
+//                OutlinedButton(
+//                    onClick = onShareCertificateClick,
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .height(46.dp),
+//                    shape = RoundedCornerShape(6.dp),
+//                    border = BorderStroke(1.dp, Color(0xFFB7C7E8)),
+//                    colors = ButtonDefaults.outlinedButtonColors(
+//                        contentColor = Color(0xFF075CE8)
+//                    )
+//                ) {
+//                    Text(
+//                        text = "Share Certificate",
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                }
+//            }
+//        }
+//    ) { paddingValues ->
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(paddingValues)
+//                .verticalScroll(rememberScrollState())
+//                .padding(horizontal = 10.dp, vertical = 16.dp),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            CertificateCard(
+//                candidateName = candidateName,
+//                score = score,
+//                result = result,
+//                date = date
+//            )
+//        }
+//    }
+//}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun ESOPCertificateScreen(
     navController: NavController,
-    candidateName: String = "Ajit Ranjan",
-    score: String = "38 / 50",
-    result: String = "PASS",
-    date: String = "05 May 2026",
     onDownloadPdfClick: () -> Unit = {},
     onShareCertificateClick: () -> Unit = {}
 ) {
 
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    val appPreferences = remember {
+        AppPreferences(context)
+    }
+
+    val userName by appPreferences.userName.collectAsState(initial = "")
+    val totalQuestions by appPreferences.totalQuestions.collectAsState(initial = 0)
+    val correctAns by appPreferences.correctAns.collectAsState(initial = 0)
+    val resultValue by appPreferences.result.collectAsState(initial = 0)
+
+    // Score from DataStore
+    val score = "$correctAns / $totalQuestions"
+
+    // Result from DataStore
+    val result = if (resultValue == 0) {
+        "FAIL"
+    } else {
+        "PASS"
+    }
+
+    // Current Date
+    val currentDate = remember {
+        java.text.SimpleDateFormat(
+            "dd MMM yyyy",
+            java.util.Locale.getDefault()
+        ).format(java.util.Date())
+    }
+
     Scaffold(
         containerColor = Color(0xFFF4F7FB),
         topBar = {
@@ -104,6 +240,7 @@ fun ESOPCertificateScreen(
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+
                 Button(
                     onClick = onDownloadPdfClick,
                     modifier = Modifier
@@ -128,7 +265,10 @@ fun ESOPCertificateScreen(
                         .weight(1f)
                         .height(46.dp),
                     shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, Color(0xFFB7C7E8)),
+                    border = BorderStroke(
+                        1.dp,
+                        Color(0xFFB7C7E8)
+                    ),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Color(0xFF075CE8)
                     )
@@ -148,19 +288,22 @@ fun ESOPCertificateScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 10.dp, vertical = 16.dp),
+                .padding(
+                    horizontal = 10.dp,
+                    vertical = 16.dp
+                ),
             contentAlignment = Alignment.Center
         ) {
+
             CertificateCard(
-                candidateName = candidateName,
+                candidateName = userName ?: "",
                 score = score,
                 result = result,
-                date = date
+                date = currentDate
             )
         }
     }
 }
-
 @Composable
 private fun CertificateCard(
     candidateName: String,

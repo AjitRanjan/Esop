@@ -120,6 +120,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+
                 composable("ESOPCertificateScreen") {
                     ESOPCertificateScreen(navController)
                 }
