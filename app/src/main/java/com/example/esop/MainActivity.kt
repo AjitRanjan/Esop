@@ -114,19 +114,16 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("ESOPResultScreen") {
-                    ESOPResultScreen(navController)
+                    ESOPResultScreen(
+                        navController = navController,
+                        appPreferences = appPrefs
+                    )
                 }
 
                 composable("ESOPCertificateScreen") {
                     ESOPCertificateScreen(navController)
                 }
 
-//                composable("ExamScreen") {
-//                    ExamScreen(
-//                        navController = navController,
-//                        questionList = questionList
-//                    )
-//                }
 
                 composable("CompleteProfileScreen") {
 

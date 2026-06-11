@@ -238,7 +238,9 @@ fun TestScreen(
             ).show()
         }
     }
-
+    var isNavigated by remember {
+        mutableStateOf(false)
+    }
 
     val questionFontSize = when {
         dimens.screenPaddingHorizontal >= 32.dp -> 24.sp   // Expanded
@@ -285,17 +287,37 @@ fun TestScreen(
 
                 response.wrappedLista.forEach {
 
-                    Log.d(
-                        "RESULT_DATA",
-                        """
-                    Total Questions : ${it.totalQuestions}
-                    Correct Answer : ${it.correctAns}
-                    Wrong Answer : ${it.wrongAns}
-                    Not Attempted : ${it.notAttempted}
-                    Percentage : ${it.percentage}
-                    Result : ${it.Result}
-                    """.trimIndent()
+//                    Log.d(
+//                        "RESULT_DATA",
+//                        """
+//                    Total Questions : ${it.totalQuestions}
+//                    Correct Answer : ${it.correctAns}
+//                    Wrong Answer : ${it.wrongAns}
+//                    Not Attempted : ${it.notAttempted}
+//                    Percentage : ${it.percentage}
+//                    Result : ${it.Result}
+//                    """.trimIndent()
+//                    )
+
+                    appPrefs.saveResult(
+                        totalQuestions =it.totalQuestions,
+                        wrongAns = it.wrongAns,
+                        notAttempted = it.notAttempted,
+                        percentage =it.percentage,
+                        correctAns = it.correctAns,
+                        result =it.Result
                     )
+
+                    if (!isNavigated) {
+                        isNavigated = true
+
+                        navController.navigate("welcome") {
+                            popUpTo("CompleteProfileScreen") {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
                 }
             }
 

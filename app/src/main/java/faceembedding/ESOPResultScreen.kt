@@ -24,6 +24,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -34,18 +36,190 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.esop.network.AppPreferences
+
+//@Composable
+//fun ESOPResultScreen(
+//    navController: NavController,
+//    percentage: Int = 76,
+//    correct: String = "40",
+//    incorrect: String = "10",
+//    score: String = "38 / 50",
+//    rank: String = "---",
+//    onViewCertificateClick: () -> Unit = {},
+//    onBackToHomeClick: () -> Unit = {}
+//) {
+//    Scaffold(
+//        containerColor = Color.White,
+//        bottomBar = {
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .background(Color.White)
+//                    .padding(horizontal = 26.dp, vertical = 16.dp),
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Button(
+//                    onClick = onViewCertificateClick,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(48.dp),
+//                    shape = RoundedCornerShape(6.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Color(0xFF075CE8)
+//                    )
+//                ) {
+//
+//                    Text(
+//                        text = "View Certificate",
+//                        color = Color.White,
+//                        fontSize = 16.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        modifier = Modifier.clickable {
+//                            navController.navigate("ESOPCertificateScreen")
+//                        }
+//                    )
+////                    Text(
+////                        text = "View Certificate",
+////                        color = Color.White,
+////                        fontSize = 16.sp,
+////                        fontWeight = FontWeight.Bold
+////                    )
+//                }
+//
+//                Spacer(modifier = Modifier.height(18.dp))
+//
+//                Text(
+//                    text = "Back to Home",
+//                    color = Color(0xFF2563EB),
+//                    fontSize = 16.sp,
+//                    fontWeight = FontWeight.Bold,
+//                    modifier = Modifier.clickable {
+//                        onBackToHomeClick()
+//                    }
+//                )
+//            }
+//        }
+//    ) { paddingValues ->
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(paddingValues),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(360.dp)
+//                    .background(
+//                        brush = Brush.verticalGradient(
+//                            colors = listOf(
+//                                Color(0xFF062C63),
+//                                Color(0xFF031A3F)
+//                            )
+//                        )
+//                    )
+//                    .padding(horizontal = 20.dp, vertical = 20.dp)
+//            ) {
+//                Text(
+//                    text = "Your Result",
+//                    color = Color.White,
+//                    fontSize = 18.sp,
+//                    fontWeight = FontWeight.Bold,
+//                    modifier = Modifier.align(Alignment.TopCenter)
+//                )
+//
+//                Column(
+//                    modifier = Modifier
+//                        .align(Alignment.Center)
+//                        .padding(top = 12.dp),
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    ResultProgress(
+//                        percentage = percentage,
+//                        score = score,
+//                        modifier = Modifier.size(150.dp)
+//                    )
+//
+//                    Spacer(modifier = Modifier.height(3.dp))
+//
+//                    Row(verticalAlignment = Alignment.CenterVertically) {
+//                        Text(
+//                            text = "Congratulations! You ",
+//                            color = Color.White,
+//                            fontSize = 20.sp,
+//                            fontWeight = FontWeight.Bold
+//                        )
+//
+//                        Text(
+//                            text = "Passed",
+//                            color = Color(0xFF95DD31),
+//                            fontSize = 20.sp,
+//                            fontWeight = FontWeight.Bold
+//                        )
+//
+//                        Text(
+//                            text = " 🎉",
+//                            color = Color.White,
+//                            fontSize = 20.sp,
+//                            fontWeight = FontWeight.Bold
+//                        )
+//                    }
+//
+//                    Spacer(modifier = Modifier.height(5.dp))
+//
+//                    Text(
+//                        text = "Well done! You have successfully",
+//                        color = Color.White.copy(alpha = 0.9f),
+//                        fontSize = 13.sp,
+//                        fontWeight = FontWeight.Medium
+//                    )
+//
+//                    Text(
+//                        text = "cleared the test.",
+//                        color = Color.White.copy(alpha = 0.9f),
+//                        fontSize = 13.sp,
+//                        fontWeight = FontWeight.Medium
+//                    )
+//                }
+//                Spacer(modifier = Modifier.height(8.dp))
+//                ResultStatsCard(
+//                    correct = correct,
+//                    incorrect = incorrect,
+//                    score = score,
+//                    rank = rank,
+//                    modifier = Modifier.align(Alignment.BottomCenter)
+//                )
+//            }
+//        }
+//    }
+//}
+
+
 
 @Composable
 fun ESOPResultScreen(
     navController: NavController,
-    percentage: Int = 76,
-    correct: String = "40",
-    incorrect: String = "10",
-    score: String = "38 / 50",
-    rank: String = "---",
+    appPreferences: AppPreferences,
     onViewCertificateClick: () -> Unit = {},
     onBackToHomeClick: () -> Unit = {}
 ) {
+
+    val totalQuestions by appPreferences.totalQuestions.collectAsState(initial = 0)
+    val wrongAns by appPreferences.wrongAns.collectAsState(initial = 0)
+    val percentage by appPreferences.percentage.collectAsState(initial = 0)
+    val correctAns by appPreferences.correctAns.collectAsState(initial = 0)
+    val result by appPreferences.result.collectAsState(initial = 0)
+
+    val score = "$correctAns / $totalQuestions"
+
+    val resultText = if (result == 0) "Failed" else "Passed"
+
+    val resultColor =
+        if (result == 0) Color.Red
+        else Color(0xFF95DD31)
+
     Scaffold(
         containerColor = Color.White,
         bottomBar = {
@@ -56,8 +230,11 @@ fun ESOPResultScreen(
                     .padding(horizontal = 26.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Button(
-                    onClick = onViewCertificateClick,
+                    onClick = {
+                        navController.navigate("ESOPCertificateScreen")
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -66,22 +243,12 @@ fun ESOPResultScreen(
                         containerColor = Color(0xFF075CE8)
                     )
                 ) {
-
                     Text(
                         text = "View Certificate",
                         color = Color.White,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable {
-                            navController.navigate("ESOPCertificateScreen")
-                        }
+                        fontWeight = FontWeight.Bold
                     )
-//                    Text(
-//                        text = "View Certificate",
-//                        color = Color.White,
-//                        fontSize = 16.sp,
-//                        fontWeight = FontWeight.Bold
-//                    )
                 }
 
                 Spacer(modifier = Modifier.height(18.dp))
@@ -105,6 +272,7 @@ fun ESOPResultScreen(
                 .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -119,6 +287,7 @@ fun ESOPResultScreen(
                     )
                     .padding(horizontal = 20.dp, vertical = 20.dp)
             ) {
+
                 Text(
                     text = "Your Result",
                     color = Color.White,
@@ -133,31 +302,38 @@ fun ESOPResultScreen(
                         .padding(top = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+
                     ResultProgress(
                         percentage = percentage,
                         score = score,
                         modifier = Modifier.size(150.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
                         Text(
-                            text = "Congratulations! You ",
+                            text = if (result == 0)
+                                "Sorry! You "
+                            else
+                                "Congratulations! You ",
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
 
                         Text(
-                            text = "Passed",
-                            color = Color(0xFF95DD31),
+                            text = resultText,
+                            color = resultColor,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
 
                         Text(
-                            text = " 🎉",
+                            text = if (result == 0) " 😔" else " 🎉",
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
@@ -167,32 +343,36 @@ fun ESOPResultScreen(
                     Spacer(modifier = Modifier.height(5.dp))
 
                     Text(
-                        text = "Well done! You have successfully",
+                        text = if (result == 0)
+                            "Please try again to improve your score."
+                        else
+                            "Well done! You have successfully",
                         color = Color.White.copy(alpha = 0.9f),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     )
 
-                    Text(
-                        text = "cleared the test.",
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    if (result != 0) {
+                        Text(
+                            text = "cleared the test.",
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+
                 ResultStatsCard(
-                    correct = correct,
-                    incorrect = incorrect,
+                    correct = correctAns.toString(),
+                    incorrect = wrongAns.toString(),
                     score = score,
-                    rank = rank,
+                    rank = if (result == 0) "Fail" else "Pass",
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
         }
     }
 }
-
 @Composable
 private fun ResultProgress(
     percentage: Int,
