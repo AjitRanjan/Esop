@@ -38,8 +38,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.esop.network.AppPreferences
 import com.example.esop.network.Resource
 import com.example.esop.quetions_esop.Question
+import com.example.esop.quetions_esop.QuestionUiState
 import com.example.esop.quetions_esop.QuestionViewModel
 import com.example.esop.vibrate.FaceVerificationUtils
 import java.util.concurrent.Executors
@@ -48,51 +50,16 @@ import java.util.concurrent.Executors
 @Composable
 fun TestInstructionsScreen(
     navController: NavController,
+    appPreferences: AppPreferences,
     onStartTestClick: () -> Unit = {},
     onGoBackClick: () -> Unit = {},
     questionViewModel: QuestionViewModel = viewModel()
 ) {
 
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    var questionCode by remember { mutableStateOf(2) }
-    val cameraExecutor = remember {
-        Executors.newSingleThreadExecutor()
-    }
-    val questionState by questionViewModel.questionState.collectAsState()
-    var showCameraDialog by remember {
-        mutableStateOf(false)
-    }
-    var questionList by remember { mutableStateOf<List<Question>>(emptyList())}
-    var imageCapture by remember {
-        mutableStateOf<ImageCapture?>(null)
-    }
+    val typedesc by appPreferences.usertypedesc.collectAsState(initial = "")
+    val questionState = questionViewModel.uiState
     var totalQuestions by remember { mutableIntStateOf(0) }
-    var easyCount by remember { mutableIntStateOf(0) }
-    var mediumCount by remember { mutableIntStateOf(0) }
-    var hardCount by remember { mutableIntStateOf(0) }
-
-    var easyPercentage by remember { mutableDoubleStateOf(0.0) }
-    var mediumPercentage by remember { mutableDoubleStateOf(0.0) }
-    var hardPercentage by remember { mutableDoubleStateOf(0.0) }
-
-    var firstEmbedding by remember {
-        mutableStateOf<FloatArray?>(null)
-    }
-
-    val permissionLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { granted ->
-
-            if (granted) {
-                showCameraDialog = true
-            }
-        }
-
-
-
-
 
 
 
@@ -103,65 +70,100 @@ fun TestInstructionsScreen(
 
     LaunchedEffect(questionState) {
 
-        when (val state = questionState) {
+        when (questionState) {
 
-            is Resource.Success -> {
+            is QuestionUiState.Success -> {
 
-                val response = state.data
-
-                questionList = response?.Questions ?: emptyList()
-                questionList =
-                    state.data?.Questions ?: emptyList()
-                questionList = state.data?.Questions ?: emptyList()
+                val response =
+                    (questionState as QuestionUiState.Success)
+                        .response
 
 
 
+                totalQuestions =
+                    response?.summary?.totalQuestions?: 0
 
-//                Log.d("QUESTION_COUNT", questionList.size.toString())
-
-
-                // Summary Data
-                totalQuestions = response?.summary?.totalQuestions ?: 0
-                easyCount = response?.summary?.easyCount ?: 0
-                mediumCount = response?.summary?.mediumCount ?: 0
-                hardCount = response?.summary?.hardCount ?: 0
-
-                easyPercentage = response?.summary?.easyPercentage ?: 0.0
-                mediumPercentage = response?.summary?.mediumPercentage ?: 0.0
-                hardPercentage = response?.summary?.hardPercentage ?: 0.0
-
-                Log.d("QUESTION_COUNT", questionList.size.toString())
-
-                Log.d("TOTAL_QUESTIONS", totalQuestions.toString())
-                Log.d("EASY_COUNT", easyCount.toString())
-                Log.d("MEDIUM_COUNT", mediumCount.toString())
-                Log.d("HARD_COUNT", hardCount.toString())
-
-                Log.d("EASY_PERCENTAGE", easyPercentage.toString())
-                Log.d("MEDIUM_PERCENTAGE", mediumPercentage.toString())
-                Log.d("HARD_PERCENTAGE", hardPercentage.toString())
-
-                questionList.forEach {
-                    Log.d("QUESTION_DATA", it.toString())
-                }
 
             }
 
-            is Resource.Error -> {
+            is QuestionUiState.Error -> {
+
                 Toast.makeText(
                     context,
-                    state.message,
+                    (questionState as QuestionUiState.Error).message,
                     Toast.LENGTH_SHORT
                 ).show()
-            }
-
-            is Resource.Loading -> {
-                Log.d("QUESTION_LOADING", "Loading...")
             }
 
             else -> {}
         }
     }
+
+
+
+
+//    LaunchedEffect(questionState) {
+//
+//        when (val state = questionState) {
+//
+//            is Resource.Success -> {
+//
+//                val response = state.data
+//
+//                questionList = response?.Questions ?: emptyList()
+//                questionList =
+//                    state.data?.Questions ?: emptyList()
+//                questionList = state.data?.Questions ?: emptyList()
+//
+//
+//
+//
+////                Log.d("QUESTION_COUNT", questionList.size.toString())
+//
+//
+//                // Summary Data
+//                totalQuestions = response?.summary?.totalQuestions ?: 0
+//                easyCount = response?.summary?.easyCount ?: 0
+//                mediumCount = response?.summary?.mediumCount ?: 0
+//                hardCount = response?.summary?.hardCount ?: 0
+//                numberofAttempt = response?.summary?.numberofAttempt ?: 0
+//
+//                easyPercentage = response?.summary?.easyPercentage ?: 0.0
+//                mediumPercentage = response?.summary?.mediumPercentage ?: 0.0
+//                hardPercentage = response?.summary?.hardPercentage ?: 0.0
+//
+//                Log.d("QUESTION_COUNT", questionList.size.toString())
+//
+//                Log.d("TOTAL_QUESTIONS", totalQuestions.toString())
+//                Log.d("EASY_COUNT", easyCount.toString())
+//                Log.d("MEDIUM_COUNT", mediumCount.toString())
+//                Log.d("HARD_COUNT", hardCount.toString())
+//
+//                Log.d("EASY_PERCENTAGE", easyPercentage.toString())
+//                Log.d("MEDIUM_PERCENTAGE", mediumPercentage.toString())
+//                Log.d("HARD_PERCENTAGE", hardPercentage.toString())
+//
+//                questionList.forEach {
+//                    Log.d("QUESTION_DATA", it.toString())
+//                }
+//
+//            }
+//
+//            is Resource.Error -> {
+//                Toast.makeText(
+//                    context,
+//                    state.message,
+//                    Toast.LENGTH_SHORT
+//                ).show()
+//            }
+//
+//            is Resource.Loading -> {
+//                Log.d("QUESTION_LOADING", "Loading...")
+//            }
+//
+//            else -> {}
+//        }
+//    }
 
 
 
@@ -199,35 +201,49 @@ fun TestInstructionsScreen(
             value = totalQuestions.toString()
         )
 
-        InstructionItem(
-            icon = Icons.Default.EmojiEvents,
-            title = "Total Marks",
-            value = "50"
-        )
+//        InstructionItem(
+//            icon = Icons.Default.EmojiEvents,
+//            title = "Total Marks",
+//            value = "50"
+//        )
 
         InstructionItem(
             icon = Icons.Default.AccessTime,
             title = "Time Duration",
-            value = "60 Minutes"
+            value = "30 Minutes"
         )
 
-        InstructionItem(
-            icon = Icons.Default.IndeterminateCheckBox,
-            title = "Negative Marking",
-            value = "No"
-        )
+//        InstructionItem(
+//            icon = Icons.Default.IndeterminateCheckBox,
+//            title = "Negative Marking",
+//            value = "No"
+//        )
 
         InstructionItem(
             icon = Icons.Default.EditNote,
             title = "Passing Marks",
-            value = "60% (30 Marks)"
+            value = "70%"
+        )
+
+
+        InstructionItem(
+            icon = Icons.Default.ForkRight,
+            title = "Hard Questions",
+            value = "30%",
+//            showCard = false
         )
 
         InstructionItem(
             icon = Icons.Default.ForkRight,
-            title = "You can review & change",
-            value = "answers before final submit.",
-            showCard = false
+            title = "Medium Questions",
+            value = "40%",
+//            showCard = false
+        )
+        InstructionItem(
+            icon = Icons.Default.ForkRight,
+            title = "Low Questions",
+            value = "30%",
+//            showCard = false
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -258,7 +274,7 @@ fun TestInstructionsScreen(
         }
     }
 
-    questionViewModel.fetchQuestions(questionCode.toString())
+        questionViewModel.fetchQuestions(category = typedesc)
 
 
 }

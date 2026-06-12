@@ -32,7 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.esop.network.AppPreferences
 import com.example.esop.network.Resource
-import com.example.esop.token.GetToken
+import com.example.esop.profile.UserType
 import com.example.esop.token.TokenViewModel
 import com.example.esop.ui.theme.dimens
 import com.example.esop.util.ImeiUtils
@@ -160,6 +160,10 @@ fun LoginScreen(navController: NavHostController) {
 
                     response.data?.let { user ->
 
+
+
+
+
                         appPrefs.saveUser(
                             UserDataStore(
                                 id = user.id.toString(),
@@ -167,6 +171,7 @@ fun LoginScreen(navController: NavHostController) {
                                 email = user.email,
                                 mobile = user.mobile,
                                 designation = user.designation,
+                                usertypedesc = user.usertypedesc,
                                 organization = user.organization,
                                 processGroup = user.processGroup,
                                 loginId = user.loginId,

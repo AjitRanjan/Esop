@@ -1,4 +1,6 @@
 package faceembedding
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -28,10 +31,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.esop.AswersOptionSubmit.Repositry.InsertExamState
+import com.example.esop.Result.ResultExamState
+import com.example.esop.Result.ResultGetReq
+import com.example.esop.Result.ResultViewModel
+import com.example.esop.fialAnsweredSubmitApi.FinalInsertViewModel
+import com.example.esop.fialAnsweredSubmitApi.ResultInsertReq
 import com.example.esop.network.AppPreferences
 
 
@@ -41,14 +52,69 @@ fun ESOPResultScreen(
     navController: NavController,
     appPreferences: AppPreferences,
     onViewCertificateClick: () -> Unit = {},
-    onBackToHomeClick: () -> Unit = {}
+    onBackToHomeClick: () -> Unit = {},
+            resultViewModel: ResultViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val getResult = resultViewModel.state
+    val userEmail by appPreferences.userEmail.collectAsState(initial = 0)
+    val loginId by appPreferences.loginId.collectAsState(initial = 0)
+    val totalQuestions by appPreferences.userEmail.collectAsState(initial = 0)
 
-    val totalQuestions by appPreferences.totalQuestions.collectAsState(initial = 0)
-    val wrongAns by appPreferences.wrongAns.collectAsState(initial = 0)
+    val wrongAns by appPreferences.loginId.collectAsState(initial = 0)
     val percentage by appPreferences.percentage.collectAsState(initial = 0)
     val correctAns by appPreferences.correctAns.collectAsState(initial = 0)
     val result by appPreferences.result.collectAsState(initial = 0)
+
+    LaunchedEffect(getResult) {
+
+        when (getResult) {
+
+            is ResultExamState.Loading -> {
+
+                Log.d(
+                    "SUBMIT_LOADING",
+                    "Loading..."
+                )
+            }
+
+            is ResultExamState.Success -> {
+
+                val response =
+                    getResult.response
+
+                Toast.makeText(
+                    context,
+                    response.responseDesc,
+                    Toast.LENGTH_LONG
+                ).show()
+
+
+                response.wrappedList.forEach {
+
+
+                }
+            }
+
+            is ResultExamState.Error -> {
+
+                Toast.makeText(
+                    context,
+                    getResult.message,
+                    Toast.LENGTH_LONG
+                ).show()
+
+                Log.d(
+                    "SUBMIT_ERROR",
+                    getResult.message
+                )
+            }
+
+            else -> {}
+        }
+    }
+
+
 
     val score = "$correctAns / $totalQuestions"
 
@@ -211,7 +277,26 @@ fun ESOPResultScreen(
             }
         }
     }
+    LaunchedEffect(Unit) {
+
+        val request = ResultGetReq(
+            loginId = loginId.toString(),
+            emailId = userEmail.toString()
+        )
+
+        resultViewModel.GetResult(request)
+    }
+
+//    val request =
+//        ResultGetReq(
+//            loginId = loginId.toString(),
+//            emailId = userEmail.toString(),
+//        )
+//
+//    resultViewModel.GetResult(request)
 }
+
+
 @Composable
 private fun ResultProgress(
     percentage: Int,

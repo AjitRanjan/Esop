@@ -171,7 +171,7 @@ fun CompleteProfileScreen(
     var expanded by remember { mutableStateOf(false) }
 
     val genderOptions = listOf("Male", "Female", "Other")
-    val usertypedesc = listOf("Operations", "Finance")
+    val usertypedesc = listOf("Operation", "Finance")
 
     var country by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
@@ -227,7 +227,7 @@ fun CompleteProfileScreen(
     val currentEmail = userEmail?.toString().orEmpty()
     val currentVersion = versionName?.toString().orEmpty()
     val profileViewModel: ProfileViewModel = viewModel()
-
+    val scope = rememberCoroutineScope()
 //     UI State Fetching
 
 
@@ -414,73 +414,6 @@ fun CompleteProfileScreen(
                     containerColor = Color.White
                 )
             )
-//            TopAppBar(
-//                title = {
-//                    Text(
-//                        text = "Complete Profile",
-//                        fontWeight = FontWeight.SemiBold
-//                    )
-//                },
-//                navigationIcon = {
-//                    IconButton(
-//                        onClick = { navController.popBackStack() }
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Default.ArrowBack,
-//                            contentDescription = "Back"
-//                        )
-//                    }
-//                },
-//                actions = {
-//
-//                    Column(
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        modifier = Modifier.padding(end = 12.dp)
-//                    ) {
-//
-//                        ProfileCompletionTopBar(
-//                            progress = profilePercentage
-//                        )
-//
-//                        Text(
-//                            text = "$profilePercentage%",
-//                            fontSize = 10.sp
-//                        )
-//                    }
-//                },
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = Color.White
-//                )
-//            )
-//            TopAppBar(
-//
-//                title = {
-//
-//                    Text(
-//                        text = "Complete Profile",
-//                        fontWeight = FontWeight.SemiBold
-//                    )
-//                },
-//
-//                navigationIcon = {
-//
-//                    IconButton(
-//                        onClick = {
-//                            navController.popBackStack()
-//                        }
-//                    ) {
-//
-//                        Icon(
-//                            imageVector = Icons.Default.ArrowBack,
-//                            contentDescription = "Back"
-//                        )
-//                    }
-//                },
-//
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = Color.White
-//                )
-//            )
         },
 
         // ================= BOTTOM BUTTON =================
@@ -531,7 +464,12 @@ fun CompleteProfileScreen(
                         if (imageBase64.isNullOrEmpty()) {
                             imageBase64 = imagePath
                         }
+                        scope.launch {
 
+                            appPrefs.saveUsertype(
+                                UserType(departmentType)
+                            )
+                        }
                         val request = UpadteProfileRequest(
                             versionName.toString(),
                             email,
@@ -570,44 +508,6 @@ fun CompleteProfileScreen(
                             request
                         )
                     },
-//                      onClick = {
-//                          if (imageBase64.isNullOrEmpty()) {
-//                              imageBase64 = imagePath
-//                          }
-//                        val request = UpadteProfileRequest(
-//                            versionName.toString(),
-//                            email,
-//                            firstName,
-//                            lastName,
-//                            "",
-//                            "",
-//                            "",
-//                            age.toInt(),
-//                            gender,
-//                            address,
-//                            mobile,
-//                            processGroupName,
-//                            OrganizationName,
-//                            FunctionaryName,
-//                            "India",
-//                            stateName,
-//                            districtname,
-//                            city,
-//                            districtCode,
-//                            stateCode,
-//                            pincode ,
-//                            departmentType,
-//                            usertype,
-//                            loginId,
-//                            designation,
-//                            processGroupCode,
-//                            OrganizationCode,
-//                            imageBase64
-//
-//                        )
-//                           showLoading=true
-//                          updateModel.UpdateProfile(context, request)
-//                    },
 
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1352,7 +1252,12 @@ fun CompleteProfileScreen(
                             item.usertypedesc,
                             item.district
                         )
+                        scope.launch {
 
+                            appPrefs.saveUsertype(
+                                UserType(usertypedesc.toString())
+                            )
+                        }
                         val filledFields = fields.count {
                             !it.isNullOrBlank() &&
                                     it.trim() != "null"

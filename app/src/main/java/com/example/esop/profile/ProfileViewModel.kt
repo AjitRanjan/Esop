@@ -18,8 +18,6 @@ class ProfileViewModel : ViewModel() {
         _profileState.asStateFlow()
 
     fun getProfile(
-//        token: String,
-
         loginId: String,
         email: String,
         appVersion: String

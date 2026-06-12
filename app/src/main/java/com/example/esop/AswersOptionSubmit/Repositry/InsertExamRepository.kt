@@ -1,10 +1,8 @@
-package faceembedding.Repositry
+package com.example.esop.AswersOptionSubmit.Repositry
 
 import com.example.esop.network.RetrofitClient
-import faceembedding.SubmitExamRequest
-import faceembedding.SubmitResponse
-import signup.SignupResponse
-import signup.request.SignupRequest
+import com.example.esop.AswersOptionSubmit.SubmitExamRequest
+import com.example.esop.AswersOptionSubmit.SubmitResponse
 
 class InsertExamRepository {
 

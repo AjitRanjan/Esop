@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.esop.login.UserDataStore
+import com.example.esop.profile.UserType
 import com.example.esop.token.GetToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -31,6 +32,7 @@ class AppPreferences(
         val PROCESSGROUPID = stringPreferencesKey("processGroupId")
         val ORGANIZATIONID = stringPreferencesKey("organizationId")
         val ORGANIZATION = stringPreferencesKey("organization")
+        val UERTYPEDEC = stringPreferencesKey("usertypedesc")
 
         // Result Card Fields
         val TOTAL_QUESTIONS = intPreferencesKey("totalQuestions")
@@ -70,13 +72,30 @@ class AppPreferences(
     // SAVE TOKEN
     // =========================
 
+
+    suspend fun saveUsertype(
+        usertypedesc: UserType
+    ) {
+        context.dataStore.edit { prefs ->
+
+            prefs[Keys.UERTYPEDEC] = usertypedesc.toString()
+
+        }
+    }
+
+
+
+
     suspend fun saveToke(user: GetToken) {
         context.dataStore.edit { prefs ->
             prefs[Keys.AUTHTOKEN] = user.authToken.toString()
             prefs[Keys.LOGGED_IN] = true
         }
     }
-
+    val usertypedesc: Flow<String> =
+        context.dataStore.data.map { prefs ->
+            prefs[Keys.UERTYPEDEC].toString()
+        }
     // =========================
     // SAVE RESULT
     // =========================
@@ -164,6 +183,8 @@ class AppPreferences(
             prefs[Keys.ORGANIZATIONID]
         }
 
+
+
     // =========================
     // RESULT FLOWS
     // =========================
@@ -197,6 +218,8 @@ class AppPreferences(
         context.dataStore.data.map { prefs ->
             prefs[Keys.RESULT] ?: 0
         }
+
+
 }
 //private val Context.dataStore by preferencesDataStore(name = "app_prefs")
 //class AppPreferences(

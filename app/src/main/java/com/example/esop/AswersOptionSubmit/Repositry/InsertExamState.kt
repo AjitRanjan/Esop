@@ -1,6 +1,6 @@
-package faceembedding.Repositry
+package com.example.esop.AswersOptionSubmit.Repositry
 
-import faceembedding.SubmitResponse
+import com.example.esop.AswersOptionSubmit.SubmitResponse
 
 sealed class InsertExamState {
 

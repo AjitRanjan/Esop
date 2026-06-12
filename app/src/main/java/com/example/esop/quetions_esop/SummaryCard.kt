@@ -1,4 +1,4 @@
-package faceembedding
+package com.example.esop.quetions_esop
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding

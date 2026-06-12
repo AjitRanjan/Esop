@@ -16,12 +16,15 @@ import com.example.esop.quetions_esop.QuestionResponse
 import com.example.esop.token.GetToken
 import com.example.esop.token.TokenRequest
 import com.example.esop.state.StateResponse
-import faceembedding.SubmitExamRequest
-import faceembedding.SubmitResponse
+import com.example.esop.fialAnsweredSubmitApi.ResultInsertReq
+import com.example.esop.AswersOptionSubmit.SubmitExamRequest
+import com.example.esop.AswersOptionSubmit.SubmitResponse
+import com.example.esop.Result.ResultGetReq
+import com.example.esop.Result.ResultResponse
+import com.example.esop.quetions_esop.QuestiontReq
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -107,14 +110,23 @@ interface ApiServices {
     ): UpdateProfileResponse
 
 
-    @GET("esop/api/exam/{id}")
+//    @GET("esop/api/exam/{id}")
+//    suspend fun getQuestions(
+//        @Path("id") id: String
+//    ): QuestionResponse
+
+
+//    @GET("esop/api/exam/createexam")
+//    suspend fun getQuestions(
+//        @Body request: QuestiontReq
+//    ): QuestionResponse
+
+
+
+    @POST("esop/api/exam/createexam")
     suspend fun getQuestions(
-        @Path("id") id: String
+        @Body request: QuestiontReq
     ): QuestionResponse
-
-
-
-
 
     @POST("esop/api/mbexamsubmit/insertsubmit")
     suspend fun insertsubmit(
@@ -122,9 +134,22 @@ interface ApiServices {
         @Body request: SubmitExamRequest
 
     ): SubmitResponse
-//    @POST("esop/api/mbexamsubmit/insertsubmit")
-//    suspend fun insertsubmit(
-//        @Body request: SubmitExamRequest
-//    ): SubmitResponse
+
+
+
+    @POST("esop/api/mbexamsubmit/insertresult")
+    suspend fun insertresultsubmit(
+
+        @Body request: ResultInsertReq
+
+    ): SubmitResponse
+
+
+    @POST("esop/api/mbexamsubmit/getresult")
+    suspend fun getresult(
+
+        @Body request: ResultGetReq
+
+    ): ResultResponse
 
 }

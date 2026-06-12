@@ -8,35 +8,99 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.esop.network.Resource
 import com.example.esop.network.RetrofitClient
+import com.example.esop.profile.ProfileRepository
+import com.example.esop.profile.ProfileRequest
+import com.example.esop.profile.ProfileResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-
-
 class QuestionViewModel : ViewModel() {
 
-    private val repository = QuestionRepository()
+    private val repository =
+        QuestionRepository()
 
-    private val _questionState =
-        MutableStateFlow<Resource<QuestionResponse>?>(null)
-
-    val questionState =
-        _questionState.asStateFlow()
+    var uiState by mutableStateOf<QuestionUiState>(
+        QuestionUiState.Idle
+    )
+        private set
 
     fun fetchQuestions(
-        questionId: String
+        category: String
     ) {
 
         viewModelScope.launch {
 
-            _questionState.value =
-                Resource.Loading()
+            uiState =
+                QuestionUiState.Loading
 
-            _questionState.value =
-                repository.getQuestions(
-                    questionId = questionId
-                )
+            when (
+
+                val result =
+                    repository.getQuestions(
+
+                        QuestiontReq(
+                            category = category
+                        )
+                    )
+
+            ) {
+
+                is Resource.Success -> {
+
+                    result.data?.let {
+
+                        uiState =
+                            QuestionUiState.Success(
+                                it
+                            )
+                    }
+                }
+
+                is Resource.Error -> {
+
+                    uiState =
+                        QuestionUiState.Error(
+                            result.message
+                                ?: "Unknown Error"
+                        )
+                }
+
+                else -> {}
+            }
         }
     }
 }
+
+
+
+
+//class QuestionViewModel : ViewModel() {
+//
+//    private val repository = QuestionRepository()
+//
+//    private val _questionState =
+//        MutableStateFlow<Resource<QuestionResponse>?>(null)
+//
+//    val questionState =
+//        _questionState.asStateFlow()
+//
+//    fun fetchQuestions(
+//        request: QuestiontReq
+//    ) {
+//
+//        viewModelScope.launch {
+//
+//            _questionState.value =
+//                Resource.Loading()
+//
+//            _questionState.value =
+//                repository.getQuestions(
+//                    request
+//                )
+//        }
+//    }
+//}
+
+
+

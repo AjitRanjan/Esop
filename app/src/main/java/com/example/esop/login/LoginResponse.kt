@@ -14,6 +14,7 @@ data class UserData(
     val mobile: String,
     val designation: String,
     val processGroup: String,
+    val usertypedesc: String,
     val usertype: String,
     val organization: String,
     val processGroupId: String,

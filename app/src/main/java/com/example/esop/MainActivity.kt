@@ -11,21 +11,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.esop.login.LoginScreen
 import com.example.esop.network.AppPreferences
 import com.example.esop.profile.CompleteProfileScreen
-import com.example.esop.profile.Repositry.UpdateProfileViewModel
 import com.example.esop.quetions_esop.Question
 import com.example.esop.util.ImeiUtils
 import faceembedding.ESOPCertificateScreen
 import faceembedding.ESOPResultScreen
 
 import faceembedding.TestInstructionsScreen
-import faceembedding.TestScreen
+import com.example.esop.quetions_esop.TestScreen
 import signup.SignupScreen
 
 
@@ -110,7 +108,12 @@ class MainActivity : ComponentActivity() {
                     TestScreen(navController)
                 }
                 composable("TestInstructionsScreen") {
-                    TestInstructionsScreen(navController)
+
+                    TestInstructionsScreen(
+                        navController = navController,
+                        appPreferences = appPrefs
+                    )
+
                 }
 
                 composable("ESOPResultScreen") {

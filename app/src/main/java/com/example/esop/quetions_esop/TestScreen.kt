@@ -1,10 +1,9 @@
-package faceembedding
+package com.example.esop.quetions_esop
 
 
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,9 +41,6 @@ import com.example.esop.network.Resource
 import com.example.esop.profile.CompletePofileScreenViewModel
 import com.example.esop.profile.ProfileViewModel
 import com.example.esop.profile.Repositry.UpdateProfileViewModel
-import com.example.esop.quetions_esop.Question
-import com.example.esop.quetions_esop.QuestionViewModel
-import com.example.esop.util.Base64Utils
 import com.example.esop.vibrate.FaceVerificationUtils
 import com.example.esop.vibrate.VibrateWhileDialogVisible
 import kotlinx.coroutines.delay
@@ -52,10 +48,6 @@ import java.util.concurrent.Executors
 // ...existing code...
 
 
-
-
-
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,26 +62,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Menu
 
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -100,15 +84,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.esop.ui.theme.dimens
 import com.example.esop.util.helper.LegendItem
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import faceembedding.Repositry.InsertExamState
-import faceembedding.Repositry.InsertViewModel
+import com.example.esop.AswersOptionSubmit.Repositry.InsertExamState
+import com.example.esop.AswersOptionSubmit.Repositry.InsertViewModel
+import com.example.esop.AswersOptionSubmit.SubmitAnswer
+import com.example.esop.AswersOptionSubmit.SubmitExamRequest
+import com.example.esop.fialAnsweredSubmitApi.FinalInsertViewModel
+import com.example.esop.fialAnsweredSubmitApi.ResultInsertReq
 
 @Composable
 fun TestScreen(
@@ -116,12 +103,14 @@ fun TestScreen(
     viewModel: CompletePofileScreenViewModel = viewModel(),
     updateModel: UpdateProfileViewModel = viewModel(),
     questionViewModel: QuestionViewModel = viewModel() ,
-    insertViewModel: InsertViewModel = viewModel()
+    insertViewModel: InsertViewModel = viewModel(),
+    fialinsertViewModel: FinalInsertViewModel = viewModel()
 ) {
     val state = viewModel.state
     val UpdateUI = updateModel.Updatestate
     val submitState = insertViewModel.state
-    val questionState by questionViewModel.questionState.collectAsState()
+    val finalsubmitState = fialinsertViewModel.state
+    val questionState = questionViewModel.uiState
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     lateinit var appPrefs: AppPreferences
@@ -161,6 +150,15 @@ fun TestScreen(
     var showDialog by remember {
         mutableStateOf(false)
     }
+    var totalQuestions by remember { mutableIntStateOf(0) }
+    var easyCount by remember { mutableIntStateOf(0) }
+    var mediumCount by remember { mutableIntStateOf(0) }
+    var hardCount by remember { mutableIntStateOf(0) }
+    var numberofAttempt by remember { mutableIntStateOf(0) }
+
+    var easyPercentage by remember { mutableDoubleStateOf(0.0) }
+    var mediumPercentage by remember { mutableDoubleStateOf(0.0) }
+    var hardPercentage by remember { mutableDoubleStateOf(0.0) }
 
 
     val markedQuestions = remember {
@@ -196,6 +194,7 @@ fun TestScreen(
             .versionName
     }
     var loginId by remember { mutableStateOf("") }
+    var DepartMentpedesc by remember { mutableStateOf("") }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -222,8 +221,10 @@ fun TestScreen(
     val userEmail by appPrefs.userEmail.collectAsState(initial = null)
     val userMobile by appPrefs.mobile.collectAsState(initial = null)
     val userloginId by appPrefs.loginId.collectAsState(initial = null)
+    val typedescDepartment by appPrefs.usertypedesc.collectAsState(initial = null)
     val userusertype by appPrefs.usertype.collectAsState(initial = null)
     loginId = userloginId.toString()
+    DepartMentpedesc = typedescDepartment.toString()
     val currentLoginId = loginId
     val currentEmail = userEmail?.toString().orEmpty()
     val currentVersion = versionName?.toString().orEmpty()
@@ -257,7 +258,7 @@ fun TestScreen(
 
 //    UI State
 
-    LaunchedEffect(submitState) {
+    LaunchedEffect(finalsubmitState) {
 
         when (submitState) {
 
@@ -280,35 +281,7 @@ fun TestScreen(
                     Toast.LENGTH_LONG
                 ).show()
 
-                Log.d(
-                    "SUBMIT_SUCCESS",
-                    Gson().toJson(response)
-                )
-
-                response.wrappedLista.forEach {
-
-//                    Log.d(
-//                        "RESULT_DATA",
-//                        """
-//                    Total Questions : ${it.totalQuestions}
-//                    Correct Answer : ${it.correctAns}
-//                    Wrong Answer : ${it.wrongAns}
-//                    Not Attempted : ${it.notAttempted}
-//                    Percentage : ${it.percentage}
-//                    Result : ${it.Result}
-//                    """.trimIndent()
-//                    )
-
-                    appPrefs.saveResult(
-                        totalQuestions =it.totalQuestions,
-                        wrongAns = it.wrongAns,
-                        notAttempted = it.notAttempted,
-                        percentage =it.percentage,
-                        correctAns = it.correctAns,
-                        result =it.Result
-                    )
-
-                    if (!isNavigated) {
+                if (!isNavigated) {
                         isNavigated = true
 
                         navController.navigate("welcome") {
@@ -318,6 +291,84 @@ fun TestScreen(
                             launchSingleTop = true
                         }
                     }
+
+                response.wrappedLista.forEach {
+
+
+                }
+            }
+
+            is InsertExamState.Error -> {
+
+                Toast.makeText(
+                    context,
+                    submitState.message,
+                    Toast.LENGTH_LONG
+                ).show()
+
+                Log.d(
+                    "SUBMIT_ERROR",
+                    submitState.message
+                )
+            }
+
+            else -> {}
+        }
+    }
+    LaunchedEffect(submitState) {
+
+        when (submitState) {
+
+            is InsertExamState.Loading -> {
+
+                Log.d(
+                    "SUBMIT_LOADING",
+                    "Loading..."
+                )
+            }
+
+            is InsertExamState.Success -> {
+
+                val response =
+                    submitState.response
+
+
+
+                Log.d(
+                    "SUBMIT_SUCCESS",
+                    Gson().toJson(response)
+                )
+
+                response.wrappedLista.forEach {
+
+
+
+                    val request =
+                        ResultInsertReq(
+
+                            loginId = loginId,
+
+                            emailId = currentEmail,
+
+                            totalQuestion = it.totalQuestions,
+
+                            wrongAns = it.wrongAns,
+
+                            numberofAttempt = it.numberofAttempt+1,
+
+                            notattempteQuestion = it.notattempteQuestion,
+                            scoredPercentage=it.scoredPercentage,
+                            passingPercentage=it.passingPercentage,
+                            correctAns=it.correctAns,
+                            finalResult=it.result,
+                            issueCertificate="Yes",
+
+
+                        )
+
+                    fialinsertViewModel.FinalinsertSubmit(request)
+
+
                 }
             }
 
@@ -684,16 +735,6 @@ fun TestScreen(
                                     }
 
 
-//                                        {
-//
-//                                        if (!reviewQuestions.contains(currentQuestionIndex)) {
-//
-//                                            reviewQuestions.add(
-//                                                currentQuestionIndex
-//                                            )
-//                                        }
-//                                    }
-
                                 }
                             },
 
@@ -854,59 +895,10 @@ fun TestScreen(
                         .toJson(request)
                     println(submitRequestJson)
 
-//                    Log.d(
-//                        "SUBMIT_REQUEST",
-//                        prettyJson
-//                    )
-
                         showQuestionPalette = true
 
-//                    Toast.makeText(
-//                        context,
-//                        "All Questions Attempted. Submitting Exam...",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
-
-                    // API Call Here
-                    // submitExamViewModel.submitExam(request)
                 }
                 ,
-
-//                onClick = {
-//
-//                    val submitList = answeredQuestions.map { entry ->
-//
-//                        SubmitAnswer(
-//                            question_id =
-//                                questionList[entry.key].questionId,
-//
-//                            answer_given =
-//                                entry.value
-//                        )
-//                    }
-//
-//                    val request = SubmitExamRequest(
-//
-//                        courseType = 2,
-//                        courseName=usertypedesc,
-//                        certificateType="Master",
-//                        email = currentEmail,
-//                        loginId = currentLoginId,
-//                        answers = submitList
-//                    )
-//
-//
-//                    val prettyJson = GsonBuilder()
-//                        .setPrettyPrinting()
-//                        .create()
-//                        .toJson(request)
-//
-//                    Log.d(
-//                        "SUBMIT_REQUEST",
-//                        prettyJson
-//                    )
-//
-//                },
 
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
@@ -1267,9 +1259,7 @@ fun TestScreen(
                                     answers = submitList
                                 )
 
-                            insertViewModel.insertSubmit(
-                                request
-                            )
+                            insertViewModel.insertSubmit(request)
                         }
                     ) {
 
@@ -1281,42 +1271,90 @@ fun TestScreen(
     }
     }
 
+//    questionList = response?.Questions ?: emptyList()
+//    questionList =
+//        state.data?.Questions ?: emptyList()
+//    questionList = state.data?.Questions ?: emptyList()
+//    showButton = false
+//    Log.d("QUESTION_COUNT", questionList.size.toString())
+//
+//    // Summary Data
+//    totalQuestions = response?.summary?.totalQuestions ?: 0
+//    easyCount = response?.summary?.easyCount ?: 0
+//    mediumCount = response?.summary?.mediumCount ?: 0
+//    hardCount = response?.summary?.hardCount ?: 0
+//    numberofAttempt = response?.summary?.numberofAttempt ?: 0
+//
+//    easyPercentage = response?.summary?.easyPercentage ?: 0.0
+//    mediumPercentage = response?.summary?.mediumPercentage ?: 0.0
+//    hardPercentage = response?.summary?.hardPercentage ?: 0.0
+//    questionList.forEach {
+//        Log.d("QUESTION_DATA", it.toString())
+//    }
+
+
+
+
+
+
     LaunchedEffect(questionState) {
 
-        when (val state = questionState) {
+        when (questionState) {
 
-            is Resource.Success -> {
+            is QuestionUiState.Success -> {
 
-                val response = state.data
+                val response =
+                    (questionState as QuestionUiState.Success)
+                        .response
 
-                questionList = response?.Questions ?: emptyList()
                 questionList =
-                    state.data?.Questions ?: emptyList()
-                questionList = state.data?.Questions ?: emptyList()
-                showButton = false
-                Log.d("QUESTION_COUNT", questionList.size.toString())
+                    response.Questions
 
+                totalQuestions =
+                    response.summary.totalQuestions
 
-                questionList.forEach {
-                    Log.d("QUESTION_DATA", it.toString())
-                }
+                easyCount =
+                    response.summary.easyCount
+
+                mediumCount =
+                    response.summary.mediumCount
+
+                hardCount =
+                    response.summary.hardCount
+
+                numberofAttempt =
+                    response.summary.numberofAttempt
+
+                easyPercentage =
+                    response.summary.easyPercentage
+
+                mediumPercentage =
+                    response.summary.mediumPercentage
+
+                hardPercentage =
+                    response.summary.hardPercentage
             }
 
-            is Resource.Error -> {
+            is QuestionUiState.Error -> {
+
                 Toast.makeText(
                     context,
-                    state.message,
+                    (questionState as QuestionUiState.Error).message,
                     Toast.LENGTH_SHORT
                 ).show()
-            }
-
-            is Resource.Loading -> {
-                Log.d("QUESTION_LOADING", "Loading...")
             }
 
             else -> {}
         }
     }
+
+
+
+
+
+
+
+
     ExamScreen(questionList = questionList)
 
     val profileState by profileViewModel.profileState.collectAsState()
@@ -1355,6 +1393,7 @@ fun TestScreen(
                           UserName =item.firstname+item.lastname
                         CanddidateId =item.loginId
                         usertypedesc =item.usertypedesc
+//                        Operation
 
 
                         val missingField = validationFields.firstOrNull {
@@ -1523,7 +1562,11 @@ fun TestScreen(
                         )
 
                     if (distance < 2000) {
-                        questionViewModel.fetchQuestions(questionCode.toString())
+
+//                        val request =
+//                            QuestiontReq(category = "category",)
+
+                        questionViewModel.fetchQuestions(category = DepartMentpedesc)
                         showDialog = false
                         blurScreen = false
                     }
