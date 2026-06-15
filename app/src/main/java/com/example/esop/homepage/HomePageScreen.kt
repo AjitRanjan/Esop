@@ -3,6 +3,7 @@ package com.example.esop.homepage
 import com.example.esop.ui.theme.CompactDimens
 import com.example.esop.ui.theme.Dimens
 import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -51,6 +53,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,8 +67,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.esop.network.AppPreferences
+import com.example.esop.network.Resource
+import com.example.esop.profile.ProfileViewModel
+import com.example.esop.util.Base64Utils
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -81,107 +89,53 @@ fun HomePageScreen(navController: NavController) {
 
     val context = LocalContext.current
 
+//    var loginId by remember { mutableStateOf("") }
+    var department by remember { mutableStateOf("") }
+    var UserName by remember { mutableStateOf("") }
+
+//    var UserName =""
+    var showLoading by remember { mutableStateOf(false) }
+//    var email by remember { mutableStateOf("") }
     val appPrefs = remember {
         AppPreferences(context)
     }
-    val userName by appPrefs.userName.collectAsState(initial = null)
-
-    val department by appPrefs.department.collectAsState(initial = "")
-
+    val userEmail by appPrefs.userEmail.collectAsState(initial = "")
+    val userloginId by appPrefs.loginId.collectAsState(initial = "")
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     var showDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-
+    val versionName = remember {
+        context.packageManager
+            .getPackageInfo(context.packageName, 0)
+            .versionName
+    }
     val scrollState = rememberScrollState()
+    val profileViewModel: ProfileViewModel = viewModel()
 
-    Toast.makeText(
-        context,
-        department,
-        Toast.LENGTH_SHORT
-    ).show()
+    val loginId = userloginId ?: ""
+    val email = userEmail ?: ""
 
-//    ModalNavigationDrawer(
-//
-//        drawerState = drawerState,
-//
-//        drawerContent = {
-//
-//            ModalDrawerSheet {
-//
-//                Spacer(
-//                    modifier = Modifier.height(dimens.spaceL)
-//                )
-//
-//                Text(
-//                    text = "Welcome User",
-//                    modifier = Modifier.padding(dimens.spaceM),
-//                    fontSize = 20.sp,
-//                    fontWeight = FontWeight.Bold
-//                )
-//                NavigationDrawerItem(
-//                    label = {
-//                        Text("Start Test")
-//                    },
-//                    selected = false,
-//                    onClick = {
-//
-//                        if (
-//                            department.equals("Operation", ignoreCase = true) ||
-//                            department.equals("Finance", ignoreCase = true)
-//                        ) {
-//
-//
-//
-//                            navController.navigate("TestInstructionsScreen") {
-//
-//                                popUpTo("welcome") {
-//                                    inclusive = false
-//                                }
-//                            }
-//                        } else {
-//
-//                            showDialog = true
-//                        }
-//
-//
-//
-//
-//                    }
-//                )
-//                NavigationDrawerItem(
-//
-//                    label = {
-//                        Text("Logout")
-//                    },
-//
-//                    selected = false,
-//
-//                    onClick = {
-//
-//                        scope.launch {
-//
-//                            // =========================
-//                            // CLEAR ALL DATASTORE DATA
-//                            // =========================
-//
-//                            appPrefs.clearUser()
-//
-//                            // =========================
-//                            // NAVIGATE LOGIN
-//                            // =========================
-//
-//                            navController.navigate("login") {
-//
-//                                popUpTo(0)
-//
-//                                launchSingleTop = true
-//                            }
-//                        }
-//                    }
-//                )
-//            }
-//        }
-//    )
+
+
+
+
+    LaunchedEffect(loginId, email) {
+
+        Log.d("HOME_SCREEN", "loginId = $loginId")
+        Log.d("HOME_SCREEN", "email = $email")
+
+        if (loginId.isNotBlank() && email.isNotBlank()) {
+
+            profileViewModel.getProfile(
+                appVersion = versionName.toString(),
+                loginId = loginId,
+                email = email
+            )
+        }
+    }
+
+
+
     ModalNavigationDrawer(
 
         drawerState = drawerState,
@@ -224,7 +178,7 @@ fun HomePageScreen(navController: NavController) {
                 HorizontalDivider()
 
                 Text(
-                    text = "Welcome User",
+                    text = UserName,
                     modifier = Modifier.padding(16.dp),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
@@ -296,7 +250,91 @@ fun HomePageScreen(navController: NavController) {
 
 
     {
+        val profileState by profileViewModel.profileState.collectAsState()
 
+        LaunchedEffect(profileState) {
+
+            when (val state = profileState) {
+
+                is Resource.Loading -> {
+                    showLoading = true
+                }
+
+                is Resource.Success -> {
+
+                    showLoading = false
+
+                    val response = state.data
+
+                    if (response.responseDesc == "OK") {
+
+                        response.wrappedList.forEach { item ->
+
+                            department = item.usertypedesc
+
+                            scope.launch {
+                                appPrefs.saveDepartment(item.usertypedesc)
+                            }
+                            UserName=item.firstname + " " + item.lastname
+                            scope.launch {
+                                appPrefs.saveCandidate(
+                                    item.firstname + " " + item.lastname
+                                )
+                            }
+//                            Toast.makeText(
+//                                context,
+//                                item.firstname + " " + item.lastname,
+//                                Toast.LENGTH_LONG
+//                            ).show()
+                        }
+                    }
+                }
+
+                is Resource.Error -> {
+
+                    showLoading = false
+
+                    Log.e(
+                        "PROFILE_ERROR",
+                        state.message
+                    )
+
+                    Toast.makeText(
+                        context,
+                        state.message,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+                else -> {
+                    showLoading = false
+                }
+            }
+        }
+
+        /**
+         * LOADER
+         */
+        if (showLoading) {
+
+            Dialog(onDismissRequest = {}) {
+
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                        .background(
+                            Color.White,
+                            RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    CircularProgressIndicator(
+                        color = Color.Blue
+                    )
+                }
+            }
+        }
         Scaffold(
 
             containerColor = Color(0xFFF5F6FA),
@@ -751,6 +789,8 @@ fun HomePageScreen(navController: NavController) {
         }
 
     }
+
+
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { },
@@ -773,6 +813,8 @@ fun HomePageScreen(navController: NavController) {
             }
         )
     }
+
+
 }
 
 @Composable

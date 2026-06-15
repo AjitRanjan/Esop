@@ -21,6 +21,7 @@ class AppPreferences(
     private object Keys {
 
         val DEPARTMENT = stringPreferencesKey("department")
+        val CANDIDATE = stringPreferencesKey("candidate")
 
         val AUTHTOKEN = stringPreferencesKey("authToken")
         val USER_ID = stringPreferencesKey("user_id")
@@ -116,6 +117,16 @@ class AppPreferences(
             prefs[Keys.DEPARTMENT] = department
         }
     }
+    suspend fun saveCandidate(candidate: String) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.CANDIDATE] = candidate
+        }
+    }
+
+    val candidate: Flow<String?> =
+        context.dataStore.data.map { prefs ->
+            prefs[Keys.CANDIDATE]
+        }
 
     val department: Flow<String?> =
         context.dataStore.data.map { prefs ->
