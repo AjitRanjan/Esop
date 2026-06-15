@@ -46,133 +46,57 @@ import com.example.esop.quetions_esop.QuestionViewModel
 import com.example.esop.vibrate.FaceVerificationUtils
 import java.util.concurrent.Executors
 
-
 @Composable
 fun TestInstructionsScreen(
     navController: NavController,
     appPreferences: AppPreferences,
-    onStartTestClick: () -> Unit = {},
-    onGoBackClick: () -> Unit = {},
     questionViewModel: QuestionViewModel = viewModel()
 ) {
 
     val context = LocalContext.current
-    val typedesc by appPreferences.usertypedesc.collectAsState(initial = "")
-    val questionState = questionViewModel.uiState
+
+//    val typedesc by appPreferences.department.collectAsState(initial = "")
+
+    val questionState =questionViewModel.uiState
+    val Department by appPreferences.department.collectAsState(initial = null)
     var totalQuestions by remember { mutableIntStateOf(0) }
+    var easyCount by remember { mutableIntStateOf(0) }
+    var mediumCount by remember { mutableIntStateOf(0) }
+    var hardCount by remember { mutableIntStateOf(0) }
+
+    // API Call Only One Time
 
 
-
-
-
-
-
-
+    // API Response Handle
     LaunchedEffect(questionState) {
 
-        when (questionState) {
+        when (val state = questionState) {
 
             is QuestionUiState.Success -> {
 
-                val response =
-                    (questionState as QuestionUiState.Success)
-                        .response
+                val summary = state.response.summary
 
+                summary?.let {
 
-
-                totalQuestions =
-                    response?.summary?.totalQuestions?: 0
-
-
+                    totalQuestions = it.totalQuestions
+                    easyCount = it.easyCount
+                    mediumCount = it.mediumCount
+                    hardCount = it.hardCount
+                }
             }
 
             is QuestionUiState.Error -> {
 
                 Toast.makeText(
                     context,
-                    (questionState as QuestionUiState.Error).message,
+                    state.message,
                     Toast.LENGTH_SHORT
                 ).show()
             }
 
-            else -> {}
+            else -> Unit
         }
     }
-
-
-
-
-//    LaunchedEffect(questionState) {
-//
-//        when (val state = questionState) {
-//
-//            is Resource.Success -> {
-//
-//                val response = state.data
-//
-//                questionList = response?.Questions ?: emptyList()
-//                questionList =
-//                    state.data?.Questions ?: emptyList()
-//                questionList = state.data?.Questions ?: emptyList()
-//
-//
-//
-//
-////                Log.d("QUESTION_COUNT", questionList.size.toString())
-//
-//
-//                // Summary Data
-//                totalQuestions = response?.summary?.totalQuestions ?: 0
-//                easyCount = response?.summary?.easyCount ?: 0
-//                mediumCount = response?.summary?.mediumCount ?: 0
-//                hardCount = response?.summary?.hardCount ?: 0
-//                numberofAttempt = response?.summary?.numberofAttempt ?: 0
-//
-//                easyPercentage = response?.summary?.easyPercentage ?: 0.0
-//                mediumPercentage = response?.summary?.mediumPercentage ?: 0.0
-//                hardPercentage = response?.summary?.hardPercentage ?: 0.0
-//
-//                Log.d("QUESTION_COUNT", questionList.size.toString())
-//
-//                Log.d("TOTAL_QUESTIONS", totalQuestions.toString())
-//                Log.d("EASY_COUNT", easyCount.toString())
-//                Log.d("MEDIUM_COUNT", mediumCount.toString())
-//                Log.d("HARD_COUNT", hardCount.toString())
-//
-//                Log.d("EASY_PERCENTAGE", easyPercentage.toString())
-//                Log.d("MEDIUM_PERCENTAGE", mediumPercentage.toString())
-//                Log.d("HARD_PERCENTAGE", hardPercentage.toString())
-//
-//                questionList.forEach {
-//                    Log.d("QUESTION_DATA", it.toString())
-//                }
-//
-//            }
-//
-//            is Resource.Error -> {
-//                Toast.makeText(
-//                    context,
-//                    state.message,
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//            }
-//
-//            is Resource.Loading -> {
-//                Log.d("QUESTION_LOADING", "Loading...")
-//            }
-//
-//            else -> {}
-//        }
-//    }
-
-
-
-
-
-
-
-
-
 
     Column(
         modifier = Modifier
@@ -180,12 +104,10 @@ fun TestInstructionsScreen(
             .background(Color.White)
             .padding(horizontal = 20.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
-    )
-
-
-    {
         Spacer(modifier = Modifier.height(50.dp))
+
         Text(
             text = "Test Instructions",
             fontSize = 22.sp,
@@ -201,23 +123,11 @@ fun TestInstructionsScreen(
             value = totalQuestions.toString()
         )
 
-//        InstructionItem(
-//            icon = Icons.Default.EmojiEvents,
-//            title = "Total Marks",
-//            value = "50"
-//        )
-
         InstructionItem(
             icon = Icons.Default.AccessTime,
             title = "Time Duration",
             value = "30 Minutes"
         )
-
-//        InstructionItem(
-//            icon = Icons.Default.IndeterminateCheckBox,
-//            title = "Negative Marking",
-//            value = "No"
-//        )
 
         InstructionItem(
             icon = Icons.Default.EditNote,
@@ -225,46 +135,44 @@ fun TestInstructionsScreen(
             value = "70%"
         )
 
-
         InstructionItem(
             icon = Icons.Default.ForkRight,
             title = "Hard Questions",
-            value = "30%",
-//            showCard = false
+            value = hardCount.toString()
         )
 
         InstructionItem(
             icon = Icons.Default.ForkRight,
             title = "Medium Questions",
-            value = "40%",
-//            showCard = false
+            value = mediumCount.toString()
         )
+
         InstructionItem(
             icon = Icons.Default.ForkRight,
-            title = "Low Questions",
-            value = "30%",
-//            showCard = false
+            title = "Easy Questions",
+            value = easyCount.toString()
+        )
+
+        InstructionItem(
+            icon = Icons.Default.LocalFireDepartment,
+            title = "Department Selected ",
+            value = Department.toString()
         )
 
         Spacer(modifier = Modifier.weight(1f))
+
         Button(
             onClick = {
-                navController.navigate(
-                    "TestScreen"
-                )
+                navController.navigate("TestScreen")
             },
-
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-
             shape = RoundedCornerShape(8.dp),
-
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF0B5EF7)
             )
         ) {
-
             Text(
                 text = "Start New Test",
                 color = Color.White,
@@ -274,7 +182,48 @@ fun TestInstructionsScreen(
         }
     }
 
-        questionViewModel.fetchQuestions(category = typedesc)
+    LaunchedEffect(Department) {
+        questionViewModel.fetchQuestions(
+            category = Department.toString()
+        )
+    }
+    LaunchedEffect(questionState) {
+
+        when (questionState) {
+
+            is QuestionUiState.Success -> {
+
+                val response =
+                    (questionState as QuestionUiState.Success)
+                        .response
+
+
+
+
+                val summary = response.summary
+
+                if (summary != null) {
+
+                    totalQuestions = summary.totalQuestions
+
+                } else {
+
+                    totalQuestions = 0
+
+                }
+            }
+            is QuestionUiState.Error -> {
+
+                Toast.makeText(
+                    context,
+                    (questionState as QuestionUiState.Error).message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            else -> {}
+        }
+    }
 
 
 }

@@ -3,6 +3,7 @@ package com.example.esop
 import com.example.esop.ui.theme.CompactDimens
 import com.example.esop.ui.theme.Dimens
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
@@ -29,10 +32,12 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
@@ -42,14 +47,17 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -79,45 +87,143 @@ fun WelcomeScreen(navController: NavController) {
     }
     val userName by appPrefs.userName.collectAsState(initial = null)
 
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val department by appPrefs.department.collectAsState(initial = "")
 
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    var showDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val scrollState = rememberScrollState()
 
+//    ModalNavigationDrawer(
+//
+//        drawerState = drawerState,
+//
+//        drawerContent = {
+//
+//            ModalDrawerSheet {
+//
+//                Spacer(
+//                    modifier = Modifier.height(dimens.spaceL)
+//                )
+//
+//                Text(
+//                    text = "Welcome User",
+//                    modifier = Modifier.padding(dimens.spaceM),
+//                    fontSize = 20.sp,
+//                    fontWeight = FontWeight.Bold
+//                )
+//                NavigationDrawerItem(
+//                    label = {
+//                        Text("Start Test")
+//                    },
+//                    selected = false,
+//                    onClick = {
+//
+//                        if (
+//                            department.equals("Operation", ignoreCase = true) ||
+//                            department.equals("Finance", ignoreCase = true)
+//                        ) {
+//
+//
+//
+//                            navController.navigate("TestInstructionsScreen") {
+//
+//                                popUpTo("welcome") {
+//                                    inclusive = false
+//                                }
+//                            }
+//                        } else {
+//
+//                            showDialog = true
+//                        }
+//
+//
+//
+//
+//                    }
+//                )
+//                NavigationDrawerItem(
+//
+//                    label = {
+//                        Text("Logout")
+//                    },
+//
+//                    selected = false,
+//
+//                    onClick = {
+//
+//                        scope.launch {
+//
+//                            // =========================
+//                            // CLEAR ALL DATASTORE DATA
+//                            // =========================
+//
+//                            appPrefs.clearUser()
+//
+//                            // =========================
+//                            // NAVIGATE LOGIN
+//                            // =========================
+//
+//                            navController.navigate("login") {
+//
+//                                popUpTo(0)
+//
+//                                launchSingleTop = true
+//                            }
+//                        }
+//                    }
+//                )
+//            }
+//        }
+//    )
     ModalNavigationDrawer(
 
         drawerState = drawerState,
 
         drawerContent = {
 
-            ModalDrawerSheet {
+            ModalDrawerSheet(
+                modifier = Modifier.fillMaxWidth(0.75f)
+            ) {
 
-                Spacer(
-                    modifier = Modifier.height(dimens.spaceL)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    IconButton(
+                        onClick = {
+
+                            scope.launch {
+                                drawerState.close()
+                            }
+                        }
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Close Drawer"
+                        )
+                    }
+
+                    Text(
+                        text = "Menu",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                HorizontalDivider()
 
                 Text(
                     text = "Welcome User",
-                    modifier = Modifier.padding(dimens.spaceM),
+                    modifier = Modifier.padding(16.dp),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
-
-//                NavigationDrawerItem(
-//                    label = {
-//                        Text("Profile")
-//                    },
-//                    selected = false,
-//                    onClick = {
-//                        navController.navigate("CompleteProfileScreen") {
-//
-//                            popUpTo("Profile") {
-//                                inclusive = false
-//                            }
-//                        }
-//                    }
-//                )
 
                 NavigationDrawerItem(
                     label = {
@@ -126,42 +232,49 @@ fun WelcomeScreen(navController: NavController) {
                     selected = false,
                     onClick = {
 
-//                        navController.navigate("TestScreen") {
-//
-//                            popUpTo("welcome") {
-//                                inclusive = false
-//                            }
-//                        }
+                        scope.launch {
+                            drawerState.close()
+                        }
 
-                        navController.navigate("TestInstructionsScreen") {
+                        if (
+                            department.equals(
+                                "Operation",
+                                ignoreCase = true
+                            ) ||
+                            department.equals(
+                                "Finance",
+                                ignoreCase = true
+                            )
+                        ) {
 
-                            popUpTo("welcome") {
-                                inclusive = false
+                            navController.navigate(
+                                "TestInstructionsScreen"
+                            ) {
+
+                                popUpTo("welcome") {
+                                    inclusive = false
+                                }
                             }
+
+                        } else {
+
+                            showDialog = true
                         }
                     }
                 )
-                NavigationDrawerItem(
 
+                NavigationDrawerItem(
                     label = {
                         Text("Logout")
                     },
-
                     selected = false,
-
                     onClick = {
 
                         scope.launch {
 
-                            // =========================
-                            // CLEAR ALL DATASTORE DATA
-                            // =========================
+                            drawerState.close()
 
                             appPrefs.clearUser()
-
-                            // =========================
-                            // NAVIGATE LOGIN
-                            // =========================
 
                             navController.navigate("login") {
 
@@ -174,7 +287,10 @@ fun WelcomeScreen(navController: NavController) {
                 )
             }
         }
-    ) {
+    )
+
+
+    {
 
         Scaffold(
 
@@ -195,7 +311,8 @@ fun WelcomeScreen(navController: NavController) {
                         Column {
 
                             Text(
-                                text = userName.toString(),
+//                                text = userName.toString(),
+                                text = "eSOP",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -267,7 +384,13 @@ fun WelcomeScreen(navController: NavController) {
 
                     NavigationBarItem(
                         selected = false,
-                        onClick = {},
+                        onClick = {
+                            Toast.makeText(
+                                context,
+                                "Not Available",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
                         icon = {
 
                             Icon(
@@ -439,8 +562,25 @@ fun WelcomeScreen(navController: NavController) {
                         .height(dimens.actionCardTotalSyncHeight)
                         .clickable {
 
+
+                            if (
+                                department.equals("Operation", ignoreCase = true) ||
+                                department.equals("Finance", ignoreCase = true)
+                            ) {
+
+
+                                navController.navigate("TestInstructionsScreen") {
+
+                                    popUpTo("welcome") {
+                                        inclusive = false
+                                    }
+                                }
+                            } else {
+
+                                showDialog = true
+                            }
 //                            navController.navigate("TestScreen")
-                            navController.navigate("TestInstructionsScreen")
+//                            navController.navigate("TestInstructionsScreen")
                         },
 
                     shape = RoundedCornerShape(dimens.radiusL),
@@ -525,7 +665,15 @@ fun WelcomeScreen(navController: NavController) {
 
                     DashboardCard(
                         dimens = dimens,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f)
+                            .clickable {
+                                Toast.makeText(
+                                    context,
+                                    "Not Available",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+
                         title = "My Tests",
                         subtitle = "View your tests"
                     )
@@ -557,7 +705,12 @@ fun WelcomeScreen(navController: NavController) {
                         dimens = dimens,
                         modifier = Modifier.weight(1f)
                             .clickable {
-                                navController.navigate("ESOPCertificateScreen")
+                                Toast.makeText(
+                                    context,
+                                    "Not Available Certificate Direct",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+//                                navController.navigate("ESOPCertificateScreen")
                             },
                         title = "Certificate",
                         subtitle = "View & Download"
@@ -591,6 +744,29 @@ fun WelcomeScreen(navController: NavController) {
                 )
             }
         }
+
+    }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = {
+                Text("Department Type Required")
+            },
+            text = {
+                Text(
+                    "Please select Department Type and update your profile now."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDialog = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 

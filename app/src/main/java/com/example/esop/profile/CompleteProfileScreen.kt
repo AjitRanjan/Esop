@@ -154,7 +154,8 @@ fun CompleteProfileScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val errorMap = remember { mutableStateMapOf<String, String>() }
-
+    var isOrganizationVisible by remember { mutableStateOf(true) }
+    var isFunctionaryVisible by remember { mutableStateOf(true) }
     var processGroupName by remember { mutableStateOf("") }
     var OrganizationName by remember { mutableStateOf("") }
     var FunctionaryName by remember { mutableStateOf("") }
@@ -169,6 +170,7 @@ fun CompleteProfileScreen(
     var districtCode by remember { mutableStateOf("") }
 
     var expanded by remember { mutableStateOf(false) }
+    var expandeded by remember { mutableStateOf(false) }
 
     val genderOptions = listOf("Male", "Female", "Other")
     val usertypedesc = listOf("Operation", "Finance")
@@ -188,12 +190,11 @@ fun CompleteProfileScreen(
     val districtviewModel: DistrictViewModel = viewModel()
 
 
-    var profileBitmap by remember {
-        mutableStateOf<Bitmap?>(null)
-    }
+    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var process_group by remember { mutableStateOf("") }
 
     var profilePercentage by remember {
-        mutableIntStateOf(0)
+        mutableIntStateOf(25)
     }
     val deviceId = ImeiUtils.getAndroidId(context)
     var showLoading by remember { mutableStateOf(false) }
@@ -209,11 +210,47 @@ fun CompleteProfileScreen(
             .versionName
     }
     appPrefs = AppPreferences(context)
+    val processGroup by appPrefs.processGroup.collectAsState(initial = null)
+    val Department by appPrefs.department.collectAsState(initial = null)
     val userEmail by appPrefs.userEmail.collectAsState(initial = null)
     val userMobile by appPrefs.mobile.collectAsState(initial = null)
     val userloginId by appPrefs.loginId.collectAsState(initial = null)
     val userusertype by appPrefs.usertype.collectAsState(initial = null)
-       mobile=userMobile.toString()
+
+    Department?.let {
+        if (it.isNotBlank())
+
+            departmentType=Department.toString()
+    }
+
+//    processGroup?.let {
+//        if (it.isNotBlank())
+//
+//            processGroupName=processGroup.toString()
+//            if (processGroup.equals("OTHERS", ignoreCase = true)) {
+//                OrganizationName = "OTHERS"
+//                FunctionaryName = "OTHERS"
+//                OrganizationCode = 0.toString()
+//                processGroupCode = 0.toString()
+//                usertype = "External"
+//                isOrganizationVisible = false
+//                isFunctionaryVisible = false
+//                stateviewModel.fetchState()
+//            } else {
+//                OrganizationName = ""
+//                FunctionaryName = ""
+//                OrganizationCode = ""
+//                isOrganizationVisible = true
+//                isFunctionaryVisible = true
+//                usertype = "Internal"
+//                roleViewModel.fetchRoles(processGroupCode)
+//            }
+//    }
+
+
+
+    mobile=userMobile.toString()
+
 
        loginId=userloginId.toString()
     email=userEmail.toString()
@@ -439,18 +476,24 @@ fun CompleteProfileScreen(
 
                     onClick = {
 
-                        if (departmentType.isNullOrBlank()) {
+                        if (
+                            departmentType.isNullOrBlank() ||
+                            (
+                                    !departmentType.equals("Operation", ignoreCase = true) &&
+                                            !departmentType.equals("Finance", ignoreCase = true)
+                                    )
+                        ) {
 
                             Toast.makeText(
                                 context,
-                                "Please choose your Department then proceed",
+                                "Please choose your correct Department Type.",
                                 Toast.LENGTH_SHORT
                             ).show()
 
                             return@Button
                         }
 
-                        else if (imageBase64.isNullOrBlank() && imagePath.isNullOrBlank()) {
+                         if (imageBase64.isNullOrBlank() && imagePath.isNullOrBlank()) {
 
                             Toast.makeText(
                                 context,
@@ -464,11 +507,31 @@ fun CompleteProfileScreen(
                         if (imageBase64.isNullOrEmpty()) {
                             imageBase64 = imagePath
                         }
-                        scope.launch {
 
-                            appPrefs.saveUsertype(
-                                UserType(departmentType)
-                            )
+                        if (pincode.isNullOrBlank() || pincode.length != 6) {
+
+                            Toast.makeText(
+                                context,
+                                "Please enter Pincode 6 digit",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            return@Button
+                        }
+
+                        if (age.isNullOrBlank()) {
+
+                            Toast.makeText(
+                                context,
+                                "Please enter Age",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            return@Button
+                        }
+
+                        scope.launch {
+                            appPrefs.saveDepartment(departmentType)
                         }
                         val request = UpadteProfileRequest(
                             versionName.toString(),
@@ -916,9 +979,9 @@ fun CompleteProfileScreen(
 
 
                 ExposedDropdownMenuBox(
-                    expanded = expanded,
+                    expanded = expandeded,
                     onExpandedChange = {
-                        expanded = !expanded
+                        expandeded = !expandeded
                     }
                 )
                 {
@@ -931,7 +994,7 @@ fun CompleteProfileScreen(
                         },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = expanded
+                                expanded = expandeded
                             )
                         },
                         modifier = Modifier
@@ -940,19 +1003,19 @@ fun CompleteProfileScreen(
                     )
 
                     ExposedDropdownMenu(
-                        expanded = expanded,
+                        expanded = expandeded,
                         onDismissRequest = {
-                            expanded = false
+                            expandeded = false
                         }
                     ) {
-                        usertypedesc.forEach { option ->
+                        usertypedesc.forEach { options ->
                             DropdownMenuItem(
                                 text = {
-                                    Text(option)
+                                    Text(options)
                                 },
                                 onClick = {
-                                    departmentType = option
-                                    expanded = false
+                                    departmentType = options
+                                    expandeded = false
                                 }
                             )
                         }
@@ -962,7 +1025,7 @@ fun CompleteProfileScreen(
 
 
 
-
+//                processGroupName
 
 
 
@@ -980,11 +1043,30 @@ fun CompleteProfileScreen(
 
                             processGroupCode =
                                 item.level_admin_cd ?: ""
+                            if (processGroupName.equals("OTHERS", ignoreCase = true)) {
+                                OrganizationName = "OTHERS"
+                                FunctionaryName = "OTHERS"
+                                OrganizationCode = 0.toString()
+                                processGroupCode = 0.toString()
+                                usertype="External"
+                                isOrganizationVisible = false
+                                isFunctionaryVisible = false
+                                stateviewModel.fetchState()
+                            } else {
+                                OrganizationName = ""
+                                FunctionaryName = ""
+                                OrganizationCode = ""
+                                isOrganizationVisible = true
+                                isFunctionaryVisible = true
+                                usertype="Internal"
+                                roleViewModel.fetchRoles(processGroupCode)
+                            }
+
 
                             roleViewModel.fetchRoles(processGroupCode)
                         }
                     )
-
+                if (isOrganizationVisible) {
                     CommonDropdown(
                         list = roleViewModel.roleList,
                         selectedText = OrganizationName,
@@ -1004,7 +1086,8 @@ fun CompleteProfileScreen(
                             )
                         }
                     )
-
+                }
+                if (isFunctionaryVisible) {
                     CommonDropdown(
                         list = functionaryviewModel.functionaryList,
                         selectedText = FunctionaryName,
@@ -1019,6 +1102,7 @@ fun CompleteProfileScreen(
                             stateviewModel.fetchState()
                         }
                     )
+                }
                 } }
             // ================= LOCATION =================
             Card(
@@ -1254,14 +1338,33 @@ fun CompleteProfileScreen(
                         )
                         scope.launch {
 
-                            appPrefs.saveUsertype(
-                                UserType(usertypedesc.toString())
-                            )
                         }
                         val filledFields = fields.count {
                             !it.isNullOrBlank() &&
                                     it.trim() != "null"
                         }
+
+
+                        if (item.process_group.equals("OTHERS", ignoreCase = true)) {
+                            OrganizationName = "OTHERS"
+                            FunctionaryName = "OTHERS"
+                            OrganizationCode = 0.toString()
+                            processGroupCode = 0.toString()
+                            usertype="External"
+                            isOrganizationVisible = false
+                            isFunctionaryVisible = false
+                            stateviewModel.fetchState()
+                        } else {
+                            OrganizationName = ""
+                            FunctionaryName = ""
+                            OrganizationCode = ""
+                            isOrganizationVisible = true
+                            isFunctionaryVisible = true
+                            usertype="Internal"
+                            roleViewModel.fetchRoles(processGroupCode)
+                        }
+
+
 
                         profilePercentage =
                             ((filledFields.toFloat() / fields.size) * 100).toInt()

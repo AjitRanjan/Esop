@@ -15,35 +15,38 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+
+
 class QuestionViewModel : ViewModel() {
 
-    private val repository =
-        QuestionRepository()
+    private val repository = QuestionRepository()
 
     var uiState by mutableStateOf<QuestionUiState>(
         QuestionUiState.Idle
     )
         private set
 
+    private var apiCalled = false
+
     fun fetchQuestions(
         category: String
     ) {
 
+        // API already call ho chuki hai
+        if (apiCalled) return
+
+        apiCalled = true
+
         viewModelScope.launch {
 
-            uiState =
-                QuestionUiState.Loading
+            uiState = QuestionUiState.Loading
 
             when (
-
-                val result =
-                    repository.getQuestions(
-
-                        QuestiontReq(
-                            category = category
-                        )
+                val result = repository.getQuestions(
+                    QuestiontReq(
+                        category = category
                     )
-
+                )
             ) {
 
                 is Resource.Success -> {
@@ -51,13 +54,14 @@ class QuestionViewModel : ViewModel() {
                     result.data?.let {
 
                         uiState =
-                            QuestionUiState.Success(
-                                it
-                            )
+                            QuestionUiState.Success(it)
                     }
                 }
 
                 is Resource.Error -> {
+
+                    // Error aaye to future retry allow kar do
+                    apiCalled = false
 
                     uiState =
                         QuestionUiState.Error(
@@ -66,41 +70,66 @@ class QuestionViewModel : ViewModel() {
                         )
                 }
 
-                else -> {}
+                else -> {
+                    apiCalled = false
+                }
             }
         }
     }
 }
-
-
-
-
 //class QuestionViewModel : ViewModel() {
 //
-//    private val repository = QuestionRepository()
+//    private val repository =
+//        QuestionRepository()
 //
-//    private val _questionState =
-//        MutableStateFlow<Resource<QuestionResponse>?>(null)
-//
-//    val questionState =
-//        _questionState.asStateFlow()
+//    var uiState by mutableStateOf<QuestionUiState>(
+//        QuestionUiState.Idle
+//    )
+//        private set
 //
 //    fun fetchQuestions(
-//        request: QuestiontReq
+//        category: String
 //    ) {
 //
 //        viewModelScope.launch {
 //
-//            _questionState.value =
-//                Resource.Loading()
+//            uiState =
+//                QuestionUiState.Loading
 //
-//            _questionState.value =
-//                repository.getQuestions(
-//                    request
-//                )
+//            when (
+//
+//                val result =
+//                    repository.getQuestions(
+//
+//                        QuestiontReq(
+//                            category = category
+//                        )
+//                    )
+//
+//            ) {
+//
+//                is Resource.Success -> {
+//
+//                    result.data?.let {
+//
+//                        uiState =
+//                            QuestionUiState.Success(
+//                                it
+//                            )
+//                    }
+//                }
+//
+//                is Resource.Error -> {
+//
+//                    uiState =
+//                        QuestionUiState.Error(
+//                            result.message
+//                                ?: "Unknown Error"
+//                        )
+//                }
+//
+//                else -> {}
+//            }
 //        }
 //    }
 //}
-
-
-

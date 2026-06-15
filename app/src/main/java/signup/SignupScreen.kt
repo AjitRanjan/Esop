@@ -136,7 +136,9 @@ fun SignupScreen(
 //    var FunctionaryName by remember { mutableStateOf("") }
     var processGroupCode by remember { mutableStateOf("") }
     var OrganizationCode by remember { mutableStateOf("") }
-
+    var expanded by remember { mutableStateOf(false) }
+    val usertypedesc = listOf("Operation", "Finance")
+    var departmentType by remember { mutableStateOf("") }
     val signupState = viewModel.state
     var error by remember { mutableStateOf("") }
     var isNavigated by remember {
@@ -254,7 +256,7 @@ fun SignupScreen(
                             "",
                             "",
                             "",
-                            "Fianance",
+                            departmentType,
                             usertype,
                             processGroupName+mobile,
                             "",
@@ -297,7 +299,49 @@ fun SignupScreen(
 
             // 🔹 Account
             SectionTitle("Account Details")
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = {
+                    expanded = !expanded
+                }
+            )
+            {
+                OutlinedTextField(
+                    value = departmentType,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = {
+                        Text("Please Choose Your Department Type")
+                    },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = expanded
+                        )
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
 
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = {
+                        expanded = false
+                    }
+                ) {
+                    usertypedesc.forEach { option ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(option)
+                            },
+                            onClick = {
+                                departmentType = option
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
             CommonDropdown(
                 list = processGroupViewModel.processGroupList,
                 selectedText = processGroupName,
@@ -458,6 +502,7 @@ fun SignupScreen(
     fun validateFields(): Boolean {
 
         errorMap.clear()
+        if (departmentType.isBlank()) errorMap["dp"] = "Select Department Type"
         if (processGroupName.isBlank()) errorMap["pg"] = "Select Process Group"
         if (OrganizationName.isBlank()) errorMap["org"] = "Select Organization"
 

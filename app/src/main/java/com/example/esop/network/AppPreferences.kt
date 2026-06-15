@@ -20,6 +20,8 @@ class AppPreferences(
 
     private object Keys {
 
+        val DEPARTMENT = stringPreferencesKey("department")
+
         val AUTHTOKEN = stringPreferencesKey("authToken")
         val USER_ID = stringPreferencesKey("user_id")
         val NAME = stringPreferencesKey("name")
@@ -32,7 +34,7 @@ class AppPreferences(
         val PROCESSGROUPID = stringPreferencesKey("processGroupId")
         val ORGANIZATIONID = stringPreferencesKey("organizationId")
         val ORGANIZATION = stringPreferencesKey("organization")
-        val UERTYPEDEC = stringPreferencesKey("usertypedesc")
+
 
         // Result Card Fields
         val TOTAL_QUESTIONS = intPreferencesKey("totalQuestions")
@@ -73,15 +75,7 @@ class AppPreferences(
     // =========================
 
 
-    suspend fun saveUsertype(
-        usertypedesc: UserType
-    ) {
-        context.dataStore.edit { prefs ->
 
-            prefs[Keys.UERTYPEDEC] = usertypedesc.toString()
-
-        }
-    }
 
 
 
@@ -92,10 +86,7 @@ class AppPreferences(
             prefs[Keys.LOGGED_IN] = true
         }
     }
-    val usertypedesc: Flow<String> =
-        context.dataStore.data.map { prefs ->
-            prefs[Keys.UERTYPEDEC].toString()
-        }
+
     // =========================
     // SAVE RESULT
     // =========================
@@ -119,6 +110,17 @@ class AppPreferences(
         }
     }
 
+
+    suspend fun saveDepartment(department: String) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.DEPARTMENT] = department
+        }
+    }
+
+    val department: Flow<String?> =
+        context.dataStore.data.map { prefs ->
+            prefs[Keys.DEPARTMENT]
+        }
     // =========================
     // CLEAR DATA
     // =========================
@@ -221,122 +223,3 @@ class AppPreferences(
 
 
 }
-//private val Context.dataStore by preferencesDataStore(name = "app_prefs")
-//class AppPreferences(
-//    private val context: Context
-//) {
-//
-//    private object Keys {
-//        val AUTHTOKEN = stringPreferencesKey("authToken")
-//        val USER_ID = stringPreferencesKey("user_id")
-//        val NAME = stringPreferencesKey("name")
-//        val EMAIL = stringPreferencesKey("email")
-//        val MOBILE = stringPreferencesKey("mobile")
-//        val DESIGNATION = stringPreferencesKey("designation")
-//        val PROCESSGROUP = stringPreferencesKey("processGroup")
-//        val LOGINID = stringPreferencesKey("loginId")
-//        val USERTYPE = stringPreferencesKey("usertype")
-//        val PROCESSGROUPID = stringPreferencesKey("processGroupId")
-//        val ORGANIZATIONID = stringPreferencesKey("organizationId")
-//
-//
-//        val ORGANIZATION = stringPreferencesKey("organization")
-//        val LOGGED_IN = booleanPreferencesKey("logged_in")
-//    }
-//
-//    // ✅ 👉 YAHI ADD KARNA HAI
-//    suspend fun saveUser(user: UserDataStore) {
-//        context.dataStore.edit { prefs ->
-//            prefs[Keys.USER_ID] = user.id
-//            prefs[Keys.NAME] = user.name
-//            prefs[Keys.EMAIL] = user.email
-//            prefs[Keys.MOBILE] = user.mobile
-//            prefs[Keys.PROCESSGROUP] = user.processGroup
-//            prefs[Keys.PROCESSGROUPID] = user.processGroupId.toString()
-//            prefs[Keys.LOGINID] = user.loginId
-//            prefs[Keys.USERTYPE] = user.usertype
-//            prefs[Keys.DESIGNATION] = user.designation
-//            prefs[Keys.ORGANIZATIONID] = user.organizationId.toString()
-//            prefs[Keys.ORGANIZATION] = user.organization
-//            prefs[Keys.LOGGED_IN] = true
-//        }
-//    }
-//
-//
-//
-//    suspend fun saveToke(user: GetToken) {
-//        context.dataStore.edit { prefs ->
-//
-//            prefs[Keys.AUTHTOKEN] = user.authToken.toString()
-//
-//            prefs[Keys.LOGGED_IN] = true
-//        }
-//    }
-//
-//
-//    // =========================
-//    // LOGOUT / CLEAR DATA
-//    // =========================
-//
-//    suspend fun clearUser() {
-//
-//        context.dataStore.edit { prefs ->
-//            prefs.clear()
-//        }
-//    }
-//    // =========================
-//    // GET NAME
-//    // =========================
-//
-//
-//    val authToken: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.AUTHTOKEN]
-//        }
-//    val userName: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.NAME]
-//        }
-//
-//    // =========================
-//    // GET EMAIL
-//    // =========================
-//
-//    val userEmail: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.EMAIL]
-//        }
-//    val mobile: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.MOBILE]
-//        }
-//
-//    val processGroup: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.PROCESSGROUP]
-//        }
-//    val organization: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.ORGANIZATION]
-//        }
-//
-//
-//    val loginId: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.LOGINID]
-//        }
-//    val usertype: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.USERTYPE]
-//        }
-//    val processGroupId: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.PROCESSGROUPID]
-//        }
-//    val organizationId: Flow<String?> =
-//        context.dataStore.data.map { prefs ->
-//            prefs[Keys.ORGANIZATIONID]
-//        }
-//
-//
-//}

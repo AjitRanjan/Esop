@@ -1,9 +1,11 @@
 package com.example.esop
 
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +34,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var appPrefs: AppPreferences
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowInsetsControllerCompat(
@@ -66,6 +69,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun loadApp(deviceId: String) {
 
         setContent {
@@ -125,8 +129,21 @@ class MainActivity : ComponentActivity() {
 
 
                 composable("ESOPCertificateScreen") {
-                    ESOPCertificateScreen(navController)
+                    ESOPCertificateScreen(
+                        navController = navController,
+                        appPreferences = appPrefs
+                    )
                 }
+
+
+
+//                composable("ESOPCertificateScreen") {
+//
+//
+//                    ESOPCertificateScreen(
+//                        navController = navController
+//                    )
+//                }
 
 
                 composable("CompleteProfileScreen") {

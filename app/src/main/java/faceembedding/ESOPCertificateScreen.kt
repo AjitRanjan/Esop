@@ -1,6 +1,11 @@
 package faceembedding
 
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.pdf.PdfDocument
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -25,6 +30,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,10 +40,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,8 +58,16 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.esop.network.AppPreferences
+import com.example.esop.network.Resource
+import com.example.esop.profile.ProfileViewModel
+import com.example.esop.profile.Repositry.UpdateProfileViewModel
+import com.example.esop.util.Base64Utils
+import kotlinx.coroutines.launch
+import java.io.File
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -171,22 +187,163 @@ import kotlin.math.sin
 fun ESOPCertificateScreen(
     navController: NavController,
     onDownloadPdfClick: () -> Unit = {},
+    appPreferences: AppPreferences,
+    profileViewModel: ProfileViewModel = viewModel(),
     onShareCertificateClick: () -> Unit = {}
-) {
+)
 
-    val context = LocalContext.current
-
-    val appPreferences = remember {
-        AppPreferences(context)
+{
+    val scope = rememberCoroutineScope()
+    var certificateBitmap by remember {
+        mutableStateOf<Bitmap?>(null)
     }
+    val context = LocalContext.current
+    lateinit var appPrefs: AppPreferences
+
+    val versionName = remember {
+        context.packageManager
+            .getPackageInfo(context.packageName, 0)
+            .versionName
+    }
+    var showLoading by remember { mutableStateOf(false) }
+    val profileState by profileViewModel.profileState.collectAsState()
+//    appPreferences = AppPreferences(context)
+    var loginId by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var usertype by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
 
 
-    val userName by appPreferences.userName.collectAsState(initial = "")
     val totalQuestions by appPreferences.totalQuestions.collectAsState(initial = 0)
     val correctAns by appPreferences.correctAns.collectAsState(initial = 0)
     val resultValue by appPreferences.result.collectAsState(initial = 0)
 
+
+    val userEmail by appPreferences.userEmail.collectAsState(initial = null)
+    val userMobile by appPreferences.mobile.collectAsState(initial = null)
+    val userloginId by appPreferences.loginId.collectAsState(initial = null)
+    val userusertype by appPreferences.usertype.collectAsState(initial = null)
+
+
+
+
+
+    val currentLoginId = userloginId.orEmpty()
+    val currentEmail = userEmail.orEmpty()
+    val currentVersion = versionName
     // Score from DataStore
+
+
+//    val profileState by profileViewModel.profileState.collectAsState()
+
+
+
+
+
+
+    LaunchedEffect(
+        currentLoginId,
+        currentEmail
+    ) {
+
+        if (
+            currentLoginId.isNotBlank() &&
+            currentEmail.isNotBlank()
+        ) {
+
+            Log.d(
+                "PROFILE_API",
+                "Calling API : $currentLoginId"
+            )
+
+            profileViewModel.getProfile(
+                loginId = currentLoginId,
+                email = currentEmail,
+                appVersion = currentVersion.toString()
+            )
+        }
+    }
+    LaunchedEffect(profileState) {
+
+        when (val state = profileState) {
+
+            is Resource.Loading -> {
+
+                showLoading = true
+
+                Log.d(
+                    "PROFILE",
+                    "Loading..."
+                )
+            }
+
+            is Resource.Success -> {
+
+                showLoading = false
+
+                val response = state.data
+
+                Log.d(
+                    "PROFILE_RESPONSE",
+                    response.toString()
+                )
+
+                response.wrappedList.firstOrNull()?.let { item ->
+
+                    firstName = item.firstname.orEmpty()
+                    lastName = item.lastname.orEmpty()
+
+                    Log.d(
+                        "PROFILE_NAME",
+                        "$firstName $lastName"
+                    )
+                }
+            }
+            is Resource.Error -> {
+
+                showLoading = false
+
+                Log.e(
+                    "PROFILE",
+                    state.message ?: "Unknown Error"
+                )
+            }
+
+            else -> {
+                showLoading = false
+            }
+        }
+    }
+    if (showLoading) {
+        Dialog(onDismissRequest = { }) {
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .background(Color.White, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Color.Blue
+                )
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     val score = "$correctAns / $totalQuestions"
 
     // Result from DataStore
@@ -242,8 +399,27 @@ fun ESOPCertificateScreen(
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
 
+
                 Button(
-                    onClick = onDownloadPdfClick,
+                    onClick = {
+
+                        scope.launch {
+
+                            certificateBitmap?.let { bitmap ->
+
+                                val pdfFile = saveAsPdf(
+                                    context = context,
+                                    bitmap = bitmap
+                                )
+
+                                Toast.makeText(
+                                    context,
+                                    "PDF Saved : ${pdfFile.name}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .height(46.dp),
@@ -259,6 +435,37 @@ fun ESOPCertificateScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
+//                Button(
+//                    onClick = {
+//
+//                        scope.launch {
+//
+//                            onDownloadPdfClick()
+//
+//                            Toast.makeText(
+//                                context,
+//                                "PDF Downloaded",
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+//                        }
+//                    },
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .height(46.dp),
+//                    shape = RoundedCornerShape(6.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Color(0xFF075CE8)
+//                    )
+//                )
+//                {
+//
+//                    Text(
+//                        text = "Download PDF",
+//                        color = Color.White,
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                }
 
                 OutlinedButton(
                     onClick = onShareCertificateClick,
@@ -294,16 +501,57 @@ fun ESOPCertificateScreen(
                     vertical = 16.dp
                 ),
             contentAlignment = Alignment.Center
-        ) {
+        )
+        {
 
             CertificateCard(
-                candidateName = userName ?: "",
+                candidateName = firstName+lastName ?: "",
                 score = score,
                 result = result,
                 date = currentDate
             )
         }
     }
+
+}
+
+fun saveAsPdf(
+    context: Context,
+    bitmap: Bitmap
+): File {
+
+    val file = File(
+        context.getExternalFilesDir(null),
+        "Certificate.pdf"
+    )
+
+    val document = PdfDocument()
+
+    val pageInfo =
+        PdfDocument.PageInfo.Builder(
+            bitmap.width,
+            bitmap.height,
+            1
+        ).create()
+
+    val page = document.startPage(pageInfo)
+
+    page.canvas.drawBitmap(
+        bitmap,
+        0f,
+        0f,
+        null
+    )
+
+    document.finishPage(page)
+
+    file.outputStream().use {
+        document.writeTo(it)
+    }
+
+    document.close()
+
+    return file
 }
 @Composable
 private fun CertificateCard(
@@ -554,6 +802,7 @@ private fun CertificateCorners() {
             color = gold
         )
     }
+
 }
 
 @Composable
@@ -622,5 +871,7 @@ private fun MedalIcon() {
             starPath.close()
             drawPath(starPath, color = Color(0xFF111827))
         }
+
     }
+
 }

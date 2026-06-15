@@ -96,6 +96,7 @@ import com.example.esop.AswersOptionSubmit.SubmitAnswer
 import com.example.esop.AswersOptionSubmit.SubmitExamRequest
 import com.example.esop.fialAnsweredSubmitApi.FinalInsertViewModel
 import com.example.esop.fialAnsweredSubmitApi.ResultInsertReq
+import faceembedding.Summary
 
 @Composable
 fun TestScreen(
@@ -106,8 +107,7 @@ fun TestScreen(
     insertViewModel: InsertViewModel = viewModel(),
     fialinsertViewModel: FinalInsertViewModel = viewModel()
 ) {
-    val state = viewModel.state
-    val UpdateUI = updateModel.Updatestate
+
     val submitState = insertViewModel.state
     val finalsubmitState = fialinsertViewModel.state
     val questionState = questionViewModel.uiState
@@ -117,7 +117,6 @@ fun TestScreen(
     val previewView = remember {
         PreviewView(context)
     }
-//    val questionViewModel: EsopQuestionModel = viewModel()
     var showLoading by remember { mutableStateOf(false) }
     val cameraExecutor = remember {
         Executors.newSingleThreadExecutor()
@@ -213,18 +212,17 @@ fun TestScreen(
     var showReviewScreen by remember {
         mutableStateOf(false)
     }
-
-     var submitRequest: SubmitExamRequest? = null
-     var submitRequestJson = ""
+    var isQuestionLoaded by remember { mutableStateOf(false) }
+    var apiCalled by remember {
+        mutableStateOf(false)
+    }
+    var submitRequestJson = ""
     val profileViewModel: ProfileViewModel = viewModel()
     appPrefs = AppPreferences(context)
     val userEmail by appPrefs.userEmail.collectAsState(initial = null)
-    val userMobile by appPrefs.mobile.collectAsState(initial = null)
     val userloginId by appPrefs.loginId.collectAsState(initial = null)
-    val typedescDepartment by appPrefs.usertypedesc.collectAsState(initial = null)
-    val userusertype by appPrefs.usertype.collectAsState(initial = null)
+    val Department by appPrefs.department.collectAsState(initial = null)
     loginId = userloginId.toString()
-    DepartMentpedesc = typedescDepartment.toString()
     val currentLoginId = loginId
     val currentEmail = userEmail?.toString().orEmpty()
     val currentVersion = versionName?.toString().orEmpty()
@@ -282,15 +280,15 @@ fun TestScreen(
                 ).show()
 
                 if (!isNavigated) {
-                        isNavigated = true
+                    isNavigated = true
 
-                        navController.navigate("welcome") {
-                            popUpTo("CompleteProfileScreen") {
-                                inclusive = true
-                            }
-                            launchSingleTop = true
+                    navController.navigate("welcome") {
+                        popUpTo("CompleteProfileScreen") {
+                            inclusive = true
                         }
+                        launchSingleTop = true
                     }
+                }
 
                 response.wrappedLista.forEach {
 
@@ -362,9 +360,10 @@ fun TestScreen(
                             correctAns=it.correctAns,
                             finalResult=it.result,
                             issueCertificate="Yes",
+                             departmentCetegory=Department.toString(),
 
 
-                        )
+                            )
 
                     fialinsertViewModel.FinalinsertSubmit(request)
 
@@ -389,9 +388,6 @@ fun TestScreen(
             else -> {}
         }
     }
-
-
-
     @Composable
     fun ExamScreen(
         questionList: List<Question>
@@ -407,7 +403,10 @@ fun TestScreen(
             mutableStateOf("")
         }
 
-        val currentQuestion = questionList.getOrNull(currentQuestionIndex)
+//        val currentQuestion = questionList.getOrNull(currentQuestionIndex)
+        val currentQuestion =
+            questionList.orEmpty()
+                .getOrNull(currentQuestionIndex)
 
         Column(
             modifier = Modifier
@@ -429,7 +428,7 @@ fun TestScreen(
                         Brush.horizontalGradient(
                             listOf(
 
-                                    Color(0xFF2563EB),
+                                Color(0xFF2563EB),
                                 Color(0xFFD9CCE9)
 //                                Color(0xFF8E6BC7),
 //                                Color(0xFFD9CCE9)
@@ -895,7 +894,7 @@ fun TestScreen(
                         .toJson(request)
                     println(submitRequestJson)
 
-                        showQuestionPalette = true
+                    showQuestionPalette = true
 
                 }
                 ,
@@ -930,372 +929,346 @@ fun TestScreen(
                 }
             }
         }
-    if (showQuestionPalette) {
+        if (showQuestionPalette) {
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .zIndex(10f)
-        ) {
-
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .background(Color.White)
+                    .zIndex(10f)
             ) {
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
                 ) {
 
-                    Text(
-                        text = "Question Index",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp
-                    )
-
-                    IconButton(
-                        onClick = {
-                            showQuestionPalette = false
-                        }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
 
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close"
+                        Text(
+                            text = "Question Index",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp
                         )
-                    }
-                }
 
-                Spacer(
-                    modifier = Modifier.height(20.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-
-                    LegendItem(
-                        Color(0xFF9E9E9E),
-                        "Not Answered"
-                    )
-
-                    LegendItem(
-                        Color(0xFF4CAF50),
-                        "Answered"
-                    )
-
-                    LegendItem(
-                        Color(0xFFFFC107),
-                        "Review"
-                    )
-
-                    LegendItem(
-                        Color(0xFF03A9F4),
-                        "Marked"
-                    )
-                }
-
-                Spacer(
-                    modifier = Modifier.height(20.dp)
-                )
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(5),
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    items(questionList.size) { index ->
-
-                        val bgColor = when {
-
-                            reviewQuestions.contains(index) ->
-                                Color(0xFFFFC107)
-
-                            markedQuestions.contains(index) ->
-                                Color(0xFF03A9F4)
-
-                            answeredQuestions.containsKey(index) ->
-                                Color(0xFF4CAF50)
-
-                            else ->
-                                Color(0xFF9E9E9E)
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .padding(6.dp)
-                                .size(60.dp)
-                                .background(
-                                    bgColor,
-                                    RoundedCornerShape(10.dp)
-                                )
-                                .clickable {
-
-                                    currentQuestionIndex = index
-                                    showQuestionPalette = false
-                                },
-
-                            contentAlignment = Alignment.Center
+                        IconButton(
+                            onClick = {
+                                showQuestionPalette = false
+                            }
                         ) {
 
-                            Text(
-                                text = "${index + 1}",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close"
                             )
                         }
                     }
-                }
 
-                Spacer(
-                    modifier = Modifier.height(12.dp)
-                )
+                    Spacer(
+                        modifier = Modifier.height(20.dp)
+                    )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.SpaceBetween
-                ) {
-
-                    OutlinedButton(
-                        modifier = Modifier
-                            .width(130.dp)
-                            .height(48.dp),
-
-                        onClick = {
-
-                            if (currentQuestionIndex > 0) {
-
-                                currentQuestionIndex--
-                                showQuestionPalette = false
-                            }
-                        }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
 
-                        Text("Previous")
+                        LegendItem(
+                            Color(0xFF9E9E9E),
+                            "Not Answered"
+                        )
+
+                        LegendItem(
+                            Color(0xFF4CAF50),
+                            "Answered"
+                        )
+
+                        LegendItem(
+                            Color(0xFFFFC107),
+                            "Review"
+                        )
+
+                        LegendItem(
+                            Color(0xFF03A9F4),
+                            "Marked"
+                        )
                     }
 
-                    OutlinedButton(
-                        modifier = Modifier
-                            .width(130.dp)
-                            .height(48.dp),
+                    Spacer(
+                        modifier = Modifier.height(20.dp)
+                    )
 
-                        onClick = {
-                            showQuestionPalette = false
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(5),
+                        modifier = Modifier.weight(1f)
+                    ) {
 
-                            showReviewScreen = true
+                        items(questionList.size) { index ->
+
+                            val bgColor = when {
+
+                                reviewQuestions.contains(index) ->
+                                    Color(0xFFFFC107)
+
+                                markedQuestions.contains(index) ->
+                                    Color(0xFF03A9F4)
+
+                                answeredQuestions.containsKey(index) ->
+                                    Color(0xFF4CAF50)
+
+                                else ->
+                                    Color(0xFF9E9E9E)
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .padding(6.dp)
+                                    .size(60.dp)
+                                    .background(
+                                        bgColor,
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .clickable {
+
+                                        currentQuestionIndex = index
+                                        showQuestionPalette = false
+                                    },
+
+                                contentAlignment = Alignment.Center
+                            ) {
+
+                                Text(
+                                    text = "${index + 1}",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween
+                    ) {
+
+                        OutlinedButton(
+                            modifier = Modifier
+                                .width(130.dp)
+                                .height(48.dp),
+
+                            onClick = {
+
+                                if (currentQuestionIndex > 0) {
+
+                                    currentQuestionIndex--
+                                    showQuestionPalette = false
+                                }
+                            }
+                        ) {
+
+                            Text("Previous")
+                        }
+
+                        OutlinedButton(
+                            modifier = Modifier
+                                .width(130.dp)
+                                .height(48.dp),
+
+                            onClick = {
+                                showQuestionPalette = false
+
+                                showReviewScreen = true
 //                            if (currentQuestionIndex < questionList.lastIndex) {
 //
 //                                currentQuestionIndex++
 //                                showQuestionPalette = false
 //                            }
-                        }
-                    ) {
-
-                        Text("Next")
-                    }
-                }
-            }
-        }
-    }
-
-
-    if (showReviewScreen) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .zIndex(20f)
-        ) {
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-
-                Text(
-                    text = "Review Your Test",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(
-                    modifier = Modifier.height(16.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.SpaceEvenly
-                ) {
-
-                    SummaryCard(
-                        "Answered",
-                        answeredCount.toString(),
-                        Color(0xFF4CAF50)
-                    )
-
-                    SummaryCard(
-                        "Not Answered",
-                        notAnsweredCount.toString(),
-                        Color(0xFFF44336)
-                    )
-
-                    SummaryCard(
-                        "Marked",
-                        markedCount.toString(),
-                        Color(0xFFFFC107)
-                    )
-
-                    SummaryCard(
-                        "Total",
-                        questionList.size.toString(),
-                        Color(0xFF2196F3)
-                    )
-                }
-
-                Spacer(
-                    modifier = Modifier.height(20.dp)
-                )
-
-                LazyColumn(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    items(questionList.size) { index ->
-
-                        val status = when {
-
-                            reviewQuestions.contains(index) ->
-                                "Marked for Review"
-
-                            markedQuestions.contains(index) ->
-                                "Marked"
-
-                            answeredQuestions.containsKey(index) ->
-                                "Answered"
-
-                            else ->
-                                "Not Answered"
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-
-                            horizontalArrangement =
-                                Arrangement.SpaceBetween
+                            }
                         ) {
 
-                            Text(
-                                text = "Q. ${index + 1}"
-                            )
-
-                            Text(
-                                text = status
-                            )
+                            Text("Next")
                         }
-
-                        Divider()
                     }
                 }
+            }
+        }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(12.dp)
+
+        if (showReviewScreen) {
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .zIndex(20f)
+            ) {
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
                 ) {
 
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
+                    Text(
+                        text = "Review Your Test",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
 
-                            // Previous = dismiss
-                            showReviewScreen = false
-                        }
+                    Spacer(
+                        modifier = Modifier.height(16.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement =
+                            Arrangement.SpaceEvenly
                     ) {
 
-                        Text("Back to Test")
+                        SummaryCard(
+                            "Answered",
+                            answeredCount.toString(),
+                            Color(0xFF4CAF50)
+                        )
+
+                        SummaryCard(
+                            "Not Answered",
+                            notAnsweredCount.toString(),
+                            Color(0xFFF44336)
+                        )
+
+                        SummaryCard(
+                            "Marked",
+                            markedCount.toString(),
+                            Color(0xFFFFC107)
+                        )
+
+                        SummaryCard(
+                            "Total",
+                            questionList.size.toString(),
+                            Color(0xFF2196F3)
+                        )
                     }
 
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
+                    Spacer(
+                        modifier = Modifier.height(20.dp)
+                    )
 
-                            val submitList =
-                                answeredQuestions.map { entry ->
-
-                                    SubmitAnswer(
-
-                                        question_id =
-                                            questionList[entry.key].questionId,
-
-                                        answer_given =
-                                            entry.value
-                                    )
-                                }
-
-                            val request =
-                                SubmitExamRequest(
-
-                                    courseType = 2,
-
-                                    courseName = "Operations",
-
-                                    certificateType = "Master",
-
-                                    loginId = currentLoginId,
-
-                                    email = currentEmail,
-
-                                    answers = submitList
-                                )
-
-                            insertViewModel.insertSubmit(request)
-                        }
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
                     ) {
 
-                        Text("Submit Test")
+                        items(questionList.size) { index ->
+
+                            val status = when {
+
+                                reviewQuestions.contains(index) ->
+                                    "Marked for Review"
+
+                                markedQuestions.contains(index) ->
+                                    "Marked"
+
+                                answeredQuestions.containsKey(index) ->
+                                    "Answered"
+
+                                else ->
+                                    "Not Answered"
+                            }
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+
+                                horizontalArrangement =
+                                    Arrangement.SpaceBetween
+                            ) {
+
+                                Text(
+                                    text = "Q. ${index + 1}"
+                                )
+
+                                Text(
+                                    text = status
+                                )
+                            }
+
+                            Divider()
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement =
+                            Arrangement.spacedBy(12.dp)
+                    ) {
+
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+
+                                // Previous = dismiss
+                                showReviewScreen = false
+                            }
+                        ) {
+
+                            Text("Back to Test")
+                        }
+
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+
+                                val submitList =
+                                    answeredQuestions.map { entry ->
+
+                                        SubmitAnswer(
+
+                                            question_id =
+                                                questionList[entry.key].questionId,
+
+                                            answer_given =
+                                                entry.value
+                                        )
+                                    }
+
+                                val request =
+                                    SubmitExamRequest(
+
+                                        courseType = 2,
+
+                                        courseName = "Operations",
+
+                                        certificateType = "Master",
+
+                                        loginId = currentLoginId,
+
+                                        email = currentEmail,
+
+                                        answers = submitList
+                                    )
+
+                                insertViewModel.insertSubmit(request)
+                            }
+                        ) {
+
+                            Text("Submit Test")
+                        }
                     }
                 }
             }
         }
     }
-    }
-
-//    questionList = response?.Questions ?: emptyList()
-//    questionList =
-//        state.data?.Questions ?: emptyList()
-//    questionList = state.data?.Questions ?: emptyList()
-//    showButton = false
-//    Log.d("QUESTION_COUNT", questionList.size.toString())
-//
-//    // Summary Data
-//    totalQuestions = response?.summary?.totalQuestions ?: 0
-//    easyCount = response?.summary?.easyCount ?: 0
-//    mediumCount = response?.summary?.mediumCount ?: 0
-//    hardCount = response?.summary?.hardCount ?: 0
-//    numberofAttempt = response?.summary?.numberofAttempt ?: 0
-//
-//    easyPercentage = response?.summary?.easyPercentage ?: 0.0
-//    mediumPercentage = response?.summary?.mediumPercentage ?: 0.0
-//    hardPercentage = response?.summary?.hardPercentage ?: 0.0
-//    questionList.forEach {
-//        Log.d("QUESTION_DATA", it.toString())
-//    }
-
-
-
-
-
 
     LaunchedEffect(questionState) {
 
@@ -1307,34 +1280,36 @@ fun TestScreen(
                     (questionState as QuestionUiState.Success)
                         .response
 
-                questionList =
-                    response.Questions
+                questionList = response.Questions
 
-                totalQuestions =
-                    response.summary.totalQuestions
 
-                easyCount =
-                    response.summary.easyCount
+                val summary = response.summary
 
-                mediumCount =
-                    response.summary.mediumCount
+                if (summary != null) {
 
-                hardCount =
-                    response.summary.hardCount
+                    totalQuestions = summary.totalQuestions
+                    easyCount = summary.easyCount
+                    mediumCount = summary.mediumCount
+                    hardCount = summary.hardCount
+                    numberofAttempt = summary.numberofAttempt
 
-                numberofAttempt =
-                    response.summary.numberofAttempt
+                    easyPercentage = summary.easyPercentage
+                    mediumPercentage = summary.mediumPercentage
+                    hardPercentage = summary.hardPercentage
 
-                easyPercentage =
-                    response.summary.easyPercentage
+                } else {
 
-                mediumPercentage =
-                    response.summary.mediumPercentage
+                    totalQuestions = 0
+                    easyCount = 0
+                    mediumCount = 0
+                    hardCount = 0
+                    numberofAttempt = 0
 
-                hardPercentage =
-                    response.summary.hardPercentage
+                    easyPercentage = 0.0
+                    mediumPercentage = 0.0
+                    hardPercentage = 0.0
+                }
             }
-
             is QuestionUiState.Error -> {
 
                 Toast.makeText(
@@ -1347,12 +1322,6 @@ fun TestScreen(
             else -> {}
         }
     }
-
-
-
-
-
-
 
 
     ExamScreen(questionList = questionList)
@@ -1390,7 +1359,7 @@ fun TestScreen(
 
 
                         )
-                          UserName =item.firstname+item.lastname
+                        UserName =item.firstname+item.lastname
                         CanddidateId =item.loginId
                         usertypedesc =item.usertypedesc
 //                        Operation
@@ -1413,91 +1382,91 @@ fun TestScreen(
 //                            questionViewModel.fetchQuestions(questionCode.toString())
 
 
-                            {
-                                val hasCameraPermission =
-                                    ContextCompat.checkSelfPermission(
-                                        context,
-                                        Manifest.permission.CAMERA
-                                    ) == PackageManager.PERMISSION_GRANTED
+                        {
+                            val hasCameraPermission =
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.CAMERA
+                                ) == PackageManager.PERMISSION_GRANTED
 
-                                if (hasCameraPermission) {
-
-
+                            if (hasCameraPermission) {
 
 
-                                        FaceVerificationUtils.startCameraWithAnalyzer(
-                                            context = context,
-                                            lifecycleOwner = lifecycleOwner,
-                                            previewView = previewView,
-                                            onReady = { capture ->
-                                                imageCapture = capture
-                                            },
-                                            onFace = { face ->
-                                                // face is FaceData forwarded from FaceVerificationUtils
-                                                val left = face.leftEyeOpenProbability
-                                                val right = face.rightEyeOpenProbability
 
-                                                // If ML Kit couldn't compute eye probabilities, ignore this detection
-                                                if (left == null || right == null) {
-                                                    face.trackingId?.let { id ->
-                                                        blinkStates[id]?.lastSeenMs = System.currentTimeMillis()
-                                                    }
-                                                } else {
-                                                    // maintain per-face state using trackingId if available
-                                                    val id = face.trackingId ?: face.hashCode()
-                                                    val state = blinkStates.getOrPut(id) { BlinkState() }
-                                                    state.lastSeenMs = System.currentTimeMillis()
 
-                                                    // Detect blink sequence: open -> closed -> open
-                                                    if (!state.eyesWereOpen) {
-                                                        if (left > 0.8f && right > 0.8f) {
-                                                            state.eyesWereOpen = true
-                                                            state.blinkDetected = false
-                                                            state.imageCaptured = false
-                                                        }
-                                                    } else {
-                                                        if (!state.blinkDetected && left < 0.3f && right < 0.3f) {
-                                                            state.blinkDetected = true
-                                                        }
+                                FaceVerificationUtils.startCameraWithAnalyzer(
+                                    context = context,
+                                    lifecycleOwner = lifecycleOwner,
+                                    previewView = previewView,
+                                    onReady = { capture ->
+                                        imageCapture = capture
+                                    },
+                                    onFace = { face ->
+                                        // face is FaceData forwarded from FaceVerificationUtils
+                                        val left = face.leftEyeOpenProbability
+                                        val right = face.rightEyeOpenProbability
 
-                                                        if (state.blinkDetected && left > 0.8f && right > 0.8f) {
-                                                            if (!state.imageCaptured) {
-                                                                state.imageCaptured = true
+                                        // If ML Kit couldn't compute eye probabilities, ignore this detection
+                                        if (left == null || right == null) {
+                                            face.trackingId?.let { id ->
+                                                blinkStates[id]?.lastSeenMs = System.currentTimeMillis()
+                                            }
+                                        } else {
+                                            // maintain per-face state using trackingId if available
+                                            val id = face.trackingId ?: face.hashCode()
+                                            val state = blinkStates.getOrPut(id) { BlinkState() }
+                                            state.lastSeenMs = System.currentTimeMillis()
 
-                                                                // Capture image on blink (ensure imageCapture available)
-                                                                imageCapture?.let { cap ->
-                                                                    FaceVerificationUtils.captureImage(
-                                                                        imageCapture = cap,
-                                                                        cameraExecutor = cameraExecutor,
-                                                                        context = context
-                                                                    ) { bitmap ->
-                                                                        try {
-                                                                            firstEmbedding = FaceVerificationUtils.createEmbedding(bitmap)
-                                                                            showCameraPreview = false
-                                                                            Toast.makeText(context, "Blink Detected & Face Captured", Toast.LENGTH_SHORT).show()
-                                                                        } catch (e: Exception) {
-                                                                            e.printStackTrace()
-                                                                        }
-                                                                    }
+                                            // Detect blink sequence: open -> closed -> open
+                                            if (!state.eyesWereOpen) {
+                                                if (left > 0.8f && right > 0.8f) {
+                                                    state.eyesWereOpen = true
+                                                    state.blinkDetected = false
+                                                    state.imageCaptured = false
+                                                }
+                                            } else {
+                                                if (!state.blinkDetected && left < 0.3f && right < 0.3f) {
+                                                    state.blinkDetected = true
+                                                }
+
+                                                if (state.blinkDetected && left > 0.8f && right > 0.8f) {
+                                                    if (!state.imageCaptured) {
+                                                        state.imageCaptured = true
+
+                                                        // Capture image on blink (ensure imageCapture available)
+                                                        imageCapture?.let { cap ->
+                                                            FaceVerificationUtils.captureImage(
+                                                                imageCapture = cap,
+                                                                cameraExecutor = cameraExecutor,
+                                                                context = context
+                                                            ) { bitmap ->
+                                                                try {
+                                                                    firstEmbedding = FaceVerificationUtils.createEmbedding(bitmap)
+                                                                    showCameraPreview = false
+                                                                    Toast.makeText(context, "Blink Detected & Face Captured", Toast.LENGTH_SHORT).show()
+                                                                } catch (e: Exception) {
+                                                                    e.printStackTrace()
                                                                 }
                                                             }
                                                         }
                                                     }
-
-                                                    // cleanup stale states (not seen for >5s)
-                                                    val now = System.currentTimeMillis()
-                                                    val stale = blinkStates.filterValues { now - it.lastSeenMs > 5_000L }.keys
-                                                    stale.forEach { blinkStates.remove(it) }
                                                 }
                                             }
-                                    )
 
-                                } else {
-                                    permissionLauncher.launch(
-                                        Manifest.permission.CAMERA
-                                    )
-                                }
+                                            // cleanup stale states (not seen for >5s)
+                                            val now = System.currentTimeMillis()
+                                            val stale = blinkStates.filterValues { now - it.lastSeenMs > 5_000L }.keys
+                                            stale.forEach { blinkStates.remove(it) }
+                                        }
+                                    }
+                                )
+
+                            } else {
+                                permissionLauncher.launch(
+                                    Manifest.permission.CAMERA
+                                )
                             }
+                        }
                     }
                 }
             }
@@ -1537,10 +1506,10 @@ fun TestScreen(
     }
 
 
-
-
     LaunchedEffect(firstEmbedding) {
-        while (firstEmbedding != null) {
+
+        while (firstEmbedding != null && !apiCalled) {
+
             delay(2000)
 
             FaceVerificationUtils.captureImage(
@@ -1555,24 +1524,56 @@ fun TestScreen(
                 val savedEmbedding = firstEmbedding
 
                 if (savedEmbedding != null) {
+
                     val distance =
                         FaceVerificationUtils.compareEmbeddings(
                             savedEmbedding,
                             currentEmbedding
                         )
+//                    if (
+//                        distance < 2000 &&
+//                        !isQuestionLoaded &&
+//                        firstEmbedding != null
+//                    ) {
+//
+//                        isQuestionLoaded = true
+//
+//                        questionViewModel.fetchQuestions(
+//                            category = Department.toString()
+//                        )
+//
+//                        showDialog = false
+//                        blurScreen = false
+//                    }
+
+//                    if (distance < 2000 && !isQuestionLoaded) {
+//
+//                        isQuestionLoaded = true
+//                        apiCalled = true
+//                        questionViewModel.fetchQuestions(
+//                            category = Department.toString()
+//                        )
+//
+////                        firstEmbedding = null
+//                        showDialog = false
+//                        blurScreen = false
+//                    }
+
+
+
 
                     if (distance < 2000) {
 
-//                        val request =
-//                            QuestiontReq(category = "category",)
+                        questionViewModel.fetchQuestions(
+                            category = Department.toString()
+                        )
 
-                        questionViewModel.fetchQuestions(category = DepartMentpedesc)
                         showDialog = false
                         blurScreen = false
-                    }
 
+                    }
                     else {
-//                        resultText = "Face Not Matched"
+
                         blurScreen = true
                         showDialog = true
                     }
@@ -1580,7 +1581,6 @@ fun TestScreen(
             }
         }
     }
-
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -1644,8 +1644,8 @@ fun TestScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            showDialog = false
-                            blurScreen = false
+//                            showDialog = false
+//                            blurScreen = false
                         }
                     ) {
                         Text("OK")
@@ -1654,6 +1654,1572 @@ fun TestScreen(
             )
         }
 
-}
+    }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@Composable
+//fun TestScreen(
+//    navController: NavController,
+//    viewModel: CompletePofileScreenViewModel = viewModel(),
+//    updateModel: UpdateProfileViewModel = viewModel(),
+//    questionViewModel: QuestionViewModel = viewModel() ,
+//    insertViewModel: InsertViewModel = viewModel(),
+//    fialinsertViewModel: FinalInsertViewModel = viewModel()
+//) {
+//    val state = viewModel.state
+//    val UpdateUI = updateModel.Updatestate
+//    val submitState = insertViewModel.state
+//    val finalsubmitState = fialinsertViewModel.state
+//    val questionState = questionViewModel.uiState
+//    val context = LocalContext.current
+//    val lifecycleOwner = LocalLifecycleOwner.current
+//    lateinit var appPrefs: AppPreferences
+//    val previewView = remember {
+//        PreviewView(context)
+//    }
+////    val questionViewModel: EsopQuestionModel = viewModel()
+//    var showLoading by remember { mutableStateOf(false) }
+//    val cameraExecutor = remember {
+//        Executors.newSingleThreadExecutor()
+//    }
+//
+//    // Blink tracking state per face (trackingId -> state)
+//    data class BlinkState(
+//        var eyesWereOpen: Boolean = false,
+//        var blinkDetected: Boolean = false,
+//        var imageCaptured: Boolean = false,
+//        var lastSeenMs: Long = System.currentTimeMillis()
+//    )
+//
+//    val blinkStates = remember { mutableStateMapOf<Int, BlinkState>() }
+//
+//    var imageCapture by remember {
+//        mutableStateOf<ImageCapture?>(null)
+//    }
+//
+//    var UserName by remember { mutableStateOf("") }
+//    var CanddidateId by remember { mutableStateOf("") }
+//    var usertypedesc by remember { mutableStateOf("") }
+//    var firstEmbedding by remember {
+//        mutableStateOf<FloatArray?>(null)
+//    }
+//
+//    var resultText by remember { mutableStateOf("No Face Captured") }
+//    var questionCode by remember { mutableStateOf(2) }
+//
+//    var showDialog by remember {
+//        mutableStateOf(false)
+//    }
+//    var totalQuestions by remember { mutableIntStateOf(0) }
+//    var easyCount by remember { mutableIntStateOf(0) }
+//    var mediumCount by remember { mutableIntStateOf(0) }
+//    var hardCount by remember { mutableIntStateOf(0) }
+//    var numberofAttempt by remember { mutableIntStateOf(0) }
+//
+//    var easyPercentage by remember { mutableDoubleStateOf(0.0) }
+//    var mediumPercentage by remember { mutableDoubleStateOf(0.0) }
+//    var hardPercentage by remember { mutableDoubleStateOf(0.0) }
+//
+//
+//    val markedQuestions = remember {
+//        mutableStateListOf<Int>()
+//    }
+//    var questionList by remember {
+//        mutableStateOf<List<Question>>(emptyList())
+//    }
+//    var blurScreen by remember {
+//        mutableStateOf(false)
+//    }
+//
+//    var showCameraPreview by remember {
+//        mutableStateOf(true)
+//    }
+//    val dimens = MaterialTheme.dimens
+//    var showButton by remember {
+//        mutableStateOf(true)
+//    }
+//    val answeredQuestions = remember {
+//        mutableStateMapOf<Int, String>()
+//    }
+//
+//    val reviewQuestions = remember {
+//        mutableStateListOf<Int>()
+//    }
+//    var showQuestionPalette by remember {
+//        mutableStateOf(false)
+//    }
+//    val versionName = remember {
+//        context.packageManager
+//            .getPackageInfo(context.packageName, 0)
+//            .versionName
+//    }
+//    var loginId by remember { mutableStateOf("") }
+//    var DepartMentpedesc by remember { mutableStateOf("") }
+//
+//    DisposableEffect(Unit) {
+//        onDispose {
+//            cameraExecutor.shutdown()
+//        }
+//    }
+//    val answeredCount = answeredQuestions.size
+//
+//    val reviewCount = reviewQuestions.size
+//
+//    val markedCount = markedQuestions.size
+//
+//    val notAnsweredCount =
+//        questionList.size - answeredCount
+//
+//    var showReviewScreen by remember {
+//        mutableStateOf(false)
+//    }
+//
+//     var submitRequest: SubmitExamRequest? = null
+//     var submitRequestJson = ""
+//    val profileViewModel: ProfileViewModel = viewModel()
+//    appPrefs = AppPreferences(context)
+//    val userEmail by appPrefs.userEmail.collectAsState(initial = null)
+//    val userMobile by appPrefs.mobile.collectAsState(initial = null)
+//    val userloginId by appPrefs.loginId.collectAsState(initial = null)
+//    val department by appPrefs.department.collectAsState(initial = "")
+//    val userusertype by appPrefs.usertype.collectAsState(initial = null)
+//    loginId = userloginId.toString()
+//    DepartMentpedesc = department.toString()
+//
+//
+//    val currentLoginId = loginId
+//    val currentEmail = userEmail?.toString().orEmpty()
+//    val currentVersion = versionName?.toString().orEmpty()
+//    val permissionLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.RequestPermission()
+//    ) { granted ->
+//        if (!granted) {
+//            Toast.makeText(
+//                context,
+//                "Camera Permission Denied",
+//                Toast.LENGTH_SHORT
+//            ).show()
+//        }
+//    }
+//    var isNavigated by remember {
+//        mutableStateOf(false)
+//    }
+//
+//    val questionFontSize = when {
+//        dimens.screenPaddingHorizontal >= 32.dp -> 24.sp   // Expanded
+//        dimens.screenPaddingHorizontal >= 24.dp -> 22.sp   // Medium
+//        else -> 18.sp                                      // Compact
+//    }
+////val dimens = MaterialTheme.dimens
+//
+//
+//
+//
+//
+//
+//
+////    UI State
+//
+//    LaunchedEffect(finalsubmitState) {
+//
+//        when (submitState) {
+//
+//            is InsertExamState.Loading -> {
+//
+//                Log.d(
+//                    "SUBMIT_LOADING",
+//                    "Loading..."
+//                )
+//            }
+//
+//            is InsertExamState.Success -> {
+//
+//                val response =
+//                    submitState.response
+//
+//                Toast.makeText(
+//                    context,
+//                    response.responseDesc,
+//                    Toast.LENGTH_LONG
+//                ).show()
+//
+//                if (!isNavigated) {
+//                        isNavigated = true
+//
+//                        navController.navigate("welcome") {
+//                            popUpTo("CompleteProfileScreen") {
+//                                inclusive = true
+//                            }
+//                            launchSingleTop = true
+//                        }
+//                    }
+//
+//                response.wrappedLista.forEach {
+//
+//
+//                }
+//            }
+//
+//            is InsertExamState.Error -> {
+//
+//                Toast.makeText(
+//                    context,
+//                    submitState.message,
+//                    Toast.LENGTH_LONG
+//                ).show()
+//
+//                Log.d(
+//                    "SUBMIT_ERROR",
+//                    submitState.message
+//                )
+//            }
+//
+//            else -> {}
+//        }
+//    }
+//    LaunchedEffect(submitState) {
+//
+//        when (submitState) {
+//
+//            is InsertExamState.Loading -> {
+//
+//                Log.d(
+//                    "SUBMIT_LOADING",
+//                    "Loading..."
+//                )
+//            }
+//
+//            is InsertExamState.Success -> {
+//
+//                val response =
+//                    submitState.response
+//
+//
+//
+//                Log.d(
+//                    "SUBMIT_SUCCESS",
+//                    Gson().toJson(response)
+//                )
+//
+//                response.wrappedLista.forEach {
+//
+//
+//
+//                    val request =
+//                        ResultInsertReq(
+//
+//                            loginId = loginId,
+//
+//                            emailId = currentEmail,
+//
+//                            totalQuestion = it.totalQuestions,
+//
+//                            wrongAns = it.wrongAns,
+//
+//                            numberofAttempt = it.numberofAttempt+1,
+//
+//                            notattempteQuestion = it.notattempteQuestion,
+//                            scoredPercentage=it.scoredPercentage,
+//                            passingPercentage=it.passingPercentage,
+//                            correctAns=it.correctAns,
+//                            finalResult=it.result,
+//                            issueCertificate="Yes",
+//
+//
+//                        )
+//
+//                    fialinsertViewModel.FinalinsertSubmit(request)
+//
+//
+//                }
+//            }
+//
+//            is InsertExamState.Error -> {
+//
+//                Toast.makeText(
+//                    context,
+//                    submitState.message,
+//                    Toast.LENGTH_LONG
+//                ).show()
+//
+//                Log.d(
+//                    "SUBMIT_ERROR",
+//                    submitState.message
+//                )
+//            }
+//
+//            else -> {}
+//        }
+//    }
+//
+//
+//
+//    @Composable
+//    fun ExamScreen(
+//        questionList: List<Question>
+//    ) {
+//
+//
+//
+//        var currentQuestionIndex by remember {
+//            mutableIntStateOf(0)
+//        }
+//
+//        var selectedAnswer by remember {
+//            mutableStateOf("")
+//        }
+//
+//        val currentQuestion = questionList.getOrNull(currentQuestionIndex)
+//
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(Color(0xFFF7F3FA))
+//        )
+//
+//
+//
+//        {
+//
+//            // ================= HEADER =================
+//
+//
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .background(
+//                        Brush.horizontalGradient(
+//                            listOf(
+//
+//                                    Color(0xFF2563EB),
+//                                Color(0xFFD9CCE9)
+////                                Color(0xFF8E6BC7),
+////                                Color(0xFFD9CCE9)
+//                            )
+//                        )
+//                    )
+//                    .padding(dimens.spaceM),
+//
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                verticalAlignment = Alignment.CenterVertically
+//            )
+//
+//
+//
+//            {
+//
+//                Card(
+//                    modifier = Modifier.weight(1f),
+//                    shape = RoundedCornerShape(dimens.radiusM)
+//                ) {
+//
+//                    Column(
+//                        modifier = Modifier.padding(dimens.spaceM)
+//                    ) {
+//
+//                        Text(
+//                            text = "Candidate ID :"+CanddidateId,
+//                            fontWeight = FontWeight.Bold
+//                        )
+//
+//                        Spacer(
+//                            modifier = Modifier.height(
+//                                dimens.spaceXS
+//                            )
+//                        )
+//
+//                        Text(
+//                            text = "Candidate Name :"+UserName
+//                        )
+//                    }
+//                }
+//
+//                Spacer(
+//                    modifier = Modifier.width(
+//                        dimens.spaceM
+//                    )
+//                )
+//
+//                Box(
+//                    contentAlignment = Alignment.Center
+//                )
+//                {
+//                    val totalTime = 30 * 60 // 30 minutes
+//
+//                    var timeLeft by remember {
+//                        mutableStateOf(totalTime)
+//                    }
+//
+//                    LaunchedEffect(Unit) {
+//
+//                        while (timeLeft > 0) {
+//
+//                            delay(1000)
+//
+//                            timeLeft--
+//                        }
+//                    }
+//
+//                    val progress =
+//                        timeLeft.toFloat() / totalTime.toFloat()
+//
+//                    CircularProgressIndicator(
+//                        progress = {
+//                            timeLeft.toFloat() / totalTime.toFloat()
+//                        },
+//                        modifier = Modifier.size(
+//                            dimens.iconXL
+//                        ),
+//                        strokeWidth = dimens.space2XS,
+//                        color = Color.White,
+//                        trackColor = Color.White.copy(alpha = 0.25f)
+//                    )
+//
+//                    Text(
+//                        text = String.format(
+//                            "%02d:%02d",
+//                            timeLeft / 60,
+//                            timeLeft % 60
+//                        ),
+//                        color = Color.White,
+//                        fontWeight = FontWeight.Bold)
+//                }
+//                IconButton(
+//                    onClick = {}
+//                ) {
+//                    IconButton(
+//                        onClick = {
+//                            showQuestionPalette = true
+//                        }
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Edit,
+//                            contentDescription = null,
+//                            modifier = Modifier.size(dimens.iconM)
+//                        )
+//                    }
+//                }
+//            }
+//
+//            // ================= QUESTION =================
+//
+//            val scrollState = rememberScrollState()
+//
+//            currentQuestion?.let { question ->
+//
+//                Column(
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .verticalScroll(scrollState)
+//                        .padding(
+//                            horizontal = dimens.screenPaddingHorizontal,
+//                            vertical = dimens.spaceM
+//                        )
+//                ) {
+//
+//                    Text(
+//                        text = "Question ${currentQuestionIndex + 1}/${questionList.size}",
+//                        style = MaterialTheme.typography.titleMedium,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//
+//                    Spacer(
+//                        modifier = Modifier.height(
+//                            dimens.spaceM
+//                        )
+//                    )
+//                    Text(
+//                        text = question.questionTitle,
+//                        fontSize = questionFontSize,
+//                        fontWeight = FontWeight.SemiBold,
+//                        lineHeight = (questionFontSize.value + 6).sp,
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
+//
+//                    Spacer(
+//                        modifier = Modifier.height(
+//                            dimens.spaceL
+//                        )
+//                    )
+//
+//                    question.options.forEach { option ->
+//
+//                        Card(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(
+//                                    vertical = dimens.spaceXS
+//                                )
+//                                .clickable {
+//
+//                                    selectedAnswer =
+//                                        option.option_Key
+//                                },
+//
+//                            shape = RoundedCornerShape(
+//                                dimens.radiusM
+//                            ),
+//
+//                            colors = CardDefaults.cardColors(
+//                                containerColor =
+//                                    if (selectedAnswer == option.option_Key)
+//                                        Color(0xFFE7D9F8)
+//                                    else
+//                                        Color.White
+//                            )
+//                        ) {
+//
+//                            Row(
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .padding(
+//                                        dimens.spaceS
+//                                    ),
+//
+//                                verticalAlignment = Alignment.Top
+//                            ) {
+//
+//                                RadioButton(
+//                                    selected =
+//                                        selectedAnswer ==
+//                                                option.option_Key,
+//
+//                                    onClick = {
+//
+//                                        selectedAnswer =
+//                                            option.option_Key
+//                                    }
+//                                )
+//
+//                                Spacer(
+//                                    modifier = Modifier.width(
+//                                        dimens.spaceXS
+//                                    )
+//                                )
+//
+//                                Text(
+//                                    text = option.option_value,
+//                                    modifier = Modifier.weight(1f),
+//                                    style = MaterialTheme.typography.bodyMedium
+//                                )
+//                            }
+//                        }
+//                    }
+//                    Spacer(
+//                        modifier = Modifier.height(
+//                            dimens.spaceL
+//                        )
+//                    )
+//                }
+//            }
+//            // ================= ACTION BUTTONS =================
+//            val buttonList = listOf(
+//                "Save & Next" to Color(0xFF4CAF50),
+//                "Save & Review" to Color(0xFFFFC107),
+//                "Mark" to Color(0xFF03A9F4),
+//                "Clear" to Color(0xFF9E9E9E))
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(
+//                        horizontal = dimens.screenPaddingHorizontal
+//                    ),
+//
+//                horizontalArrangement = Arrangement.spacedBy(
+//                    dimens.spaceXS
+//                )
+//            )
+//            {
+//
+//                buttonList.forEach { (text, color) ->
+//
+//                    Box(
+//                        modifier = Modifier
+//                            .weight(1f)
+//                            .height(48.dp)
+//                            .clip(
+//                                RoundedCornerShape(
+//                                    dimens.radiusM
+//                                )
+//                            )
+//                            .background(color)
+//                            .clickable {
+//
+//                                when (text) {
+//
+//                                    "Clear" -> {
+//                                        selectedAnswer = ""
+//                                    }
+//                                    "Save & Next" -> {
+//
+//                                        if (selectedAnswer.isNotEmpty()) {
+//                                            answeredQuestions[currentQuestionIndex] =
+//                                                selectedAnswer
+//                                        }
+//
+//                                        if (currentQuestionIndex < questionList.lastIndex) {
+//
+//                                            currentQuestionIndex++
+//                                            selectedAnswer = ""
+//                                        }
+//                                    }
+//                                    "Save & Review" -> {
+//
+//                                        if (!reviewQuestions.contains(currentQuestionIndex)) {
+//
+//                                            reviewQuestions.add(
+//                                                currentQuestionIndex
+//                                            )
+//                                        }
+//
+//                                        if (selectedAnswer.isNotEmpty()) {
+//
+//                                            answeredQuestions[currentQuestionIndex] =
+//                                                selectedAnswer
+//                                        }
+//
+//                                        if (currentQuestionIndex < questionList.lastIndex) {
+//
+//                                            currentQuestionIndex++
+//                                            selectedAnswer = ""
+//                                        }
+//                                    }
+//                                    "Mark" -> {
+//
+//                                        if (!markedQuestions.contains(currentQuestionIndex)) {
+//
+//                                            markedQuestions.add(currentQuestionIndex)
+//
+//
+//
+//                                        }
+//
+//                                    }
+//
+//
+//                                }
+//                            },
+//
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//
+//                        Text(
+//                            text = text,
+//
+//                            color =
+//                                if (text == "Save & Review")
+//                                    Color.Black
+//                                else
+//                                    Color.White,
+//
+//                            fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
+//                            textAlign = TextAlign.Center,
+//                            maxLines = 1
+//                        )
+//                    }
+//                }
+//            }
+//
+//            Spacer(
+//                modifier = Modifier.height(
+//                    dimens.spaceS
+//                )
+//            )
+//
+//
+////            Spacer(modifier = Modifier.height(dimens.spaceS))
+//            Spacer(modifier = Modifier.height(20.dp))
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(
+//                        top = 8.dp,
+//                        start = 16.dp,
+//                        end = 16.dp
+//                    ),
+//
+//                horizontalArrangement = Arrangement.SpaceBetween
+//            ) {
+//
+//                OutlinedButton(
+//                    modifier = Modifier
+//                        .width(90.dp)
+//                        .height(34.dp),
+//
+//                    shape = RoundedCornerShape(8.dp),
+//
+//                    onClick = {
+//
+//                        if (currentQuestionIndex > 0) {
+//
+//                            currentQuestionIndex--
+//
+//                            selectedAnswer =
+//                                answeredQuestions[currentQuestionIndex]
+//                                    ?: ""
+//                        }
+//                    }
+//                ) {
+//
+//                    Text(
+//                        text = "Previous",
+//                        fontSize = 10.sp
+//                    )
+//                }
+//
+//                OutlinedButton(
+//                    modifier = Modifier
+//                        .width(90.dp)
+//                        .height(34.dp),
+//
+//                    shape = RoundedCornerShape(8.dp),
+//
+//                    onClick = {
+//
+//                        if (currentQuestionIndex < questionList.lastIndex) {
+//
+//                            currentQuestionIndex++
+//
+//                            selectedAnswer =
+//                                answeredQuestions[currentQuestionIndex]
+//                                    ?: ""
+//                        }
+//                    }
+//                ) {
+//
+//                    Text(
+//                        text = "Next",
+//                        fontSize = 10.sp
+//                    )
+//                }
+//            }
+//
+//            Spacer(
+//                modifier = Modifier.height(
+//                    dimens.spaceM
+//                )
+//            )
+//
+//            Button(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(
+//                        horizontal = dimens.screenPaddingHorizontal,
+//                        vertical = dimens.spaceM
+//                    )
+//                    .height(dimens.buttonHeight),
+//
+//                shape = RoundedCornerShape(
+//                    dimens.radiusL
+//                ),
+//
+//                onClick = {
+//
+//                    if (answeredQuestions.size != questionList.size) {
+//
+//                        val remainingQuestions =
+//                            questionList.size - answeredQuestions.size
+//
+//                        Toast.makeText(
+//                            context,
+//                            "Please attempt all questions. Remaining: $remainingQuestions",
+//                            Toast.LENGTH_LONG
+//                        ).show()
+//
+//                        return@Button
+//                    }
+//
+//                    val submitList = answeredQuestions.map { entry ->
+//
+//                        SubmitAnswer(
+//                            question_id =
+//                                questionList[entry.key].questionId,
+//
+//                            answer_given =
+//                                entry.value
+//                        )
+//                    }
+//
+//                    val request = SubmitExamRequest(
+//
+//                        courseType = 2,
+//                        courseName = usertypedesc,
+//                        certificateType = "Master",
+//                        email = currentEmail,
+//                        loginId = currentLoginId,
+//                        answers = submitList
+//                    )
+//
+//                    submitRequestJson = GsonBuilder()
+//                        .setPrettyPrinting()
+//                        .create()
+//                        .toJson(request)
+//                    println(submitRequestJson)
+//
+//                        showQuestionPalette = true
+//
+//                }
+//                ,
+//
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = Color.Transparent
+//                ),
+//
+//                contentPadding = PaddingValues(0.dp)
+//            ) {
+//
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .background(
+//                            brush = Brush.horizontalGradient(
+//                                colors = listOf(
+//                                    Color(0xFF2563EB),
+//                                    Color(0xFFD9CCE9)
+//                                )
+//                            )
+//                        ),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//
+//                    Text(
+//                        text = "Submit Exam",
+//                        color = Color.White,
+//                        style = MaterialTheme.typography.titleMedium,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                }
+//            }
+//        }
+//    if (showQuestionPalette) {
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(Color.White)
+//                .zIndex(10f)
+//        ) {
+//
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(16.dp)
+//            ) {
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//
+//                    Text(
+//                        text = "Question Index",
+//                        fontWeight = FontWeight.Bold,
+//                        fontSize = 24.sp
+//                    )
+//
+//                    IconButton(
+//                        onClick = {
+//                            showQuestionPalette = false
+//                        }
+//                    ) {
+//
+//                        Icon(
+//                            imageVector = Icons.Default.Close,
+//                            contentDescription = "Close"
+//                        )
+//                    }
+//                }
+//
+//                Spacer(
+//                    modifier = Modifier.height(20.dp)
+//                )
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceEvenly
+//                ) {
+//
+//                    LegendItem(
+//                        Color(0xFF9E9E9E),
+//                        "Not Answered"
+//                    )
+//
+//                    LegendItem(
+//                        Color(0xFF4CAF50),
+//                        "Answered"
+//                    )
+//
+//                    LegendItem(
+//                        Color(0xFFFFC107),
+//                        "Review"
+//                    )
+//
+//                    LegendItem(
+//                        Color(0xFF03A9F4),
+//                        "Marked"
+//                    )
+//                }
+//
+//                Spacer(
+//                    modifier = Modifier.height(20.dp)
+//                )
+//
+//                LazyVerticalGrid(
+//                    columns = GridCells.Fixed(5),
+//                    modifier = Modifier.weight(1f)
+//                ) {
+//
+//                    items(questionList.size) { index ->
+//
+//                        val bgColor = when {
+//
+//                            reviewQuestions.contains(index) ->
+//                                Color(0xFFFFC107)
+//
+//                            markedQuestions.contains(index) ->
+//                                Color(0xFF03A9F4)
+//
+//                            answeredQuestions.containsKey(index) ->
+//                                Color(0xFF4CAF50)
+//
+//                            else ->
+//                                Color(0xFF9E9E9E)
+//                        }
+//
+//                        Box(
+//                            modifier = Modifier
+//                                .padding(6.dp)
+//                                .size(60.dp)
+//                                .background(
+//                                    bgColor,
+//                                    RoundedCornerShape(10.dp)
+//                                )
+//                                .clickable {
+//
+//                                    currentQuestionIndex = index
+//                                    showQuestionPalette = false
+//                                },
+//
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//
+//                            Text(
+//                                text = "${index + 1}",
+//                                color = Color.White,
+//                                fontWeight = FontWeight.Bold
+//                            )
+//                        }
+//                    }
+//                }
+//
+//                Spacer(
+//                    modifier = Modifier.height(12.dp)
+//                )
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement =
+//                        Arrangement.SpaceBetween
+//                ) {
+//
+//                    OutlinedButton(
+//                        modifier = Modifier
+//                            .width(130.dp)
+//                            .height(48.dp),
+//
+//                        onClick = {
+//
+//                            if (currentQuestionIndex > 0) {
+//
+//                                currentQuestionIndex--
+//                                showQuestionPalette = false
+//                            }
+//                        }
+//                    ) {
+//
+//                        Text("Previous")
+//                    }
+//
+//                    OutlinedButton(
+//                        modifier = Modifier
+//                            .width(130.dp)
+//                            .height(48.dp),
+//
+//                        onClick = {
+//                            showQuestionPalette = false
+//
+//                            showReviewScreen = true
+////                            if (currentQuestionIndex < questionList.lastIndex) {
+////
+////                                currentQuestionIndex++
+////                                showQuestionPalette = false
+////                            }
+//                        }
+//                    ) {
+//
+//                        Text("Next")
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//
+//    if (showReviewScreen) {
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(Color.White)
+//                .zIndex(20f)
+//        ) {
+//
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(16.dp)
+//            ) {
+//
+//                Text(
+//                    text = "Review Your Test",
+//                    fontSize = 22.sp,
+//                    fontWeight = FontWeight.Bold
+//                )
+//
+//                Spacer(
+//                    modifier = Modifier.height(16.dp)
+//                )
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement =
+//                        Arrangement.SpaceEvenly
+//                ) {
+//
+//                    SummaryCard(
+//                        "Answered",
+//                        answeredCount.toString(),
+//                        Color(0xFF4CAF50)
+//                    )
+//
+//                    SummaryCard(
+//                        "Not Answered",
+//                        notAnsweredCount.toString(),
+//                        Color(0xFFF44336)
+//                    )
+//
+//                    SummaryCard(
+//                        "Marked",
+//                        markedCount.toString(),
+//                        Color(0xFFFFC107)
+//                    )
+//
+//                    SummaryCard(
+//                        "Total",
+//                        questionList.size.toString(),
+//                        Color(0xFF2196F3)
+//                    )
+//                }
+//
+//                Spacer(
+//                    modifier = Modifier.height(20.dp)
+//                )
+//
+//                LazyColumn(
+//                    modifier = Modifier.weight(1f)
+//                ) {
+//
+//                    items(questionList.size) { index ->
+//
+//                        val status = when {
+//
+//                            reviewQuestions.contains(index) ->
+//                                "Marked for Review"
+//
+//                            markedQuestions.contains(index) ->
+//                                "Marked"
+//
+//                            answeredQuestions.containsKey(index) ->
+//                                "Answered"
+//
+//                            else ->
+//                                "Not Answered"
+//                        }
+//
+//                        Row(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(8.dp),
+//
+//                            horizontalArrangement =
+//                                Arrangement.SpaceBetween
+//                        ) {
+//
+//                            Text(
+//                                text = "Q. ${index + 1}"
+//                            )
+//
+//                            Text(
+//                                text = status
+//                            )
+//                        }
+//
+//                        Divider()
+//                    }
+//                }
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement =
+//                        Arrangement.spacedBy(12.dp)
+//                ) {
+//
+//                    OutlinedButton(
+//                        modifier = Modifier.weight(1f),
+//                        onClick = {
+//
+//                            // Previous = dismiss
+//                            showReviewScreen = false
+//                        }
+//                    ) {
+//
+//                        Text("Back to Test")
+//                    }
+//
+//                    Button(
+//                        modifier = Modifier.weight(1f),
+//                        onClick = {
+//
+//                            val submitList =
+//                                answeredQuestions.map { entry ->
+//
+//                                    SubmitAnswer(
+//
+//                                        question_id =
+//                                            questionList[entry.key].questionId,
+//
+//                                        answer_given =
+//                                            entry.value
+//                                    )
+//                                }
+//
+//                            val request =
+//                                SubmitExamRequest(
+//
+//                                    courseType = 2,
+//
+//                                    courseName = "Operations",
+//
+//                                    certificateType = "Master",
+//
+//                                    loginId = currentLoginId,
+//
+//                                    email = currentEmail,
+//
+//                                    answers = submitList
+//                                )
+//
+//                            insertViewModel.insertSubmit(request)
+//                        }
+//                    ) {
+//
+//                        Text("Submit Test")
+//                    }
+//                }
+//            }
+//        }
+//    }
+//    }
+//
+//
+//    LaunchedEffect(questionState) {
+//
+//        when (questionState) {
+//
+//            is QuestionUiState.Success -> {
+//
+//                val response =
+//                    (questionState as QuestionUiState.Success)
+//                        .response
+//
+//                questionList =
+//                    response.Questions
+//
+//                totalQuestions =
+//                    response.summary.totalQuestions
+//
+//                easyCount =
+//                    response.summary.easyCount
+//
+//                mediumCount =
+//                    response.summary.mediumCount
+//
+//                hardCount =
+//                    response.summary.hardCount
+//
+//                numberofAttempt =
+//                    response.summary.numberofAttempt
+//
+//                easyPercentage =
+//                    response.summary.easyPercentage
+//
+//                mediumPercentage =
+//                    response.summary.mediumPercentage
+//
+//                hardPercentage =
+//                    response.summary.hardPercentage
+//            }
+//
+//            is QuestionUiState.Error -> {
+//
+//                Toast.makeText(
+//                    context,
+//                    (questionState as QuestionUiState.Error).message,
+//                    Toast.LENGTH_SHORT
+//                ).show()
+//            }
+//
+//            else -> {}
+//        }
+//    }
+//
+//
+//
+//
+//
+//
+//
+//
+//    ExamScreen(questionList = questionList)
+//
+//    val profileState by profileViewModel.profileState.collectAsState()
+//    LaunchedEffect(profileState) {
+//
+//        when (val state = profileState) {
+//
+//            is Resource.Success -> {
+//
+//                val response = state.data
+//
+//                if (response.responseDesc == "OK") {
+//
+//                    response.wrappedList.forEach { item ->
+//
+//                        val validationFields = listOf(
+//                            "Email" to item.email,
+//                            "First Name" to item.firstname,
+//                            "Last Name" to item.lastname,
+//                            "Age" to item.age?.toString(),
+//                            "Gender" to item.gender?.toString(),
+//                            "Pincode" to item.pincode?.toString(),
+//                            "City" to item.city,
+//                            "Address" to item.address,
+//                            "Mobile Number" to item.mobile,
+//                            "Designation" to item.designation,
+//                            "Process Group" to item.process_group,
+//                            "Organization" to item.organization,
+//                            "Functionary" to item.functionary,
+//                            "User Department Type " to item.usertypedesc,
+//                            "State" to item.state,
+//                            "District" to item.district
+//
+//
+//                        )
+//                          UserName =item.firstname+item.lastname
+//                        CanddidateId =item.loginId
+//                        usertypedesc =item.usertypedesc
+////                        Operation
+//
+//
+//                        val missingField = validationFields.firstOrNull {
+//                            it.second.isNullOrBlank() ||
+//                                    it.second.equals("null", true)
+//                        }
+//
+//                        if (missingField != null) {
+//
+//                            Toast.makeText(
+//                                context,
+//                                "Please complete Your Profile  ${missingField.first} then start exam",
+//                                Toast.LENGTH_LONG
+//                            ).show()
+//
+//                        } else
+////                            questionViewModel.fetchQuestions(questionCode.toString())
+//
+//
+//                            {
+//                                val hasCameraPermission =
+//                                    ContextCompat.checkSelfPermission(
+//                                        context,
+//                                        Manifest.permission.CAMERA
+//                                    ) == PackageManager.PERMISSION_GRANTED
+//
+//                                if (hasCameraPermission) {
+//
+//
+//
+//
+//                                        FaceVerificationUtils.startCameraWithAnalyzer(
+//                                            context = context,
+//                                            lifecycleOwner = lifecycleOwner,
+//                                            previewView = previewView,
+//                                            onReady = { capture ->
+//                                                imageCapture = capture
+//                                            },
+//                                            onFace = { face ->
+//                                                // face is FaceData forwarded from FaceVerificationUtils
+//                                                val left = face.leftEyeOpenProbability
+//                                                val right = face.rightEyeOpenProbability
+//
+//                                                // If ML Kit couldn't compute eye probabilities, ignore this detection
+//                                                if (left == null || right == null) {
+//                                                    face.trackingId?.let { id ->
+//                                                        blinkStates[id]?.lastSeenMs = System.currentTimeMillis()
+//                                                    }
+//                                                } else {
+//                                                    // maintain per-face state using trackingId if available
+//                                                    val id = face.trackingId ?: face.hashCode()
+//                                                    val state = blinkStates.getOrPut(id) { BlinkState() }
+//                                                    state.lastSeenMs = System.currentTimeMillis()
+//
+//                                                    // Detect blink sequence: open -> closed -> open
+//                                                    if (!state.eyesWereOpen) {
+//                                                        if (left > 0.8f && right > 0.8f) {
+//                                                            state.eyesWereOpen = true
+//                                                            state.blinkDetected = false
+//                                                            state.imageCaptured = false
+//                                                        }
+//                                                    } else {
+//                                                        if (!state.blinkDetected && left < 0.3f && right < 0.3f) {
+//                                                            state.blinkDetected = true
+//                                                        }
+//
+//                                                        if (state.blinkDetected && left > 0.8f && right > 0.8f) {
+//                                                            if (!state.imageCaptured) {
+//                                                                state.imageCaptured = true
+//
+//                                                                // Capture image on blink (ensure imageCapture available)
+//                                                                imageCapture?.let { cap ->
+//                                                                    FaceVerificationUtils.captureImage(
+//                                                                        imageCapture = cap,
+//                                                                        cameraExecutor = cameraExecutor,
+//                                                                        context = context
+//                                                                    ) { bitmap ->
+//                                                                        try {
+//                                                                            firstEmbedding = FaceVerificationUtils.createEmbedding(bitmap)
+//                                                                            showCameraPreview = false
+//                                                                            Toast.makeText(context, "Blink Detected & Face Captured", Toast.LENGTH_SHORT).show()
+//                                                                        } catch (e: Exception) {
+//                                                                            e.printStackTrace()
+//                                                                        }
+//                                                                    }
+//                                                                }
+//                                                            }
+//                                                        }
+//                                                    }
+//
+//                                                    // cleanup stale states (not seen for >5s)
+//                                                    val now = System.currentTimeMillis()
+//                                                    val stale = blinkStates.filterValues { now - it.lastSeenMs > 5_000L }.keys
+//                                                    stale.forEach { blinkStates.remove(it) }
+//                                                }
+//                                            }
+//                                    )
+//
+//                                } else {
+//                                    permissionLauncher.launch(
+//                                        Manifest.permission.CAMERA
+//                                    )
+//                                }
+//                            }
+//                    }
+//                }
+//            }
+//
+//
+//            is Resource.Error -> {
+//                showLoading = false
+//
+//            }
+//
+//            is Resource.Loading -> {
+//                showLoading = false
+//                Log.d(
+//                    "PROFILE",
+//                    "Loading..."
+//                )
+//            }
+//
+//            else -> {
+//                showLoading = false
+//            }
+//        }
+//    }
+//    if (showLoading) {
+//        Dialog(onDismissRequest = { }) {
+//            Box(
+//                modifier = Modifier
+//                    .size(90.dp)
+//                    .background(Color.White, RoundedCornerShape(12.dp)),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                CircularProgressIndicator(
+//                    color = Color.Blue
+//                )
+//            }
+//        }
+//    }
+//
+//
+//
+//
+//    LaunchedEffect(firstEmbedding) {
+//        while (firstEmbedding != null) {
+//            delay(2000)
+//
+//            FaceVerificationUtils.captureImage(
+//                imageCapture = imageCapture,
+//                cameraExecutor = cameraExecutor,
+//                context = context
+//            ) { bitmap ->
+//
+//                val currentEmbedding =
+//                    FaceVerificationUtils.createEmbedding(bitmap)
+//
+//                val savedEmbedding = firstEmbedding
+//
+//                if (savedEmbedding != null) {
+//                    val distance =
+//                        FaceVerificationUtils.compareEmbeddings(
+//                            savedEmbedding,
+//                            currentEmbedding
+//                        )
+//
+//                    if (distance < 2000) {
+//
+////                        val request =
+////                            QuestiontReq(category = "category",)
+//                        Toast.makeText(
+//                            context,
+//                            DepartMentpedesc,
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                        questionViewModel.fetchQuestions(category = DepartMentpedesc)
+//                        showDialog = false
+//                        blurScreen = false
+//                    }
+//
+//                    else {
+////                        resultText = "Face Not Matched"
+//                        blurScreen = true
+//                        showDialog = true
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    Box(
+//        modifier = Modifier.fillMaxSize()
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .then(
+//                    if (blurScreen) {
+//                        Modifier.graphicsLayer {
+//                            alpha = 0.3f
+//                        }
+//                    } else {
+//                        Modifier
+//                    }
+//                ),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            if (showCameraPreview) {
+//                AndroidView(
+//                    factory = {
+//                        previewView
+//                    },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .weight(1f)
+//                )
+//            }
+//
+//            Spacer(modifier = Modifier.height(10.dp))
+//            if (showButton) {
+//
+//                Button(
+//                    onClick = {
+////                        showButton = false
+//                        profileViewModel.getProfile(
+//                            appVersion = currentVersion,
+//                            loginId = currentLoginId,
+//                            email = currentEmail
+//                        )
+//                    },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(10.dp)
+//                ) {
+//                    Text("Capture First Face")
+//                }
+//            }
+//        }
+//
+//        if (showDialog) {
+//            VibrateWhileDialogVisible(showDialog)
+//
+//            AlertDialog(
+//                onDismissRequest = {},
+//                title = {
+//                    Text("Security Alert")
+//                },
+//                text = {
+//                    Text("Face Not Matched or Object Detected")
+//                },
+//                confirmButton = {
+//                    Button(
+//                        onClick = {
+//                            showDialog = false
+//                            blurScreen = false
+//                        }
+//                    ) {
+//                        Text("OK")
+//                    }
+//                }
+//            )
+//        }
+//
+//}
+//
+//}

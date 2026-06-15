@@ -24,7 +24,10 @@ data class ResultInsertReq(
     val correctAns: Int,
     @SerializedName("finalResult")
     val finalResult: Int,
+    @SerializedName("departmentCetegory")
+    val departmentCetegory: String,
     @SerializedName("issueCertificate")
     val issueCertificate: String,
+
 
 )
