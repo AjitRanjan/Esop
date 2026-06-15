@@ -74,12 +74,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.TextButton
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.mapSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
@@ -226,6 +229,7 @@ fun TestScreen(
     val currentLoginId = loginId
     val currentEmail = userEmail?.toString().orEmpty()
     val currentVersion = versionName?.toString().orEmpty()
+    var showDialogTime by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -240,12 +244,17 @@ fun TestScreen(
     var isNavigated by remember {
         mutableStateOf(false)
     }
-
+    var selectedAnswer by remember {
+        mutableStateOf("")
+    }
     val questionFontSize = when {
         dimens.screenPaddingHorizontal >= 32.dp -> 24.sp   // Expanded
         dimens.screenPaddingHorizontal >= 24.dp -> 22.sp   // Medium
         else -> 18.sp                                      // Compact
     }
+
+
+
 //val dimens = MaterialTheme.dimens
 
 
@@ -255,6 +264,13 @@ fun TestScreen(
 
 
 //    UI State
+
+
+
+
+
+
+
 
     LaunchedEffect(finalsubmitState) {
 
@@ -395,15 +411,48 @@ fun TestScreen(
 
 
 
-        var currentQuestionIndex by remember {
+//        var currentQuestionIndex by remember {
+//            mutableIntStateOf(0)
+//        }
+//
+//
+//
+//        var selectedAnswer by remember {
+//            mutableStateOf("")
+//        }
+
+
+        var currentQuestionIndex by rememberSaveable {
             mutableIntStateOf(0)
         }
 
-        var selectedAnswer by remember {
+        var selectedAnswer by rememberSaveable {
             mutableStateOf("")
         }
 
 //        val currentQuestion = questionList.getOrNull(currentQuestionIndex)
+
+
+
+        val answeredQuestions = rememberSaveable(
+            saver = mapSaver(
+                save = { state ->
+                    state.mapKeys { it.key.toString() }
+                },
+                restore = { restored ->
+                    mutableStateMapOf<Int, String>().apply {
+                        restored.forEach { (key, value) ->
+                            put(key.toInt(), value as String)
+                        }
+                    }
+                }
+            )
+        ) {
+            mutableStateMapOf<Int, String>()
+        }
+
+
+
         val currentQuestion =
             questionList.orEmpty()
                 .getOrNull(currentQuestionIndex)
@@ -477,11 +526,14 @@ fun TestScreen(
                     )
                 )
 
+
+
                 Box(
                     contentAlignment = Alignment.Center
-                )
-                {
-                    val totalTime = 30 * 60 // 30 minutes
+                ) {
+
+//                    val totalTime = 15 // 15 seconds
+                    val totalTime = 60 * 60 // 60 minutes
 
                     var timeLeft by remember {
                         mutableStateOf(totalTime)
@@ -490,23 +542,19 @@ fun TestScreen(
                     LaunchedEffect(Unit) {
 
                         while (timeLeft > 0) {
-
                             delay(1000)
-
                             timeLeft--
                         }
-                    }
 
-                    val progress =
-                        timeLeft.toFloat() / totalTime.toFloat()
+                        // Timer finished
+                        showDialog = true
+                    }
 
                     CircularProgressIndicator(
                         progress = {
                             timeLeft.toFloat() / totalTime.toFloat()
                         },
-                        modifier = Modifier.size(
-                            dimens.iconXL
-                        ),
+                        modifier = Modifier.size(dimens.iconXL),
                         strokeWidth = dimens.space2XS,
                         color = Color.White,
                         trackColor = Color.White.copy(alpha = 0.25f)
@@ -519,8 +567,37 @@ fun TestScreen(
                             timeLeft % 60
                         ),
                         color = Color.White,
-                        fontWeight = FontWeight.Bold)
+                        fontWeight = FontWeight.Bold
+                    )
                 }
+
+// Alert Dialog
+                if (showDialogTime) {
+                    showDialog = false
+                    blurScreen = false
+
+                    AlertDialog(
+                        onDismissRequest = { },
+                        title = {
+                            Text("Time Over")
+                        },
+                        text = {
+                            Text(
+                                "Your test time has been completed."
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    navController.popBackStack()
+//                        showDialogExam = false
+                                }
+                            ) {
+                                Text("OK")
+                            }
+                        }
+                    )}
+
                 IconButton(
                     onClick = {}
                 ) {
@@ -853,7 +930,8 @@ fun TestScreen(
 
                 onClick = {
 
-                    if (answeredQuestions.size != questionList.size) {
+
+                    if (answeredQuestions.size == questionList.size) {
 
                         val remainingQuestions =
                             questionList.size - answeredQuestions.size
@@ -1530,38 +1608,6 @@ fun TestScreen(
                             savedEmbedding,
                             currentEmbedding
                         )
-//                    if (
-//                        distance < 2000 &&
-//                        !isQuestionLoaded &&
-//                        firstEmbedding != null
-//                    ) {
-//
-//                        isQuestionLoaded = true
-//
-//                        questionViewModel.fetchQuestions(
-//                            category = Department.toString()
-//                        )
-//
-//                        showDialog = false
-//                        blurScreen = false
-//                    }
-
-//                    if (distance < 2000 && !isQuestionLoaded) {
-//
-//                        isQuestionLoaded = true
-//                        apiCalled = true
-//                        questionViewModel.fetchQuestions(
-//                            category = Department.toString()
-//                        )
-//
-////                        firstEmbedding = null
-//                        showDialog = false
-//                        blurScreen = false
-//                    }
-
-
-
-
                     if (distance < 2000) {
 
                         questionViewModel.fetchQuestions(

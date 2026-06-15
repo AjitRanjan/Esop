@@ -126,37 +126,43 @@ fun TestInstructionsScreen(
         InstructionItem(
             icon = Icons.Default.AccessTime,
             title = "Time Duration",
-            value = "30 Minutes"
+            value = "50 Minutes"
         )
 
-        InstructionItem(
-            icon = Icons.Default.EditNote,
-            title = "Passing Marks",
-            value = "70%"
-        )
-
-        InstructionItem(
-            icon = Icons.Default.ForkRight,
-            title = "Hard Questions",
-            value = hardCount.toString()
-        )
-
-        InstructionItem(
-            icon = Icons.Default.ForkRight,
-            title = "Medium Questions",
-            value = mediumCount.toString()
-        )
-
-        InstructionItem(
-            icon = Icons.Default.ForkRight,
-            title = "Easy Questions",
-            value = easyCount.toString()
-        )
+//        InstructionItem(
+//            icon = Icons.Default.EditNote,
+//            title = "Passing Marks",
+//            value = "70%"
+//        )
+//
+//        InstructionItem(
+//            icon = Icons.Default.ForkRight,
+//            title = "Hard Questions",
+//            value = hardCount.toString()
+//        )
+//
+//        InstructionItem(
+//            icon = Icons.Default.ForkRight,
+//            title = "Medium Questions",
+//            value = mediumCount.toString()
+//        )
+//
+//        InstructionItem(
+//            icon = Icons.Default.ForkRight,
+//            title = "Easy Questions",
+//            value = easyCount.toString()
+//        )
 
         InstructionItem(
             icon = Icons.Default.LocalFireDepartment,
             title = "Department Selected ",
             value = Department.toString()
+        )
+
+        InstructionItem(
+            icon = Icons.Default.LocalFireDepartment,
+            title = "Mark per Question ",
+            value = "1"
         )
 
         Spacer(modifier = Modifier.weight(1f))

@@ -1,4 +1,4 @@
-package com.example.esop
+package com.example.esop.homepage
 
 import com.example.esop.ui.theme.CompactDimens
 import com.example.esop.ui.theme.Dimens
@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.BarChart
@@ -72,7 +71,7 @@ import kotlinx.coroutines.launch
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WelcomeScreen(navController: NavController) {
+fun HomePageScreen(navController: NavController) {
 
     // =========================
     // USE YOUR DIMENS HERE
@@ -94,6 +93,12 @@ fun WelcomeScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     val scrollState = rememberScrollState()
+
+    Toast.makeText(
+        context,
+        department,
+        Toast.LENGTH_SHORT
+    ).show()
 
 //    ModalNavigationDrawer(
 //
@@ -518,7 +523,7 @@ fun WelcomeScreen(navController: NavController) {
                             )
 
                             Text(
-                                text = "Electronic Standard\nOperation Process",
+                                text = "Electronic Standard\nOperation Procedure",
                                 color = Color.White,
                                 fontSize = 14.sp
                             )
@@ -603,7 +608,7 @@ fun WelcomeScreen(navController: NavController) {
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Start New Test",
+                                text = "Start  Test Now",
                                 color = Color.White,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold

@@ -19,6 +19,12 @@ import kotlinx.coroutines.launch
 
 class QuestionViewModel : ViewModel() {
 
+
+    var selectedPosition by mutableStateOf(0)
+
+    fun setPosition(pos: Int) {
+        selectedPosition = pos
+    }
     private val repository = QuestionRepository()
 
     var uiState by mutableStateOf<QuestionUiState>(

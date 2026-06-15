@@ -16,18 +16,17 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.esop.homepage.HomePageScreen
 import com.example.esop.login.LoginScreen
 import com.example.esop.network.AppPreferences
 import com.example.esop.profile.CompleteProfileScreen
 import com.example.esop.quetions_esop.Question
+import com.example.esop.quetions_esop.TestScreen
 import com.example.esop.util.ImeiUtils
 import faceembedding.ESOPCertificateScreen
 import faceembedding.ESOPResultScreen
-
 import faceembedding.TestInstructionsScreen
-import com.example.esop.quetions_esop.TestScreen
 import signup.SignupScreen
-
 
 class MainActivity : ComponentActivity() {
 
@@ -105,7 +104,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("welcome") {
-                    WelcomeScreen(navController)
+                    HomePageScreen(navController)
                 }
 
                 composable("TestScreen") {
@@ -134,7 +133,6 @@ class MainActivity : ComponentActivity() {
                         appPreferences = appPrefs
                     )
                 }
-
 
 
 //                composable("ESOPCertificateScreen") {

@@ -217,11 +217,11 @@ fun CompleteProfileScreen(
     val userloginId by appPrefs.loginId.collectAsState(initial = null)
     val userusertype by appPrefs.usertype.collectAsState(initial = null)
 
-    Department?.let {
-        if (it.isNotBlank())
-
-            departmentType=Department.toString()
-    }
+//    Department?.let {
+//        if (it.isNotBlank())
+//
+//            departmentType=Department.toString()
+//    }
 
 //    processGroup?.let {
 //        if (it.isNotBlank())
@@ -265,6 +265,7 @@ fun CompleteProfileScreen(
     val currentVersion = versionName?.toString().orEmpty()
     val profileViewModel: ProfileViewModel = viewModel()
     val scope = rememberCoroutineScope()
+
 //     UI State Fetching
 
 
@@ -637,11 +638,11 @@ fun CompleteProfileScreen(
 
                             Text(
                                 text = "$firstName$lastName".trim()
-                                    .ifBlank { "Candidate name" },
+                                    .ifBlank { "Candidate Name" },
                                 color = Color(0xFF123B35),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
+//                                textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
                             )
                             Spacer(modifier = Modifier.height(20.dp))
 //                            loginId
@@ -978,49 +979,7 @@ fun CompleteProfileScreen(
             ) { Column {
 
 
-                ExposedDropdownMenuBox(
-                    expanded = expandeded,
-                    onExpandedChange = {
-                        expandeded = !expandeded
-                    }
-                )
-                {
-                    OutlinedTextField(
-                        value = departmentType,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = {
-                            Text("Please Choose Your Department Type")
-                        },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = expandeded
-                            )
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
 
-                    ExposedDropdownMenu(
-                        expanded = expandeded,
-                        onDismissRequest = {
-                            expandeded = false
-                        }
-                    ) {
-                        usertypedesc.forEach { options ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(options)
-                                },
-                                onClick = {
-                                    departmentType = options
-                                    expandeded = false
-                                }
-                            )
-                        }
-                    }
-                }
 
 
 
@@ -1066,6 +1025,52 @@ fun CompleteProfileScreen(
                             roleViewModel.fetchRoles(processGroupCode)
                         }
                     )
+
+                ExposedDropdownMenuBox(
+                    expanded = expandeded,
+                    onExpandedChange = {
+                        expandeded = !expandeded
+                    }
+                )
+                {
+                    OutlinedTextField(
+                        value = departmentType,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = {
+                            Text("Please Choose Your Department Type")
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = expandeded
+                            )
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expandeded,
+                        onDismissRequest = {
+                            expandeded = false
+                        }
+                    ) {
+                        usertypedesc.forEach { options ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(options)
+                                },
+                                onClick = {
+                                    departmentType = options
+                                    expandeded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+
                 if (isOrganizationVisible) {
                     CommonDropdown(
                         list = roleViewModel.roleList,
@@ -1346,6 +1351,7 @@ fun CompleteProfileScreen(
 
 
                         if (item.process_group.equals("OTHERS", ignoreCase = true)) {
+                            OrganizationCode = "OTHERS"
                             OrganizationName = "OTHERS"
                             FunctionaryName = "OTHERS"
                             OrganizationCode = 0.toString()
@@ -1355,9 +1361,11 @@ fun CompleteProfileScreen(
                             isFunctionaryVisible = false
                             stateviewModel.fetchState()
                         } else {
-                            OrganizationName = ""
-                            FunctionaryName = ""
-                            OrganizationCode = ""
+                            processGroupName=item.process_group
+                            processGroupCode=item.process_groupId
+                            OrganizationName = item.organization
+                            FunctionaryName = item.functionary
+                            OrganizationCode = item.organization_id
                             isOrganizationVisible = true
                             isFunctionaryVisible = true
                             usertype="Internal"

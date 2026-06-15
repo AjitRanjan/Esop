@@ -88,6 +88,7 @@ fun LoginScreen(navController: NavHostController) {
     var isNavigated by remember {
         mutableStateOf(false)
     }
+    val scope = rememberCoroutineScope()
     val viewModelToken: TokenViewModel = viewModel()
 
     val tokenState by viewModelToken.tokenState.collectAsState()
@@ -166,6 +167,9 @@ fun LoginScreen(navController: NavHostController) {
 
 
 
+                        scope.launch {
+                            appPrefs.saveDepartment(user.usertypedesc)
+                        }
 
                         appPrefs.saveUser(
                             UserDataStore(

@@ -1,4 +1,4 @@
-package com.example.esop
+package com.example.esop.util
 
 //enum class LoginType {
 //    AADHAAR,
