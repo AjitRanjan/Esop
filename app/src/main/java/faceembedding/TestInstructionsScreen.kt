@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +25,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,16 +36,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.esop.network.AppPreferences
 import com.example.esop.network.Resource
+import com.example.esop.profile.ProfileViewModel
 import com.example.esop.quetions_esop.Question
 import com.example.esop.quetions_esop.QuestionUiState
 import com.example.esop.quetions_esop.QuestionViewModel
 import com.example.esop.vibrate.FaceVerificationUtils
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 @Composable
@@ -54,20 +61,35 @@ fun TestInstructionsScreen(
 ) {
 
     val context = LocalContext.current
+    var showLoading by remember { mutableStateOf(false) }
 
+    val scope = rememberCoroutineScope()
 //    val typedesc by appPreferences.department.collectAsState(initial = "")
-
+    val profileViewModel: ProfileViewModel = viewModel()
+    val userEmail by appPreferences.userEmail.collectAsState(initial = "")
+    val userloginId by appPreferences.loginId.collectAsState(initial = "")
     val questionState =questionViewModel.uiState
-    val Department by appPreferences.department.collectAsState(initial = null)
+    val department by appPreferences.department.collectAsState(initial = null)
     var totalQuestions by remember { mutableIntStateOf(0) }
     var easyCount by remember { mutableIntStateOf(0) }
     var mediumCount by remember { mutableIntStateOf(0) }
     var hardCount by remember { mutableIntStateOf(0) }
-
+    val loginId = userloginId ?: ""
+    val email = userEmail ?: ""
+    val versionName = remember {
+        context.packageManager
+            .getPackageInfo(context.packageName, 0)
+            .versionName
+    }
     // API Call Only One Time
 
 
     // API Response Handle
+
+
+
+
+
     LaunchedEffect(questionState) {
 
         when (val state = questionState) {
@@ -97,7 +119,26 @@ fun TestInstructionsScreen(
             else -> Unit
         }
     }
+    if (showLoading) {
 
+        Dialog(onDismissRequest = {}) {
+
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .background(
+                        Color.White,
+                        RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+
+                CircularProgressIndicator(
+                    color = Color.Blue
+                )
+            }
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -156,7 +197,7 @@ fun TestInstructionsScreen(
         InstructionItem(
             icon = Icons.Default.LocalFireDepartment,
             title = "Department Selected ",
-            value = Department.toString()
+            value = department.toString()
         )
 
         InstructionItem(
@@ -188,9 +229,9 @@ fun TestInstructionsScreen(
         }
     }
 
-    LaunchedEffect(Department) {
+    LaunchedEffect(department) {
         questionViewModel.fetchQuestions(
-            category = Department.toString()
+            category = department.toString()
         )
     }
     LaunchedEffect(questionState) {

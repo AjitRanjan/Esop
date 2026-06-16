@@ -432,7 +432,17 @@ fun CompleteProfileScreen(
                 },
                 navigationIcon = {
                     IconButton(
-                        onClick = { navController.popBackStack() }
+                        onClick = {
+                            navController.popBackStack()
+//                            navController.navigate("HomePageScreen") {
+//                                launchSingleTop = true
+//                            }
+//                            navController.previousBackStackEntry
+//                                ?.savedStateHandle
+//                                ?.set("refresh", true)
+//
+//                            navController.popBackStack()
+                        }
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
