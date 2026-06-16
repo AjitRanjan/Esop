@@ -4,11 +4,18 @@ package com.example.esop.quetions_esop
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -100,15 +107,19 @@ import com.example.esop.AswersOptionSubmit.SubmitExamRequest
 import com.example.esop.fialAnsweredSubmitApi.FinalInsertViewModel
 import com.example.esop.fialAnsweredSubmitApi.ResultInsertReq
 import faceembedding.Summary
+import java.nio.ByteBuffer
+import java.util.concurrent.ExecutorService
+import kotlin.math.sqrt
 
 @Composable
 fun TestScreen(
     navController: NavController,
-    viewModel: CompletePofileScreenViewModel = viewModel(),
-    updateModel: UpdateProfileViewModel = viewModel(),
     questionViewModel: QuestionViewModel = viewModel() ,
     insertViewModel: InsertViewModel = viewModel(),
-    fialinsertViewModel: FinalInsertViewModel = viewModel()
+    fialinsertViewModel: FinalInsertViewModel = viewModel(),
+    category : String,
+    certytype : String,
+    paacategory: String
 ) {
 
     val submitState = insertViewModel.state
@@ -139,6 +150,7 @@ fun TestScreen(
         mutableStateOf<ImageCapture?>(null)
     }
 
+    var processgroup by remember { mutableStateOf("") }
     var UserName by remember { mutableStateOf("") }
     var CanddidateId by remember { mutableStateOf("") }
     var usertypedesc by remember { mutableStateOf("") }
@@ -196,6 +208,7 @@ fun TestScreen(
             .versionName
     }
     var loginId by remember { mutableStateOf("") }
+
     var DepartMentpedesc by remember { mutableStateOf("") }
 
     DisposableEffect(Unit) {
@@ -223,13 +236,16 @@ fun TestScreen(
     val profileViewModel: ProfileViewModel = viewModel()
     appPrefs = AppPreferences(context)
     val userEmail by appPrefs.userEmail.collectAsState(initial = null)
+    val usertypeEternalExteral by appPrefs.usertype.collectAsState(initial = null)
     val userloginId by appPrefs.loginId.collectAsState(initial = null)
     val Department by appPrefs.department.collectAsState(initial = null)
     loginId = userloginId.toString()
     val currentLoginId = loginId
+    val usertypeEnEx = usertypeEternalExteral
     val currentEmail = userEmail?.toString().orEmpty()
     val currentVersion = versionName?.toString().orEmpty()
     var showDialogTime by remember { mutableStateOf(false) }
+    val TypeCertificate by appPrefs.TypeCertificate.collectAsState(initial = null)
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -269,6 +285,17 @@ fun TestScreen(
 
 
 
+
+    LaunchedEffect(category, certytype, paacategory) {
+
+
+
+        Toast.makeText(
+            context,
+            category+"/"+certytype+"/"+paacategory,
+            Toast.LENGTH_LONG
+        ).show()
+    }
 
 
 
@@ -355,35 +382,33 @@ fun TestScreen(
 
                 response.wrappedLista.forEach {
 
+                    numberofAttempt=(it.numberofAttempt ?: 0) + 1
 
+                    val request = ResultInsertReq(
 
-                    val request =
-                        ResultInsertReq(
+                        loginId = loginId,
+                        emailId = currentEmail,
 
-                            loginId = loginId,
+                        totalQuestion = it.totalQuestions,
+                        wrongAns = it.wrongAns,
 
-                            emailId = currentEmail,
+                        // Increment attempt count by 1
+                        numberofAttempt = (it.numberofAttempt ?: 0) + 1,
 
-                            totalQuestion = it.totalQuestions,
+                        notattempteQuestion = it.notattempteQuestion,
+                        scoredPercentage = it.scoredPercentage,
+                        passingPercentage = it.passingPercentage,
+                        correctAns = it.correctAns,
+                        finalResult = it.result,
+                        issueCertificate = "Yes",
+                        departmentCetegory = category,
+                        userTypeIe=usertypeEnEx.toString(),
+                        paaCategory= paacategory,
+                        certificateType= certytype
+                    )
 
-                            wrongAns = it.wrongAns,
-
-                            numberofAttempt = it.numberofAttempt+1,
-
-                            notattempteQuestion = it.notattempteQuestion,
-                            scoredPercentage=it.scoredPercentage,
-                            passingPercentage=it.passingPercentage,
-                            correctAns=it.correctAns,
-                            finalResult=it.result,
-                            issueCertificate="Yes",
-                             departmentCetegory=Department.toString(),
-
-
-                            )
 
                     fialinsertViewModel.FinalinsertSubmit(request)
-
-
                 }
             }
 
@@ -530,7 +555,8 @@ fun TestScreen(
 
                 Box(
                     contentAlignment = Alignment.Center
-                ) {
+                )
+                {
 
 //                    val totalTime = 15 // 15 seconds
                     val totalTime = 60 * 60 // 60 minutes
@@ -545,9 +571,11 @@ fun TestScreen(
                             delay(1000)
                             timeLeft--
                         }
-
+                        blurScreen = false
+                        showDialog = false
+                        showDialogTime = true
                         // Timer finished
-                        showDialog = true
+//                        showDialog = true
                     }
 
                     CircularProgressIndicator(
@@ -570,33 +598,59 @@ fun TestScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-
-// Alert Dialog
                 if (showDialogTime) {
-                    showDialog = false
-                    blurScreen = false
 
                     AlertDialog(
-                        onDismissRequest = { },
+                        onDismissRequest = { }, // dismiss nahi hoga
+
                         title = {
                             Text("Time Over")
                         },
+
                         text = {
                             Text(
-                                "Your test time has been completed."
+                                "Time is over. Please complete your test."
                             )
                         },
+
                         confirmButton = {
                             TextButton(
                                 onClick = {
-                                    navController.popBackStack()
-//                        showDialogExam = false
+                                    showReviewScreen=true
                                 }
                             ) {
                                 Text("OK")
                             }
                         }
-                    )}
+                    )
+                }
+
+// Alert Dialog
+//                if (showDialogTime) {
+//                    showDialog = false
+//                    blurScreen = false
+//
+//                    AlertDialog(
+//                        onDismissRequest = { },
+//                        title = {
+//                            Text("Time Over")
+//                        },
+//                        text = {
+//                            Text(
+//                                "Your test time has been completed."
+//                            )
+//                        },
+//                        confirmButton = {
+//                            TextButton(
+//                                onClick = {
+//                                    navController.popBackStack()
+////                        showDialogExam = false
+//                                }
+//                            ) {
+//                                Text("OK")
+//                            }
+//                        }
+//                    )}
 
                 IconButton(
                     onClick = {}
@@ -958,12 +1012,14 @@ fun TestScreen(
 
                     val request = SubmitExamRequest(
 
-                        courseType = 2,
+                        courseType = numberofAttempt,
                         courseName = usertypedesc,
-                        certificateType = "Master",
+                        certificateType = certytype,
                         email = currentEmail,
                         loginId = currentLoginId,
-                        answers = submitList
+                        answers = submitList,
+                        userTypeIe=usertypeEnEx.toString(),
+                        paaCategory=paacategory
                     )
 
                     submitRequestJson = GsonBuilder()
@@ -1183,7 +1239,7 @@ fun TestScreen(
 
 
         if (showReviewScreen) {
-
+            showDialogTime=false
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -1325,7 +1381,7 @@ fun TestScreen(
 
                                         courseType = 2,
 
-                                        courseName = "Operations",
+                                        courseName = usertypedesc,
 
                                         certificateType = "Master",
 
@@ -1333,7 +1389,13 @@ fun TestScreen(
 
                                         email = currentEmail,
 
-                                        answers = submitList
+                                        answers = submitList,
+                                        userTypeIe=usertypeEnEx.toString(),
+                                        paaCategory = if (processgroup.equals("PAA", ignoreCase = true)) {
+                                            processgroup
+                                        } else {
+                                            "No"
+                                        }
                                     )
 
                                 insertViewModel.insertSubmit(request)
@@ -1439,6 +1501,7 @@ fun TestScreen(
                         )
                         UserName =item.firstname+item.lastname
                         CanddidateId =item.loginId
+                        processgroup =item.process_group
                         usertypedesc =item.usertypedesc
 //                        Operation
 
@@ -1583,50 +1646,114 @@ fun TestScreen(
         }
     }
 
+//    LaunchedEffect(firstEmbedding) {
+//
+//        while (firstEmbedding != null && !apiCalled) {
+//
+//            delay(2000)
+//
+//            FaceVerificationUtils.captureImage(
+//                imageCapture = imageCapture,
+//                cameraExecutor = cameraExecutor,
+//                context = context
+//            ) { bitmap ->
+//
+//                val currentEmbedding =
+//                    FaceVerificationUtils.createEmbedding(bitmap)
+//
+//                val savedEmbedding = firstEmbedding
+//
+//                if (savedEmbedding != null) {
+//
+//                    val distance =
+//                        FaceVerificationUtils.compareEmbeddings(
+//                            savedEmbedding,
+//                            currentEmbedding
+//                        )
+//                    if (distance < 2000) {
+//
+//                        questionViewModel.fetchQuestions(
+//                            category = Department.toString()
+//                        )
+//
+//                        showDialog = false
+//                        blurScreen = false
+//
+//                    }
+//                    else {
+//
+//                        blurScreen = true
+//                        showDialog = true
+//                    }
+//                }
+//            }
+//        }
+//    }
+
 
     LaunchedEffect(firstEmbedding) {
-
         while (firstEmbedding != null && !apiCalled) {
+//        while (firstEmbedding != null) {
 
             delay(2000)
 
-            FaceVerificationUtils.captureImage(
+            captureImage(
                 imageCapture = imageCapture,
                 cameraExecutor = cameraExecutor,
                 context = context
             ) { bitmap ->
 
                 val currentEmbedding =
-                    FaceVerificationUtils.createEmbedding(bitmap)
+                    createEmbedding(bitmap)
 
-                val savedEmbedding = firstEmbedding
+                val savedEmbedding =
+                    firstEmbedding
 
                 if (savedEmbedding != null) {
 
                     val distance =
-                        FaceVerificationUtils.compareEmbeddings(
+                        compareEmbeddings(
                             savedEmbedding,
                             currentEmbedding
                         )
+
                     if (distance < 2000) {
 
                         questionViewModel.fetchQuestions(
-                            category = Department.toString()
+                            category = category,
+                            certytype = certytype,
+                            paacategory = if (processgroup.equals("PAA", true))
+                                processgroup
+                            else
+                                "No"
                         )
 
-                        showDialog = false
+
+
+//                        questionViewModel.fetchQuestions(
+//                            category = Department.toString()
+//                        )
+                        resultText =
+                            "✅ Genuine Person"
+
                         blurScreen = false
 
-                    }
-                    else {
+                        showDialog = false
+
+                    } else {
+
+                        resultText =
+                            "❌ Face Not Matched"
 
                         blurScreen = true
+
                         showDialog = true
                     }
                 }
             }
         }
     }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -1690,19 +1817,224 @@ fun TestScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-//                            showDialog = false
-//                            blurScreen = false
+                            showDialog = false
+                            blurScreen = false
                         }
                     ) {
                         Text("OK")
                     }
                 }
             )
-        }
+        }}}
 
+
+    // START CAMERA
+    private fun startCamera(
+        context: android.content.Context,
+        previewView: PreviewView,
+        onReady: (ImageCapture) -> Unit
+    ) {
+
+        val cameraProviderFuture =
+            ProcessCameraProvider.getInstance(context)
+
+        cameraProviderFuture.addListener({
+
+            val cameraProvider =
+                cameraProviderFuture.get()
+
+            val preview =
+                Preview.Builder().build()
+
+            preview.setSurfaceProvider(
+                previewView.surfaceProvider
+            )
+
+            val imageCapture =
+                ImageCapture.Builder()
+                    .setCaptureMode(
+                        ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
+                    )
+                    .build()
+
+            val cameraSelector =
+                CameraSelector.DEFAULT_FRONT_CAMERA
+
+            try {
+
+                cameraProvider.unbindAll()
+
+                cameraProvider.bindToLifecycle(
+                    context as androidx.lifecycle.LifecycleOwner,
+                    cameraSelector,
+                    preview,
+                    imageCapture
+                )
+
+                onReady(imageCapture)
+
+            } catch (e: Exception) {
+
+                e.printStackTrace()
+
+                Toast.makeText(
+                    context,
+                    "Camera Start Failed",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+        }, ContextCompat.getMainExecutor(context))
     }
 
-}
+    // CAPTURE IMAGE
+    private fun captureImage(
+        imageCapture: ImageCapture?,
+        cameraExecutor: ExecutorService,
+        context: android.content.Context,
+        onBitmapReady: (Bitmap) -> Unit
+    ) {
+
+        val capture = imageCapture
+
+        if (capture == null) {
+
+            Toast.makeText(
+                context,
+                "Camera Not Ready",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            return
+        }
+
+        capture.takePicture(
+
+            cameraExecutor,
+
+            object : ImageCapture.OnImageCapturedCallback() {
+
+                override fun onCaptureSuccess(
+                    image: ImageProxy
+                ) {
+
+                    try {
+
+                        val bitmap =
+                            imageProxyToBitmap(image)
+
+                        onBitmapReady(bitmap)
+
+                    } catch (e: Exception) {
+
+                        e.printStackTrace()
+
+                    } finally {
+
+                        image.close()
+                    }
+                }
+
+                override fun onError(
+                    exception: ImageCaptureException
+                ) {
+
+                    exception.printStackTrace()
+
+                    Toast.makeText(
+                        context,
+                        "Capture Failed",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        )
+    }
+
+    // IMAGE TO BITMAP
+    private fun imageProxyToBitmap(
+        image: ImageProxy
+    ): Bitmap {
+
+        val buffer: ByteBuffer =
+            image.planes[0].buffer
+
+        val bytes =
+            ByteArray(buffer.remaining())
+
+        buffer.get(bytes)
+
+        return BitmapFactory.decodeByteArray(
+            bytes,
+            0,
+            bytes.size
+        )
+    }
+
+    // SIMPLE FACE EMBEDDING
+    private fun createEmbedding(
+        bitmap: Bitmap
+    ): FloatArray {
+
+        val resized =
+            Bitmap.createScaledBitmap(
+                bitmap,
+                32,
+                32,
+                true
+            )
+
+        val embedding =
+            FloatArray(32 * 32)
+
+        var index = 0
+
+        for (x in 0 until 32) {
+
+            for (y in 0 until 32) {
+
+                val pixel =
+                    resized.getPixel(x, y)
+
+                val r =
+                    (pixel shr 16) and 0xff
+
+                val g =
+                    (pixel shr 8) and 0xff
+
+                val b =
+                    pixel and 0xff
+
+                val gray =
+                    (r + g + b) / 3f
+
+                embedding[index] = gray
+
+                index++
+            }
+        }
+
+        return embedding
+    }
+
+    // COMPARE EMBEDDING
+    private fun compareEmbeddings(
+        emb1: FloatArray,
+        emb2: FloatArray
+    ): Float {
+
+        var sum = 0f
+
+        for (i in emb1.indices) {
+
+            val diff =
+                emb1[i] - emb2[i]
+
+            sum += diff * diff
+        }
+
+        return sqrt(sum)
+    }
 
 
 

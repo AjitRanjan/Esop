@@ -53,10 +53,13 @@ import com.example.esop.vibrate.FaceVerificationUtils
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TestInstructionsScreen(
     navController: NavController,
     appPreferences: AppPreferences,
+    processgroup: String,
+    department: String,
     questionViewModel: QuestionViewModel = viewModel()
 ) {
 
@@ -69,7 +72,14 @@ fun TestInstructionsScreen(
     val userEmail by appPreferences.userEmail.collectAsState(initial = "")
     val userloginId by appPreferences.loginId.collectAsState(initial = "")
     val questionState =questionViewModel.uiState
-    val department by appPreferences.department.collectAsState(initial = null)
+//    val department by appPreferences.department.collectAsState(initial = null)
+    val CertificateType = listOf("Professional", "Master")
+    var TypeCertificate by remember { mutableStateOf("") }
+    var isChecked by remember { mutableStateOf(false) }
+    var expandeded by remember { mutableStateOf(false)}
+
+
+
     var totalQuestions by remember { mutableIntStateOf(0) }
     var easyCount by remember { mutableIntStateOf(0) }
     var mediumCount by remember { mutableIntStateOf(0) }
@@ -85,6 +95,7 @@ fun TestInstructionsScreen(
 
 
     // API Response Handle
+
 
 
 
@@ -149,6 +160,53 @@ fun TestInstructionsScreen(
 
         Spacer(modifier = Modifier.height(50.dp))
 
+
+        ExposedDropdownMenuBox(
+            expanded = expandeded,
+            onExpandedChange = {
+                expandeded = !expandeded
+            }
+        )
+        {
+            OutlinedTextField(
+                value = TypeCertificate,
+                onValueChange = {},
+                readOnly = true,
+                label = {
+                    Text("Please Select Your Certificate of Type")
+                },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(
+                        expanded = expandeded
+                    )
+                },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+
+            ExposedDropdownMenu(
+                expanded = expandeded,
+                onDismissRequest = {
+                    expandeded = false
+                }
+            ) {
+                CertificateType.forEach { options ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(options)
+                        },
+                        onClick = {
+                            TypeCertificate = options
+                            expandeded = false
+                        }
+                    )
+                }
+            }
+        }
+
+
+
         Text(
             text = "Test Instructions",
             fontSize = 22.sp,
@@ -206,12 +264,72 @@ fun TestInstructionsScreen(
             value = "1"
         )
 
+        Row(
+            verticalAlignment = Alignment.Top
+        ) {
+            Checkbox(
+                checked = isChecked,
+                onCheckedChange = {
+                    isChecked = it
+                }
+            )
+
+            Text(
+                text = "I acknowledge that my identity will be verified through facial recognition using eye-blink detection before the examination begins. For security and examination integrity purposes, the camera may remain active throughout the test, and my face may be verified periodically until the examination is completed. If face verification fails or an unauthorized person is detected, the examination may be suspended or terminated.\n",
+//                text = "I understand that after blinking and capturing my face, the camera will remain active during the test. My face will be verified continuously until the test ends. If another person is detected, the test may be terminated.",
+                modifier = Modifier.padding(top = 12.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = {
-                navController.navigate("TestScreen")
-            },
+            onClick =
+                 {
+
+                    if (TypeCertificate.isBlank()) {
+
+                        Toast.makeText(
+                            context,
+                            "Please select Certificate of Type",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        return@Button
+                    }
+
+                    if (!isChecked) {
+
+                        Toast.makeText(
+                            context,
+                            "Please accept the face verification instructions.",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        return@Button
+                    }
+
+
+                     scope.launch { appPreferences.saveTypeCertificate(TypeCertificate) }
+                    navController.navigate("TestScreen/$department/$TypeCertificate/$processgroup")
+                },
+//                {
+//                if (TypeCertificate.isBlank()) {
+//
+//                    Toast.makeText(
+//                        context,
+//                        "Please select Certificate of Type",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//
+//                } else {
+//
+//                    navController.navigate("TestScreen")
+//                }
+//
+//            }
+
+
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
@@ -229,11 +347,33 @@ fun TestInstructionsScreen(
         }
     }
 
-    LaunchedEffect(department) {
+    LaunchedEffect(department, TypeCertificate,processgroup) {
+
+        if (
+            TypeCertificate.isBlank() ||
+            TypeCertificate == "Select Certificate"
+        ) return@LaunchedEffect
+
         questionViewModel.fetchQuestions(
-            category = department.toString()
+            category = department,
+            certytype = TypeCertificate,
+            paacategory = if (processgroup.equals("PAA", true))
+                processgroup
+            else
+                "No"
         )
     }
+
+
+//    LaunchedEffect(department) {
+//
+//
+//        questionViewModel.fetchQuestions(
+//            category=department,
+//            certytype=TypeCertificate,
+//            paacategory =if (processgroup.equals("PAA", ignoreCase = true)) { processgroup } else { "No" }
+//        )
+//    }
     LaunchedEffect(questionState) {
 
         when (questionState) {

@@ -173,7 +173,7 @@ fun CompleteProfileScreen(
     var expandeded by remember { mutableStateOf(false) }
 
     val genderOptions = listOf("Male", "Female", "Other")
-    val usertypedesc = listOf("Operation", "Finance")
+    val usertypedesc = listOf("Operations", "Finance")
 
     var country by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
@@ -211,43 +211,10 @@ fun CompleteProfileScreen(
     }
     appPrefs = AppPreferences(context)
     val processGroup by appPrefs.processGroup.collectAsState(initial = null)
-    val Department by appPrefs.department.collectAsState(initial = null)
     val userEmail by appPrefs.userEmail.collectAsState(initial = null)
     val userMobile by appPrefs.mobile.collectAsState(initial = null)
     val userloginId by appPrefs.loginId.collectAsState(initial = null)
     val userusertype by appPrefs.usertype.collectAsState(initial = null)
-
-//    Department?.let {
-//        if (it.isNotBlank())
-//
-//            departmentType=Department.toString()
-//    }
-
-//    processGroup?.let {
-//        if (it.isNotBlank())
-//
-//            processGroupName=processGroup.toString()
-//            if (processGroup.equals("OTHERS", ignoreCase = true)) {
-//                OrganizationName = "OTHERS"
-//                FunctionaryName = "OTHERS"
-//                OrganizationCode = 0.toString()
-//                processGroupCode = 0.toString()
-//                usertype = "External"
-//                isOrganizationVisible = false
-//                isFunctionaryVisible = false
-//                stateviewModel.fetchState()
-//            } else {
-//                OrganizationName = ""
-//                FunctionaryName = ""
-//                OrganizationCode = ""
-//                isOrganizationVisible = true
-//                isFunctionaryVisible = true
-//                usertype = "Internal"
-//                roleViewModel.fetchRoles(processGroupCode)
-//            }
-//    }
-
-
 
     mobile=userMobile.toString()
 
@@ -490,7 +457,7 @@ fun CompleteProfileScreen(
                         if (
                             departmentType.isNullOrBlank() ||
                             (
-                                    !departmentType.equals("Operation", ignoreCase = true) &&
+                                    !departmentType.equals("Operations", ignoreCase = true) &&
                                             !departmentType.equals("Finance", ignoreCase = true)
                                     )
                         ) {
@@ -541,9 +508,10 @@ fun CompleteProfileScreen(
                             return@Button
                         }
 
-                        scope.launch {
-                            appPrefs.saveDepartment(departmentType)
-                        }
+
+//                        scope.launch {
+//                            appPrefs.saveDepartment(departmentType)
+//                        }
                         val request = UpadteProfileRequest(
                             versionName.toString(),
                             email,

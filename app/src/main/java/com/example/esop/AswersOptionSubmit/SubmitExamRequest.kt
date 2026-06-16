@@ -3,7 +3,6 @@ package com.example.esop.AswersOptionSubmit
 import com.google.gson.annotations.SerializedName
 
 data class SubmitExamRequest(
-
     @SerializedName("Course_Type")
     val courseType: Int,
 
@@ -13,9 +12,11 @@ data class SubmitExamRequest(
     @SerializedName("certificateType")
     val certificateType: String,
 
-//    @SerializedName("title")
-//    val title: String,
+    @SerializedName("userTypeIe")
+    val userTypeIe: String,
 
+    @SerializedName("paaCategory")
+     val paaCategory: String,
     @SerializedName("loginId")
     val loginId: String,
 
@@ -24,4 +25,41 @@ data class SubmitExamRequest(
 
     @SerializedName("answers")
     val answers: List<SubmitAnswer>
+
+
+
+
+
+
+
+
+
+
+
+
+//    @SerializedName("Course_Type")
+//    val courseType: Int,
+//
+//    @SerializedName("courseName")
+//    val courseName: String,
+//
+//    @SerializedName("certificateType")
+//    val certificateType: String,
+//
+////    @SerializedName("title")
+////    val title: String,
+//
+//    @SerializedName("loginId")
+//    val loginId: String,
+//
+//    @SerializedName("email")
+//    val email: String,
+//
+//    @SerializedName("answers")
+//    val answers: List<SubmitAnswer>
 )
+
+
+
+
+

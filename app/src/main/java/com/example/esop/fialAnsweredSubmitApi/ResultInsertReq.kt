@@ -29,5 +29,20 @@ data class ResultInsertReq(
     @SerializedName("issueCertificate")
     val issueCertificate: String,
 
+    @SerializedName("userTypeIe")
+    val userTypeIe: String,
+
+    @SerializedName("paaCategory")
+    val paaCategory: String,
+    @SerializedName("certificateType")
+    val certificateType: String,
+
+
+
+
+
+
+
 
 )
+

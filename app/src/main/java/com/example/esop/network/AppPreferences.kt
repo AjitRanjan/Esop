@@ -22,6 +22,7 @@ class AppPreferences(
 
         val DEPARTMENT = stringPreferencesKey("department")
         val CANDIDATE = stringPreferencesKey("candidate")
+        val TypeCertificate = stringPreferencesKey("TypeCertificate")
 
         val AUTHTOKEN = stringPreferencesKey("authToken")
         val USER_ID = stringPreferencesKey("user_id")
@@ -122,10 +123,22 @@ class AppPreferences(
             prefs[Keys.CANDIDATE] = candidate
         }
     }
+    suspend fun saveTypeCertificate(candidate: String) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.TypeCertificate] = candidate
+        }
+    }
 
-    val candidate: Flow<String?> =
+//    saveProcessGroup
+//    suspend fun saveProcessGroup(candidate: String) {
+//        context.dataStore.edit { prefs ->
+//            prefs[Keys.TypeCertificate] = candidate
+//        }
+//    }
+
+    val TypeCertificate: Flow<String?> =
         context.dataStore.data.map { prefs ->
-            prefs[Keys.CANDIDATE]
+            prefs[Keys.TypeCertificate]
         }
 
     val department: Flow<String?> =

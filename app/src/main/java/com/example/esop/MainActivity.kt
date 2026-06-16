@@ -80,6 +80,7 @@ class MainActivity : ComponentActivity() {
             }
             val navController = rememberNavController()
 
+
             val userMobile by appPrefs.mobile.collectAsState(initial = null)
             val userEmail by appPrefs.userEmail.collectAsState(initial = null)
 
@@ -109,17 +110,70 @@ class MainActivity : ComponentActivity() {
                     HomePageScreen(navController)
                 }
 
-                composable("TestScreen") {
-                    TestScreen(navController)
+//                composable("TestScreen") {
+//                    TestScreen(navController)
+//                }
+
+
+
+                composable(
+                    route = "TestScreen/{category}/{certytype}/{paacategory}"
+                ) { backStackEntry ->
+
+                    val category = backStackEntry.arguments?.getString("category") ?: ""
+
+                    val certytype = backStackEntry.arguments?.getString("certytype") ?: ""
+                    val paacategory = backStackEntry.arguments?.getString("paacategory") ?: ""
+
+                    TestScreen(
+                        navController = navController,
+                        category = category,
+                        certytype = certytype,
+                        paacategory = paacategory
+                    )
                 }
-                composable("TestInstructionsScreen") {
+//                composable("TestInstructionsScreen") {
+//
+//                    TestInstructionsScreen(
+//                        navController = navController,
+//                        appPreferences = appPrefs
+//                    )
+//
+//                }
+//                composable(
+////                    route = "TestInstructionsScreen/{processgroup}"
+//                        route = "TestInstructionsScreen/{processgroup}/{department}"
+//                ) { backStackEntry ->
+//
+//                    val processgroup = backStackEntry.arguments?.getString("processgroup") ?: ""
+//                    val department = backStackEntry.arguments?.getString("department") ?: ""
+//
+//                    TestInstructionsScreen(
+//                        navController = navController,
+//                        appPreferences = appPrefs,
+//                        processgroup = processgroup,
+//                        department = department
+//                    )
+//                }
+                composable(
+                    route = "TestInstructionsScreen/{processgroup}/{department}"
+                ) { backStackEntry ->
+
+                    val processgroup =
+                        backStackEntry.arguments?.getString("processgroup") ?: ""
+
+                    val department =
+                        backStackEntry.arguments?.getString("department") ?: ""
 
                     TestInstructionsScreen(
                         navController = navController,
-                        appPreferences = appPrefs
+                        appPreferences = appPrefs,
+                        processgroup = processgroup,
+                        department = department
                     )
-
                 }
+
+
 
                 composable("ESOPResultScreen") {
                     ESOPResultScreen(

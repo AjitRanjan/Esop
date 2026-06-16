@@ -114,7 +114,7 @@ fun ESOPResultScreen(
     var resultList by remember { mutableStateOf<List<WrappedResulttem>>(emptyList()) }
     var selectedDepartment by remember { mutableStateOf("Finance") }
 
-    val departments = listOf("Finance", "Operation")
+    val departments = listOf("Finance", "Operations")
 
     // Derived: filter list by selected department
     val filteredResult: WrappedResulttem? = remember(resultList, selectedDepartment) {
@@ -196,7 +196,7 @@ fun ESOPResultScreen(
                         response.wrappedList
                             .filter {
                                 it.departmentCetegory.equals(
-                                    "Operation",
+                                    "Operations",
                                     ignoreCase = true
                                 )
                             }
@@ -289,8 +289,8 @@ fun ESOPResultScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                if (resultText == "Passed") {
-//                if (resultText == "Failed") {
+//                if (resultText == "Passed") {
+                if (resultText == "Failed") {
                     Button(
                         onClick = {
                             scope.launch {

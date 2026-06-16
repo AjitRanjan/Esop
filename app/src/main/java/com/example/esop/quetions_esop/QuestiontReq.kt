@@ -5,6 +5,15 @@ import com.google.gson.annotations.SerializedName
 data class QuestiontReq(
 
     @SerializedName("category")
-    val category: String
+    val category: String,
+    @SerializedName("certytype")
+    val certytype: String,
+    @SerializedName("paacategory")
+    val paacategory: String
+
+
+
+
+
 
 )

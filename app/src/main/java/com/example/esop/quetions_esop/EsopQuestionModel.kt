@@ -34,8 +34,13 @@ class QuestionViewModel : ViewModel() {
 
     private var apiCalled = false
 
+
     fun fetchQuestions(
-        category: String
+        category: String,
+        certytype: String,
+        paacategory: String
+
+
     ) {
 
         // API already call ho chuki hai
@@ -50,10 +55,13 @@ class QuestionViewModel : ViewModel() {
             when (
                 val result = repository.getQuestions(
                     QuestiontReq(
-                        category = category
+                        category = category,
+                        certytype = certytype,
+                        paacategory = paacategory
                     )
                 )
             ) {
+
 
                 is Resource.Success -> {
 

@@ -102,6 +102,7 @@ fun HomePageScreen(
     var department by remember { mutableStateOf("") }
 
     var UserName by remember { mutableStateOf("") }
+    var processgroup by remember { mutableStateOf("") }
 
 //    var UserName =""
     var showLoading by remember { mutableStateOf(false) }
@@ -295,7 +296,7 @@ fun HomePageScreen(
 
                         if (
                             department.equals(
-                                "Operation",
+                                "Operations",
                                 ignoreCase = true
                             ) ||
                             department.equals(
@@ -377,7 +378,9 @@ fun HomePageScreen(
 
 
                             UserName = item.firstname + " " + item.lastname
+                            processgroup = item.process_group
                             scope.launch { appPrefs.saveDepartment(department) }
+
                             scope.launch { appPrefs.saveCandidate(item.firstname + " " + item.lastname) }
                         }
                     }
@@ -712,15 +715,20 @@ fun HomePageScreen(
 
 
                                 if (
-                                    department.equals("Operation", ignoreCase = true) ||
+                                    department.equals("Operations", ignoreCase = true) ||
                                     department.equals("Finance", ignoreCase = true)
                                 ) {
 
 
-                                    scope.launch {
-                                        appPrefs.saveDepartment(department)
-                                    }
-                                    navController.navigate("TestInstructionsScreen") {
+//                                    scope.launch {
+//                                        appPrefs.saveDepartment(department)
+//                                    }
+
+
+//                                    navController.navigate("TestInstructionsScreen") {
+                                    "TestInstructionsScreen/{processgroup}/{department}"
+//                                    navController.navigate( "TestInstructionsScreen/$processgroup") {
+                                    navController.navigate( "TestInstructionsScreen/$processgroup/$department") {
 
                                         popUpTo("welcome") {
                                             inclusive = false
@@ -856,12 +864,12 @@ fun HomePageScreen(
                             dimens = dimens,
                             modifier = Modifier.weight(1f)
                                 .clickable {
-                                    Toast.makeText(
-                                        context,
-                                        "Not Available Certificate Direct",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-//                                navController.navigate("ESOPCertificateScreen")
+//                                    Toast.makeText(
+//                                        context,
+//                                        "Not Available Certificate Direct",
+//                                        Toast.LENGTH_SHORT
+//                                    ).show()
+                                navController.navigate("ESOPCertificateScreen")
                                 },
                             title = "Certificate",
                             subtitle = "View & Download"
