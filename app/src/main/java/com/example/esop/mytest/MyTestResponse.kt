@@ -1,6 +1,4 @@
-package com.example.esop
-
-import com.example.esop.Result.WrappedResulttem
+package com.example.esop.mytest
 
 data class MyTestResponse(
 

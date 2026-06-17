@@ -222,8 +222,7 @@ fun TestScreen(
 
     val markedCount = markedQuestions.size
 
-    val notAnsweredCount =
-        questionList.size - answeredCount
+    val notAnsweredCount = (questionList?.size ?: 0) - answeredCount
 
     var showReviewScreen by remember {
         mutableStateOf(false)
@@ -382,6 +381,9 @@ fun TestScreen(
 
                 response.wrappedLista.forEach {
 
+
+
+
                     numberofAttempt=(it.numberofAttempt ?: 0) + 1
 
                     val request = ResultInsertReq(
@@ -436,51 +438,16 @@ fun TestScreen(
 
 
 
-//        var currentQuestionIndex by remember {
-//            mutableIntStateOf(0)
-//        }
-//
-//
-//
-//        var selectedAnswer by remember {
-//            mutableStateOf("")
-//        }
-
-
-        var currentQuestionIndex by rememberSaveable {
+        var currentQuestionIndex by remember {
             mutableIntStateOf(0)
         }
 
-        var selectedAnswer by rememberSaveable {
+        var selectedAnswer by remember {
             mutableStateOf("")
         }
 
-//        val currentQuestion = questionList.getOrNull(currentQuestionIndex)
-
-
-
-        val answeredQuestions = rememberSaveable(
-            saver = mapSaver(
-                save = { state ->
-                    state.mapKeys { it.key.toString() }
-                },
-                restore = { restored ->
-                    mutableStateMapOf<Int, String>().apply {
-                        restored.forEach { (key, value) ->
-                            put(key.toInt(), value as String)
-                        }
-                    }
-                }
-            )
-        ) {
-            mutableStateMapOf<Int, String>()
-        }
-
-
-
-        val currentQuestion =
-            questionList.orEmpty()
-                .getOrNull(currentQuestionIndex)
+        val currentQuestion = (questionList ?: emptyList())
+            .getOrNull(currentQuestionIndex)
 
         Column(
             modifier = Modifier
@@ -657,6 +624,51 @@ fun TestScreen(
                 ) {
                     IconButton(
                         onClick = {
+//                            showQuestionPalette = true
+
+                            if (answeredQuestions.size == questionList.size) {
+
+                                val remainingQuestions =
+                                    questionList.size - answeredQuestions.size
+
+                                Toast.makeText(
+                                    context,
+                                    "Please attempt all questions. Remaining: $remainingQuestions",
+                                    Toast.LENGTH_LONG
+                                ).show()
+
+
+                            }
+
+                            val submitList = answeredQuestions.map { entry ->
+
+                                SubmitAnswer(
+                                    question_id =
+                                        questionList[entry.key].questionId,
+
+                                    answer_given =
+                                        entry.value
+                                )
+                            }
+
+                            val request = SubmitExamRequest(
+
+                                courseType = numberofAttempt,
+                                courseName = usertypedesc,
+                                certificateType = certytype,
+                                email = currentEmail,
+                                loginId = currentLoginId,
+                                answers = submitList,
+                                userTypeIe=usertypeEnEx.toString(),
+                                paaCategory=paacategory
+                            )
+
+                            submitRequestJson = GsonBuilder()
+                                .setPrettyPrinting()
+                                .create()
+                                .toJson(request)
+                            println(submitRequestJson)
+
                             showQuestionPalette = true
                         }
                     ) {
@@ -815,54 +827,107 @@ fun TestScreen(
 
                                 when (text) {
 
+                                    "Save & Next" -> {
+                                        if (selectedAnswer.isNotEmpty()) {
+                                            answeredQuestions[currentQuestionIndex] = selectedAnswer
+                                        }
+
+                                        // ✅ Save & Next karne par Review aur Marked se hata do
+                                        reviewQuestions.remove(currentQuestionIndex)
+                                        markedQuestions.remove(currentQuestionIndex)
+
+                                        if (currentQuestionIndex < questionList.lastIndex) {
+                                            currentQuestionIndex++
+                                            selectedAnswer = answeredQuestions[currentQuestionIndex] ?: ""
+                                        }
+                                    }
+
+                                    "Save & Review" -> {
+                                        if (selectedAnswer.isNotEmpty()) {
+                                            answeredQuestions[currentQuestionIndex] = selectedAnswer
+                                        }
+
+                                        // ✅ Review mein add karo, Marked se hata do
+                                        if (!reviewQuestions.contains(currentQuestionIndex)) {
+                                            reviewQuestions.add(currentQuestionIndex)
+                                        }
+                                        markedQuestions.remove(currentQuestionIndex)
+
+                                        if (currentQuestionIndex < questionList.lastIndex) {
+                                            currentQuestionIndex++
+                                            selectedAnswer = answeredQuestions[currentQuestionIndex] ?: ""
+                                        }
+                                    }
+
+                                    "Mark" -> {
+                                        // ✅ Mark mein add karo, Review se hata do
+                                        if (!markedQuestions.contains(currentQuestionIndex)) {
+                                            markedQuestions.add(currentQuestionIndex)
+                                        }
+                                        reviewQuestions.remove(currentQuestionIndex)
+
+                                        // Answer save karo agar diya hai
+                                        if (selectedAnswer.isNotEmpty()) {
+                                            answeredQuestions[currentQuestionIndex] = selectedAnswer
+                                        }
+                                    }
+
                                     "Clear" -> {
                                         selectedAnswer = ""
+                                        // ✅ Clear karne par saari states hata do
+                                        answeredQuestions.remove(currentQuestionIndex)
+                                        reviewQuestions.remove(currentQuestionIndex)
+                                        markedQuestions.remove(currentQuestionIndex)
                                     }
-                                    "Save & Next" -> {
 
-                                        if (selectedAnswer.isNotEmpty()) {
-                                            answeredQuestions[currentQuestionIndex] =
-                                                selectedAnswer
-                                        }
-
-                                        if (currentQuestionIndex < questionList.lastIndex) {
-
-                                            currentQuestionIndex++
-                                            selectedAnswer = ""
-                                        }
-                                    }
-                                    "Save & Review" -> {
-
-                                        if (!reviewQuestions.contains(currentQuestionIndex)) {
-
-                                            reviewQuestions.add(
-                                                currentQuestionIndex
-                                            )
-                                        }
-
-                                        if (selectedAnswer.isNotEmpty()) {
-
-                                            answeredQuestions[currentQuestionIndex] =
-                                                selectedAnswer
-                                        }
-
-                                        if (currentQuestionIndex < questionList.lastIndex) {
-
-                                            currentQuestionIndex++
-                                            selectedAnswer = ""
-                                        }
-                                    }
-                                    "Mark" -> {
-
-                                        if (!markedQuestions.contains(currentQuestionIndex)) {
-
-                                            markedQuestions.add(currentQuestionIndex)
-
-
-
-                                        }
-
-                                    }
+//                                    "Clear" -> {
+//                                        selectedAnswer = ""
+//                                    }
+//                                    "Save & Next" -> {
+//
+//                                        if (selectedAnswer.isNotEmpty()) {
+//                                            answeredQuestions[currentQuestionIndex] =
+//                                                selectedAnswer
+//                                        }
+//
+//                                        if (currentQuestionIndex < questionList.lastIndex) {
+//
+//                                            currentQuestionIndex++
+//                                            selectedAnswer = ""
+//                                        }
+//                                    }
+//                                    "Save & Review" -> {
+//
+//                                        if (!reviewQuestions.contains(currentQuestionIndex)) {
+//
+//                                            reviewQuestions.add(
+//                                                currentQuestionIndex
+//                                            )
+//                                        }
+//
+//                                        if (selectedAnswer.isNotEmpty()) {
+//
+//                                            answeredQuestions[currentQuestionIndex] =
+//                                                selectedAnswer
+//                                        }
+//
+//                                        if (currentQuestionIndex < questionList.lastIndex) {
+//
+//                                            currentQuestionIndex++
+//                                            selectedAnswer = ""
+//                                        }
+//                                    }
+//                                    "Mark" -> {
+//
+//                                        if (!markedQuestions.contains(currentQuestionIndex)) {
+//
+//                                            markedQuestions.add(currentQuestionIndex)
+//
+//
+//
+//                                        }
+//
+//                                    }
 
 
                                 }
@@ -1222,11 +1287,11 @@ fun TestScreen(
                                 showQuestionPalette = false
 
                                 showReviewScreen = true
-//                            if (currentQuestionIndex < questionList.lastIndex) {
-//
-//                                currentQuestionIndex++
-//                                showQuestionPalette = false
-//                            }
+                            if (currentQuestionIndex < questionList.lastIndex) {
+
+                                currentQuestionIndex++
+                                showQuestionPalette = false
+                            }
                             }
                         ) {
 
@@ -1379,11 +1444,11 @@ fun TestScreen(
                                 val request =
                                     SubmitExamRequest(
 
-                                        courseType = 2,
+                                        courseType = numberofAttempt+1,
 
                                         courseName = usertypedesc,
 
-                                        certificateType = "Master",
+                                        certificateType = certytype,
 
                                         loginId = currentLoginId,
 

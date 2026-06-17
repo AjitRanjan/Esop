@@ -1,6 +1,5 @@
-package faceembedding
+package com.example.esop.ResultScreen
 import android.os.Build
-import android.security.identity.ResultData
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -28,8 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,33 +42,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.esop.AswersOptionSubmit.Repositry.InsertExamState
 import com.example.esop.Result.ResultExamState
 import com.example.esop.Result.ResultGetReq
 import com.example.esop.Result.ResultViewModel
-import com.example.esop.fialAnsweredSubmitApi.FinalInsertViewModel
-import com.example.esop.fialAnsweredSubmitApi.ResultInsertReq
 import com.example.esop.network.AppPreferences
 
-
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -80,16 +60,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextDecoration
 import com.example.esop.Result.WrappedResulttem
-import com.example.esop.login.UserDataStore
 import com.example.esop.util.formatDateTime
 import kotlinx.coroutines.launch
 
@@ -132,6 +108,7 @@ fun ESOPResultScreen(
 //    val departmentCetegory = filteredResult?.departmentCetegory ?: ""
     val totalQuestions = filteredResult?.totalQuestion?.toIntOrNull() ?: 0
     val correctAns = filteredResult?.correctAns?.toIntOrNull() ?: 0
+    val notattempteQuestion = filteredResult?.notattempteQuestion?.toIntOrNull() ?: 0
     val wrongAns = filteredResult?.wrongAns?.toIntOrNull() ?: 0
     val percentage = filteredResult?.scoredPercentage?.toIntOrNull() ?: 0
     val result = filteredResult?.finalResult?.toIntOrNull() ?: 0
@@ -471,6 +448,7 @@ fun ESOPResultScreen(
                 ResultStatsCard(
 
                     correct = correctAns.toString(),
+                    notattempteQuestion = notattempteQuestion.toString(),
 
                     incorrect = wrongAns.toString(),
 
@@ -559,6 +537,7 @@ private fun ResultProgress(
 @Composable
 private fun ResultStatsCard(
     correct: String,
+    notattempteQuestion: String,
     incorrect: String,
     score: String,
     rank: String,
@@ -592,22 +571,92 @@ private fun ResultStatItem(
     value: String,
     valueColor: Color
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+    val context = LocalContext.current
+    lateinit var appPreferences: AppPreferences
+    appPreferences = AppPreferences(context)
+
+    val userEmail by appPreferences.userEmail.collectAsState(initial = "")
+    val loginId by appPreferences.loginId.collectAsState(initial = "")
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
         Text(
             text = title,
             color = Color(0xFF4B5563),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold
         )
+
         Spacer(modifier = Modifier.height(4.dp))
+
         Text(
             text = value,
             color = valueColor,
             fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+
+            textDecoration =
+                if (title == "Incorrect")
+                    TextDecoration.Underline
+                else
+                    TextDecoration.None,
+
+            modifier =
+                if (title == "Incorrect")
+                    Modifier.clickable {
+                        val request = GetResultViewRequest(
+
+                            loginId= loginId.toString(),
+                            numberofAttempt= userEmail.toString(),
+                            certificateType= userEmail.toString(),
+                            departmentCetegory= userEmail.toString()
+                        )
+
+
+//                        fialinsertViewModel.FinalinsertSubmit(request)
+
+
+
+
+
+
+                        Toast.makeText(
+                            context,
+                            title,
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                    }
+                else
+                    Modifier
         )
     }
 }
+
+//@Composable
+//private fun ResultStatItem(
+//    title: String,
+//    value: String,
+//    valueColor: Color
+//) {
+//    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//        Text(
+//            text = title,
+//            color = Color(0xFF4B5563),
+//            fontSize = 12.sp,
+//            fontWeight = FontWeight.SemiBold
+//        )
+//        Spacer(modifier = Modifier.height(4.dp))
+//        Text(
+//            text = value,
+//            color = valueColor,
+//            fontSize = 18.sp,
+//            fontWeight = FontWeight.Bold
+//        )
+//    }
+//}
 
 
 

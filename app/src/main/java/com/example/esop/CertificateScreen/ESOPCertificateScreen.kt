@@ -1,4 +1,4 @@
-package faceembedding
+package com.example.esop.CertificateScreen
 
 
 import android.content.Context
@@ -7,7 +7,6 @@ import android.graphics.pdf.PdfDocument
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -66,9 +65,6 @@ import androidx.navigation.NavController
 import com.example.esop.network.AppPreferences
 import com.example.esop.network.Resource
 import com.example.esop.profile.ProfileViewModel
-import com.example.esop.profile.Repositry.UpdateProfileViewModel
-import com.example.esop.util.Base64Utils
-import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.cos
@@ -91,142 +87,23 @@ import androidx.annotation.RequiresApi
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.core.content.FileProvider
-import androidx.compose.ui.platform.LocalView
 
 import android.graphics.Paint
 import android.graphics.RectF
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//
-//fun ESOPCertificateScreen(
-//    navController: NavController,
-//    candidateName: String = "Ajit Ranjan",
-//    score: String = "38 / 50",
-//    result: String = "PASS",
-//    date: String = "05 May 2026",
-//    onDownloadPdfClick: () -> Unit = {},
-//    onShareCertificateClick: () -> Unit = {}
-//)
-//{
-//
-//    var firstName by remember { mutableStateOf("") }
-//    var lastName by remember { mutableStateOf("") }
-//
-//
-//    Scaffold(
-//        containerColor = Color(0xFFF4F7FB),
-//        topBar = {
-//            TopAppBar(
-//                title = {
-//                    Text(
-//                        text = "Certificate",
-//                        fontWeight = FontWeight.Bold,
-//                        color = Color(0xFF111827)
-//                    )
-//                },
-//                navigationIcon = {
-//                    IconButton(
-//                        onClick = {
-//                            navController.popBackStack()
-//                        }
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Default.ArrowBack,
-//                            contentDescription = "Back",
-//                            tint = Color(0xFF111827)
-//                        )
-//                    }
-//                },
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = Color.White
-//                )
-//            )
-//        },
-//        bottomBar = {
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .background(Color.White)
-//                    .padding(12.dp),
-//                horizontalArrangement = Arrangement.spacedBy(14.dp)
-//            ) {
-//                Button(
-//                    onClick = onDownloadPdfClick,
-//                    modifier = Modifier
-//                        .weight(1f)
-//                        .height(46.dp),
-//                    shape = RoundedCornerShape(6.dp),
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = Color(0xFF075CE8)
-//                    )
-//                ) {
-//                    Text(
-//                        text = "Download PDF",
-//                        color = Color.White,
-//                        fontSize = 14.sp,
-//                        fontWeight = FontWeight.Bold
-//                    )
-//                }
-//
-//                OutlinedButton(
-//                    onClick = onShareCertificateClick,
-//                    modifier = Modifier
-//                        .weight(1f)
-//                        .height(46.dp),
-//                    shape = RoundedCornerShape(6.dp),
-//                    border = BorderStroke(1.dp, Color(0xFFB7C7E8)),
-//                    colors = ButtonDefaults.outlinedButtonColors(
-//                        contentColor = Color(0xFF075CE8)
-//                    )
-//                ) {
-//                    Text(
-//                        text = "Share Certificate",
-//                        fontSize = 14.sp,
-//                        fontWeight = FontWeight.Bold
-//                    )
-//                }
-//            }
-//        }
-//    ) { paddingValues ->
-//
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(paddingValues)
-//                .verticalScroll(rememberScrollState())
-//                .padding(horizontal = 10.dp, vertical = 16.dp),
-//            contentAlignment = Alignment.Center
-//        ) {
-//            CertificateCard(
-//                candidateName = candidateName,
-//                score = score,
-//                result = result,
-//                date = date
-//            )
-//        }
-//    }
-//}
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ESOPCertificateScreen(
     navController: NavController,
-    onDownloadPdfClick: () -> Unit = {},
     appPreferences: AppPreferences,
     profileViewModel: ProfileViewModel = viewModel(),
-    onShareCertificateClick: () -> Unit = {}
 )
 
 {
-    val scope = rememberCoroutineScope()
-    var certificateBitmap by remember {
-        mutableStateOf<Bitmap?>(null)
-    }
     val context = LocalContext.current
-    lateinit var appPrefs: AppPreferences
 
     val versionName = remember {
         context.packageManager
@@ -235,10 +112,6 @@ fun ESOPCertificateScreen(
     }
     var showLoading by remember { mutableStateOf(false) }
     val profileState by profileViewModel.profileState.collectAsState()
-//    appPreferences = AppPreferences(context)
-    var loginId by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var usertype by remember { mutableStateOf("") }
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
 
@@ -262,16 +135,6 @@ fun ESOPCertificateScreen(
     val currentVersion = versionName
 
     val view = LocalView.current
-    // Score from DataStore
-
-
-//    val profileState by profileViewModel.profileState.collectAsState()
-
-
-
-
-
-
     LaunchedEffect(
         currentLoginId,
         currentEmail
@@ -660,7 +523,7 @@ fun ESOPCertificateScreen(
         canvas.drawBitmap(
             bitmap,
             null,
-            android.graphics.RectF(
+            RectF(
                 leftMargin,
                 topMargin,
                 leftMargin + scaledWidth,
@@ -711,10 +574,10 @@ fun ESOPCertificateScreen(
 
     // Current Date
     val currentDate = remember {
-        java.text.SimpleDateFormat(
+        SimpleDateFormat(
             "dd MMM yyyy",
-            java.util.Locale.getDefault()
-        ).format(java.util.Date())
+            Locale.getDefault()
+        ).format(Date())
     }
 
     Scaffold(

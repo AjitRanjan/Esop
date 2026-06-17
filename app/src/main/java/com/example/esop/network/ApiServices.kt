@@ -21,6 +21,8 @@ import com.example.esop.AswersOptionSubmit.SubmitExamRequest
 import com.example.esop.AswersOptionSubmit.SubmitResponse
 import com.example.esop.Result.ResultGetReq
 import com.example.esop.Result.ResultResponse
+import com.example.esop.ResultScreen.GetResultViewRequest
+import com.example.esop.ResultScreen.GetResultViewResponse
 import com.example.esop.quetions_esop.QuestiontReq
 import retrofit2.Response
 import retrofit2.http.Body
@@ -151,5 +153,16 @@ interface ApiServices {
         @Body request: ResultGetReq
 
     ): ResultResponse
+
+
+    @POST("esop/api/mbexamsubmit/getResultView")
+    suspend fun getResultView(
+
+        @Body request: GetResultViewRequest
+
+    ): GetResultViewResponse
+
+
+
 
 }

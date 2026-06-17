@@ -18,13 +18,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.esop.homepage.HomePageScreen
 import com.example.esop.login.LoginScreen
+import com.example.esop.mytest.MyTest
 import com.example.esop.network.AppPreferences
 import com.example.esop.profile.CompleteProfileScreen
 import com.example.esop.quetions_esop.Question
 import com.example.esop.quetions_esop.TestScreen
 import com.example.esop.util.ImeiUtils
-import faceembedding.ESOPCertificateScreen
-import faceembedding.ESOPResultScreen
+import com.example.esop.CertificateScreen.ESOPCertificateScreen
+import com.example.esop.ResultScreen.ESOPResultScreen
 import faceembedding.TestInstructionsScreen
 import signup.SignupScreen
 
@@ -207,6 +208,43 @@ class MainActivity : ComponentActivity() {
                         navController = navController
                     )
                 }
+
+
+//                composable(
+//                    route = "MyTestScreen/{loginId}/{emailId}"
+//                ) { backStackEntry ->
+//
+//                    val loginId =
+//                        backStackEntry.arguments?.getString("loginId") ?: ""
+//
+//                    val emailId =
+//                        backStackEntry.arguments?.getString("emailId") ?: ""
+//
+//                    val resultViewModel: ResultViewModel = viewModel()
+//
+//                    MyTestScreen(
+//                        navController = navController,
+//                        viewModel = resultViewModel,
+//                        loginId = loginId,
+//                        userEmail = emailId
+//                    )
+//                }
+
+
+
+                composable("MyTest") {
+                    MyTest(
+                        navController = navController,
+                        appPreferences = appPrefs
+                    )
+                }
+
+
+
+
+                
+
+                
             }
         }
     }

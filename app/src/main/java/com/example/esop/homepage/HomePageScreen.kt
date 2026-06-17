@@ -88,7 +88,9 @@ import kotlinx.coroutines.launch
 fun HomePageScreen(
     navController: NavController
 
-) {
+)
+
+{
 
     // =========================
     // USE YOUR DIMENS HERE
@@ -283,48 +285,48 @@ fun HomePageScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                NavigationDrawerItem(
-                    label = {
-                        Text("Start Test")
-                    },
-                    selected = false,
-                    onClick = {
-
-                        scope.launch {
-                            drawerState.close()
-                        }
-
-                        if (
-                            department.equals(
-                                "Operations",
-                                ignoreCase = true
-                            ) ||
-                            department.equals(
-                                "Finance",
-                                ignoreCase = true
-                            )
-                        )
-
-
-
-
-                        {
-
-                            navController.navigate(
-                                "TestInstructionsScreen"
-                            ) {
-
-                                popUpTo("welcome") {
-                                    inclusive = false
-                                }
-                            }
-
-                        } else {
-
-                            showDialog = true
-                        }
-                    }
-                )
+//                NavigationDrawerItem(
+//                    label = {
+//                        Text("Start Test")
+//                    },
+//                    selected = false,
+//                    onClick = {
+//
+//                        scope.launch {
+//                            drawerState.close()
+//                        }
+//
+//                        if (
+//                            department.equals(
+//                                "Operations",
+//                                ignoreCase = true
+//                            ) ||
+//                            department.equals(
+//                                "Finance",
+//                                ignoreCase = true
+//                            )
+//                        )
+//
+//
+//
+//
+//                        {
+//
+//                            navController.navigate(
+//                                "TestInstructionsScreen"
+//                            ) {
+//
+//                                popUpTo("welcome") {
+//                                    inclusive = false
+//                                }
+//                            }
+//
+//                        } else {
+//
+//                            showDialog = true
+//                        }
+//                    }
+//                )
 
                 NavigationDrawerItem(
                     label = {
@@ -548,6 +550,7 @@ fun HomePageScreen(
                         selected = false,
                         onClick = {
                             navController.navigate("ESOPResultScreen")
+
                         },
                         icon = {
 
@@ -826,11 +829,13 @@ fun HomePageScreen(
                             dimens = dimens,
                             modifier = Modifier.weight(1f)
                                 .clickable {
-                                    Toast.makeText(
-                                        context,
-                                        "Not Available",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+//                                    navController.navigate("MyTestScreen/$loginId/$userEmail")
+                                    navController.navigate("MyTest")
+//                                    Toast.makeText(
+//                                        context,
+//                                        "Not Available",
+//                                        Toast.LENGTH_SHORT
+//                                    ).show()
                                 },
 
                             title = "My Tests",
@@ -864,12 +869,12 @@ fun HomePageScreen(
                             dimens = dimens,
                             modifier = Modifier.weight(1f)
                                 .clickable {
-//                                    Toast.makeText(
-//                                        context,
-//                                        "Not Available Certificate Direct",
-//                                        Toast.LENGTH_SHORT
-//                                    ).show()
-                                navController.navigate("ESOPCertificateScreen")
+                                    Toast.makeText(
+                                        context,
+                                        "Not Available Certificate Direct",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+//                                navController.navigate("ESOPCertificateScreen")
                                 },
                             title = "Certificate",
                             subtitle = "View & Download"
