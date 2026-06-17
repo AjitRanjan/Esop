@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfDocument
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -54,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -68,8 +70,34 @@ import com.example.esop.profile.Repositry.UpdateProfileViewModel
 import com.example.esop.util.Base64Utils
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
 import kotlin.math.cos
 import kotlin.math.sin
+
+
+
+import android.content.ContentValues
+import android.os.Environment
+import android.provider.MediaStore
+
+
+import android.graphics.Canvas
+import android.os.Build
+import androidx.annotation.RequiresApi
+
+
+
+
+
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.content.FileProvider
+import androidx.compose.ui.platform.LocalView
+
+import android.graphics.Paint
+import android.graphics.RectF
 
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
@@ -232,6 +260,8 @@ fun ESOPCertificateScreen(
     val currentLoginId = userloginId.orEmpty()
     val currentEmail = userEmail.orEmpty()
     val currentVersion = versionName
+
+    val view = LocalView.current
     // Score from DataStore
 
 
@@ -330,13 +360,339 @@ fun ESOPCertificateScreen(
         }
     }
 
+    fun sharePdf(
+        context: Context,
+        pdfFiles: File
+    ) {
+
+        val uri: Uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            pdfFiles
+        )
+
+        val intent = Intent(Intent.ACTION_SEND)
+
+        intent.type = "application/pdf"
+
+        intent.putExtra(
+            Intent.EXTRA_STREAM,
+            uri
+        )
+
+        intent.addFlags(
+            Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
+
+        context.startActivity(
+            Intent.createChooser(
+                intent,
+                "Share Certificate"
+            )
+        )
+    }
+
+
+
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+
+
+
+    fun saveCertificatePdf(
+        context: Context,
+        candidateName: String,
+        score: String,
+        result: String,
+        date: String
+    ) {
+
+        val pdfDocument = PdfDocument()
+
+        val pageInfo = PdfDocument.PageInfo.Builder(
+            595,
+            842,
+            1
+        ).create()
+
+        val page = pdfDocument.startPage(pageInfo)
+
+        val canvas = page.canvas
+
+        val titlePaint = Paint().apply {
+            textSize = 24f
+            isFakeBoldText = true
+        }
+
+        val textPaint = Paint().apply {
+            textSize = 18f
+        }
+
+        canvas.drawText(
+            "CERTIFICATE",
+            180f,
+            80f,
+            titlePaint
+        )
+
+        canvas.drawText(
+            "Candidate Name: $candidateName",
+            50f,
+            180f,
+            textPaint
+        )
+
+        canvas.drawText(
+            "Score: $score",
+            50f,
+            240f,
+            textPaint
+        )
+
+        canvas.drawText(
+            "Result: $result",
+            50f,
+            300f,
+            textPaint
+        )
+
+        canvas.drawText(
+            "Date: $date",
+            50f,
+            360f,
+            textPaint
+        )
+
+        pdfDocument.finishPage(page)
+
+        val fileName = "Certificate_${System.currentTimeMillis()}.pdf"
+
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+            put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
+            put(
+                MediaStore.Downloads.RELATIVE_PATH,
+                Environment.DIRECTORY_DOWNLOADS
+            )
+        }
+
+        val uri = context.contentResolver.insert(
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+            values
+        )
+
+        uri?.let {
+            context.contentResolver.openOutputStream(it)?.use { output ->
+                pdfDocument.writeTo(output)
+            }
+
+            Toast.makeText(
+                context,
+                "Certificate saved in Downloads",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        pdfDocument.close()
+    }
+//    @RequiresApi(Build.VERSION_CODES.Q)
+//    fun savePdfToDownloads(
+//        context: Context,
+//        bitmap: Bitmap
+//    ) {
+//
+//        val pdfDocument = PdfDocument()
+//
+//        val pageInfo = PdfDocument.PageInfo.Builder(
+//            595,
+//            842,
+//            1
+//        ).create()
+//
+//        val page = pdfDocument.startPage(pageInfo)
+//        val leftMargin = 30f
+//        val topMargin = 20f
+//        val rightMargin = 30f
+//        val bottomMargin = 30f
+//        page.canvas.drawBitmap(
+//            bitmap,
+//            null,
+//            android.graphics.RectF(
+//                leftMargin,
+//                topMargin,
+//                595f - rightMargin,
+//                842f - bottomMargin
+//            ),
+//            null
+//        )
+//
+//        pdfDocument.finishPage(page)
+//
+//        val fileName = "Certificate_${System.currentTimeMillis()}.pdf"
+//
+//        val values = ContentValues().apply {
+//            put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+//            put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
+//            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+//        }
+//
+//        val uri = context.contentResolver.insert(
+//            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+//            values
+//        )
+//
+//        uri?.let {
+//
+//            context.contentResolver.openOutputStream(it)?.use { outputStream ->
+//                pdfDocument.writeTo(outputStream)
+//            }
+//
+//            Toast.makeText(
+//                context,
+//                "PDF saved in Download folder",
+//                Toast.LENGTH_LONG
+//            ).show()
+//        }
+//
+//        pdfDocument.close()
+//    }
 
 
 
 
 
 
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun savePdfToDownloads(
+        context: Context,
+        bitmap: Bitmap
+    ) {
 
+        val pdfDocument = PdfDocument()
+
+        val pageInfo = PdfDocument.PageInfo.Builder(
+            595,
+            842,
+            1
+        ).create()
+
+        val page = pdfDocument.startPage(pageInfo)
+
+        page.canvas.drawBitmap(
+            bitmap,
+            null,
+            RectF(
+                30f,   // left
+                20f,   // top
+                565f,  // right
+                812f   // bottom
+            ),
+            null
+        )
+
+        pdfDocument.finishPage(page)
+
+        val fileName = "Certificate_${System.currentTimeMillis()}.pdf"
+
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+            put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
+            put(
+                MediaStore.Downloads.RELATIVE_PATH,
+                Environment.DIRECTORY_DOWNLOADS
+            )
+        }
+
+        val uri = context.contentResolver.insert(
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+            values
+        )
+
+        uri?.let {
+            context.contentResolver.openOutputStream(it)?.use { output ->
+                pdfDocument.writeTo(output)
+            }
+
+            Toast.makeText(
+                context,
+                "PDF Saved In Downloads Folder",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        pdfDocument.close()
+    }
+    fun createPdf(
+        context: Context,
+        bitmap: Bitmap
+    ) {
+
+        val pdfDocument = PdfDocument()
+
+        val pageWidth = 595
+        val pageHeight = 842
+
+        val pageInfo = PdfDocument.PageInfo.Builder(
+            pageWidth,
+            pageHeight,
+            1
+        ).create()
+
+        val page = pdfDocument.startPage(pageInfo)
+
+        val canvas = page.canvas
+
+        val leftMargin = 30f
+        val topMargin = 30f
+        val bottomMargin = 30f
+
+        val availableWidth = pageWidth - leftMargin
+        val availableHeight = pageHeight - topMargin - bottomMargin
+
+        val scale = minOf(
+            availableWidth / bitmap.width.toFloat(),
+            availableHeight / bitmap.height.toFloat()
+        )
+
+        val scaledWidth = bitmap.width * scale
+        val scaledHeight = bitmap.height * scale
+
+        canvas.drawBitmap(
+            bitmap,
+            null,
+            android.graphics.RectF(
+                leftMargin,
+                topMargin,
+                leftMargin + scaledWidth,
+                topMargin + scaledHeight
+            ),
+            null
+        )
+
+        pdfDocument.finishPage(page)
+
+        val file = File(
+            context.getExternalFilesDir(null),
+            "Certificate.pdf"
+        )
+
+        pdfDocument.writeTo(FileOutputStream(file))
+        pdfDocument.close()
+    }
+
+
+    fun getBitmapFromView(view: View): Bitmap {
+        val bitmap = Bitmap.createBitmap(
+            view.width,
+            view.height,
+            Bitmap.Config.ARGB_8888
+        )
+
+        val canvas = Canvas(bitmap)
+        view.draw(canvas)
+
+        return bitmap
+    }
 
 
 
@@ -401,25 +757,34 @@ fun ESOPCertificateScreen(
 
 
                 Button(
-                    onClick = {
+                    onClick =
+                        {
+                            val originalBitmap = getBitmapFromView(view)
 
-                        scope.launch {
+                            // Top aur Bottom ka extra area remove
+                            val cropTop = 300
+                            val cropBottom = 300
 
-                            certificateBitmap?.let { bitmap ->
+                            val croppedBitmap = Bitmap.createBitmap(
+                                originalBitmap,
+                                0,
+                                cropTop,
+                                originalBitmap.width,
+                                originalBitmap.height - cropTop - cropBottom
+                            )
 
-                                val pdfFile = saveAsPdf(
-                                    context = context,
-                                    bitmap = bitmap
-                                )
+                            savePdfToDownloads(
+                                context = context,
+                                bitmap = croppedBitmap
+                            )
 
-                                Toast.makeText(
-                                    context,
-                                    "PDF Saved : ${pdfFile.name}",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
-                    },
+//                            val bitmap = getBitmapFromView(view)
+//
+//                            savePdfToDownloads(
+//                                context = context,
+//                                bitmap = bitmap
+//                            )
+                        },
                     modifier = Modifier
                         .weight(1f)
                         .height(46.dp),
@@ -435,61 +800,50 @@ fun ESOPCertificateScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-//                Button(
-//                    onClick = {
-//
-//                        scope.launch {
-//
-//                            onDownloadPdfClick()
-//
-//                            Toast.makeText(
-//                                context,
-//                                "PDF Downloaded",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-//                        }
-//                    },
+                OutlinedButton(
+                    onClick = {
+
+                        val bitmap = getBitmapFromView(view)
+
+                        val pdfFiles = createPdf(
+                            context,
+                            bitmap
+                        )
+
+//                        sharePdf(
+//                            context,
+//                            pdfFiles
+//                        )
+
+                    }
+                ) {
+                    Text("Share Certificate")
+                }
+//                OutlinedButton(
+//                    onClick = onShareCertificateClick,
 //                    modifier = Modifier
 //                        .weight(1f)
 //                        .height(46.dp),
 //                    shape = RoundedCornerShape(6.dp),
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = Color(0xFF075CE8)
+//                    border = BorderStroke(
+//                        1.dp,
+//                        Color(0xFFB7C7E8)
+//                    ),
+//                    colors = ButtonDefaults.outlinedButtonColors(
+//                        contentColor = Color(0xFF075CE8)
 //                    )
-//                )
-//                {
-//
+//                ) {
 //                    Text(
-//                        text = "Download PDF",
-//                        color = Color.White,
+//                        text = "Share Certificate",
 //                        fontSize = 14.sp,
 //                        fontWeight = FontWeight.Bold
 //                    )
 //                }
-
-                OutlinedButton(
-                    onClick = onShareCertificateClick,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(46.dp),
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(
-                        1.dp,
-                        Color(0xFFB7C7E8)
-                    ),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFF075CE8)
-                    )
-                ) {
-                    Text(
-                        text = "Share Certificate",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
-    ) { paddingValues ->
+    )
+
+    { paddingValues ->
 
         Box(
             modifier = Modifier
@@ -501,58 +855,48 @@ fun ESOPCertificateScreen(
                     vertical = 16.dp
                 ),
             contentAlignment = Alignment.Center
-        )
-        {
+        ) {
 
-            CertificateCard(
-                candidateName = firstName+lastName ?: "",
-                score = score,
-                result = result,
-                date = currentDate
-            )
+            Column {
+
+                CertificateCard(
+                    candidateName = (firstName ?: "") + (lastName ?: ""),
+                    score = score,
+                    result = result,
+                    date = currentDate
+                )
+            }
         }
     }
 
+
+//    { paddingValues ->
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(paddingValues)
+//                .verticalScroll(rememberScrollState())
+//                .padding(
+//                    horizontal = 10.dp,
+//                    vertical = 16.dp
+//                ),
+//            contentAlignment = Alignment.Center
+//        )
+//        {
+//
+//            CertificateCard(
+//                candidateName = firstName+lastName ?: "",
+//                score = score,
+//                result = result,
+//                date = currentDate
+//            )
+//        }
+//    }
+
 }
 
-fun saveAsPdf(
-    context: Context,
-    bitmap: Bitmap
-): File {
 
-    val file = File(
-        context.getExternalFilesDir(null),
-        "Certificate.pdf"
-    )
-
-    val document = PdfDocument()
-
-    val pageInfo =
-        PdfDocument.PageInfo.Builder(
-            bitmap.width,
-            bitmap.height,
-            1
-        ).create()
-
-    val page = document.startPage(pageInfo)
-
-    page.canvas.drawBitmap(
-        bitmap,
-        0f,
-        0f,
-        null
-    )
-
-    document.finishPage(page)
-
-    file.outputStream().use {
-        document.writeTo(it)
-    }
-
-    document.close()
-
-    return file
-}
 @Composable
 private fun CertificateCard(
     candidateName: String,

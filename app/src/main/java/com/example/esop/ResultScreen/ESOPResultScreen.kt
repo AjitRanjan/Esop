@@ -144,6 +144,7 @@ fun ESOPResultScreen(
         )
         resultViewModel.GetResult(request)
     }
+
     if (showDialogExam) {
         AlertDialog(
             onDismissRequest = { },
@@ -289,8 +290,8 @@ fun ESOPResultScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-//                if (resultText == "Passed") {
-                if (resultText == "Failed") {
+                if (resultText == "Passed") {
+//                if (resultText == "Failed") {
                     Button(
                         onClick = {
                             scope.launch {
@@ -336,7 +337,8 @@ fun ESOPResultScreen(
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
-            ) {
+            )
+            {
                 OutlinedTextField(
                     value = selectedDepartment,
                     onValueChange = {},
@@ -578,7 +580,7 @@ private fun ResultStatsCard(
             ResultStatItem(title = "Correct", value = correct, valueColor = Color(0xFF19A64A))
             ResultStatItem(title = "Incorrect", value = incorrect, valueColor = Color(0xFFE53935))
             ResultStatItem(title = "Score", value = score, valueColor = Color(0xFF1D9BF0))
-            ResultStatItem(title = "Rank", value = rank, valueColor = Color(0xFF111827))
+            ResultStatItem(title = "Result", value = rank, valueColor = Color(0xFF111827))
         }
     }
 }
